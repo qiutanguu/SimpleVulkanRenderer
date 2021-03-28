@@ -59,7 +59,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)external\;$(SolutionDir)source\;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external\;$(SolutionDir)source\runtime\;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -78,7 +78,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)external\;$(SolutionDir)source\;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external\;$(SolutionDir)source\runtime\;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -95,11 +95,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\core\core.vcxproj">
-      <Project>{73a30b2f-c1f9-4203-a86b-cf81db9820f6}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\graphics\graphics.vcxproj">
-      <Project>{2f6d0eee-bba8-46b9-b409-7fbfc6d59bb6}</Project>
+    <ProjectReference Include="..\runtime\runtime.vcxproj">
+      <Project>{f89f6060-5bee-421f-b28d-22f94782ce13}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

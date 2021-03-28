@@ -46,7 +46,7 @@ namespace flower { namespace graphics {
 	{
 		if (handle == VK_NULL_HANDLE) 
 		{ 
-			LOG_VULKAN_FATAL("¾ä±úÎª¿Õ");
+			LOG_VULKAN_FATAL("¾ä±úÎª¿Õ£¡");
 			__debugbreak(); 
 			abort(); 
 		}

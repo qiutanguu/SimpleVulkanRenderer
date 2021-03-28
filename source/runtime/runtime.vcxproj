@@ -19,13 +19,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -45,9 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)build\$(ProjectName)\bin\</OutDir>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\int\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)build\$(ProjectName)\bin\</OutDir>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\int\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -55,11 +59,17 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external\;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -69,6 +79,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external\;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -76,8 +88,44 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="core\application.h" />
+    <ClInclude Include="core\benchmark.h" />
+    <ClInclude Include="core\camera.h" />
+    <ClInclude Include="core\core.h" />
+    <ClInclude Include="core\job_system.h" />
+    <ClInclude Include="core\log.h" />
+    <ClInclude Include="core\ring_buffer.h" />
+    <ClInclude Include="core\timer.h" />
+    <ClInclude Include="graphics\buffer.h" />
+    <ClInclude Include="graphics\common.h" />
+    <ClInclude Include="graphics\context.h" />
+    <ClInclude Include="graphics\device.h" />
+    <ClInclude Include="graphics\instance.h" />
+    <ClInclude Include="graphics\model.h" />
+    <ClInclude Include="graphics\render_context.h" />
+    <ClInclude Include="graphics\sampler.h" />
+    <ClInclude Include="graphics\swapchain.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="core\application.cpp" />
+    <ClCompile Include="core\core.cpp" />
+    <ClCompile Include="core\job_system.cpp" />
+    <ClCompile Include="core\log.cpp" />
+    <ClCompile Include="core\timer.cpp" />
+    <ClCompile Include="graphics\buffer.cpp" />
+    <ClCompile Include="graphics\common.cpp" />
+    <ClCompile Include="graphics\context.cpp" />
+    <ClCompile Include="graphics\device.cpp" />
+    <ClCompile Include="graphics\instance.cpp" />
+    <ClCompile Include="graphics\model.cpp" />
+    <ClCompile Include="graphics\render_context.cpp" />
+    <ClCompile Include="graphics\swapchain.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

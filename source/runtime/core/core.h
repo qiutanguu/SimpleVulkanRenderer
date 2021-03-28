@@ -86,19 +86,19 @@ namespace flower
 		non_copyable& operator=(const non_copyable&) = delete;
 	};
 
-	inline std::vector<char> read_file_binary(const std::string& filename) 
+	inline std::vector<char> read_file_binary(const std::string& filename)
 	{
-		std::ifstream file(filename, std::ios::ate | std::ios::binary);
+		std::ifstream file(filename,std::ios::ate|std::ios::binary);
 
-		if (!file.is_open()) 
+		if(!file.is_open())
 		{
-			LOG_IO_FATAL("文件{0}打开失败", filename);
+			LOG_IO_FATAL("文件{0}打开失败",filename);
 		}
 
-		size_t fileSize = (size_t) file.tellg();
+		size_t fileSize = (size_t)file.tellg();
 		std::vector<char> buffer(fileSize);
 		file.seekg(0);
-		file.read(buffer.data(), fileSize);
+		file.read(buffer.data(),fileSize);
 		file.close();
 		return buffer;
 	}
