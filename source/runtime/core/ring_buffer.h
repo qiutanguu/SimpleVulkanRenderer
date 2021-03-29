@@ -32,7 +32,7 @@ namespace flower
 			if(tail!=head)
 			{
 				item = data[tail];
-				tail = (tail+1)%capacity;
+				tail = (tail+1) % capacity;
 				result = true;
 			}
 			lock.unlock();

@@ -67,10 +67,50 @@ namespace flower { namespace graphics {
 		constexpr auto FS = "main";
 	}
 
-	class shader_module : non_copyable
+	// 深度缓冲
+	struct vk_depth_resource
+	{
+		VkImage depth_image;
+		VkDeviceMemory depth_image_memory;
+		VkImageView depth_imageView;
+	};
+
+	// 交换链支持细节
+	struct vk_swapchain_support_details 
+	{
+		// 基本表面功能（交换链中图像的最小/最大数量，图像的最小/最大宽度和高度）
+		VkSurfaceCapabilitiesKHR capabilities; 
+
+		// 表面格式（像素格式，色彩空间）
+		std::vector<VkSurfaceFormatKHR> formats; 
+
+		// 可用的演示模式
+		std::vector<VkPresentModeKHR> presentModes;
+	};
+
+	// 队列族对应的次序
+	class vk_queue_family_indices 
+	{
+		friend class vk_device;
+	public:
+		uint32_t graphics_family; // 图形队列族
+		uint32_t present_family;  // 显示队列族
+		uint32_t compute_faimly;  // 计算队列族
+
+		bool is_completed() 
+		{
+			return graphics_family_set && present_family_set && compute_faimly_set;
+		}
+	private:
+		bool graphics_family_set = false;
+		bool present_family_set = false;
+		bool compute_faimly_set = false;
+	};
+
+	class vk_shader_module : non_copyable
 	{
 	public:
-		shader_module(VkDevice& in_device,const std::vector<char>& code) : device(in_device)
+		vk_shader_module(VkDevice& in_device,const std::vector<char>& code) : device(in_device)
 		{
 			VkShaderModuleCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -83,7 +123,7 @@ namespace flower { namespace graphics {
 			}
 		}
 
-		~shader_module()
+		~vk_shader_module()
 		{
 			vkDestroyShaderModule(device, handle, nullptr);
 		}
@@ -91,7 +131,7 @@ namespace flower { namespace graphics {
 		VkShaderModule& get_handle() { return handle; }
 
 	private:
-		VkShaderModule handle {VK_NULL_HANDLE};
+		VkShaderModule handle { VK_NULL_HANDLE };
 		VkDevice& device;
 	};
 
@@ -119,7 +159,7 @@ namespace flower { namespace graphics {
 	}
 
 	// 寻找支持的格式
-	inline VkFormat findSupportedFormat(VkPhysicalDevice gpu,const std::vector<VkFormat>& candidates,VkImageTiling tiling,VkFormatFeatureFlags features)
+	inline VkFormat find_supported_format(VkPhysicalDevice gpu,const std::vector<VkFormat>& candidates,VkImageTiling tiling,VkFormatFeatureFlags features)
 	{
 		for (VkFormat format : candidates) 
 		{
@@ -139,19 +179,19 @@ namespace flower { namespace graphics {
 	}
 
 	// 寻找深度格式
-	inline VkFormat findDepthFormat(VkPhysicalDevice gpu) 
+	inline VkFormat find_depth_format(VkPhysicalDevice physical_device) 
 	{
-		return findSupportedFormat
+		return find_supported_format
 		(
-			gpu,
+			physical_device,
 			{VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
 		);
 	}
 
-	// 单个命令记录开始 见：endSingleTimeCommands copyBufferToImage
-	inline VkCommandBuffer beginSingleTimeCommands(VkCommandPool pool,VkDevice device) 
+	// 单个命令记录开始 见：end_single_time_commands copyBufferToImage
+	inline VkCommandBuffer begin_single_time_commands(VkCommandPool pool,VkDevice device) 
 	{
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -172,8 +212,12 @@ namespace flower { namespace graphics {
 	}
 
 
-	// 单个命令结束 见：beginSingleTimeCommands copyBufferToImage
-	inline void endSingleTimeCommands(VkCommandBuffer commandBuffer,VkQueue& graphicsQueue,VkCommandPool pool,VkDevice device) 
+	// 单个命令结束 见：begin_single_time_commands copyBufferToImage
+	inline void end_single_time_commands(
+		VkCommandBuffer commandBuffer,
+		VkQueue& queue,
+		VkCommandPool pool,
+		VkDevice device) 
 	{
 		vkEndCommandBuffer(commandBuffer);
 
@@ -182,16 +226,16 @@ namespace flower { namespace graphics {
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 
-		vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(graphicsQueue);
+		vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(queue);
 
 		vkFreeCommandBuffers(device, pool, 1, &commandBuffer);
 	}
 
 	// 将Buffer数据复制到图片中
-	inline void copyBufferToImage(VkBuffer buffer,VkImage image,uint32_t width,uint32_t height,VkCommandPool commandpool,VkDevice device,VkQueue in_graphics_queue)
+	inline void copy_buffer_to_image(VkBuffer buffer,VkImage image,uint32_t width,uint32_t height,VkCommandPool commandpool,VkDevice device,VkQueue in_graphics_queue)
 	{
-		VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandpool,device);
+		VkCommandBuffer commandBuffer = begin_single_time_commands(commandpool,device);
 
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
@@ -218,12 +262,20 @@ namespace flower { namespace graphics {
 			&region
 		);
 
-		endSingleTimeCommands(commandBuffer,in_graphics_queue,commandpool,device);
+		end_single_time_commands(commandBuffer,in_graphics_queue,commandpool,device);
 	}
 
-	inline void transitionImageLayout(VkImage image,VkFormat format,VkImageLayout oldLayout,VkImageLayout newLayout,VkCommandPool commandpool,VkDevice device,VkQueue in_graphics_queue)
+	// 图片布局转化
+	inline void transition_image_layout(
+		VkImage image,
+		VkFormat format,
+		VkImageLayout oldLayout,
+		VkImageLayout newLayout,
+		VkCommandPool commandpool,
+		VkDevice device,
+		VkQueue in_graphics_queue)
 	{
-		VkCommandBuffer commandBuffer = beginSingleTimeCommands(commandpool,device);
+		VkCommandBuffer commandBuffer = begin_single_time_commands(commandpool,device);
 
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -272,12 +324,21 @@ namespace flower { namespace graphics {
 			1, &barrier
 		);
 
-		endSingleTimeCommands(commandBuffer,in_graphics_queue,commandpool,device);
+		end_single_time_commands(commandBuffer,in_graphics_queue,commandpool,device);
 	}
 
-	void createImage(uint32_t width,uint32_t height,VkFormat format,VkImageTiling tiling,VkImageUsageFlags usage,VkMemoryPropertyFlags properties,VkImage& image,VkDeviceMemory& imageMemory,class device& in_device);
+	void create_image(
+		uint32_t width,
+		uint32_t height,
+		VkFormat format,
+		VkImageTiling tiling,
+		VkImageUsageFlags usage,
+		VkMemoryPropertyFlags properties,
+		VkImage& image,
+		VkDeviceMemory& imageMemory,
+		class vk_device& in_device);
 
-	inline void createTexture2DImageView(VkImage* image,VkImageView* view,VkDevice device)
+	inline void create_texture2D_imageView(VkImage* image,VkImageView* view,VkDevice device)
 	{
 		*view = create_imageView(image, VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT,device);
 	}

@@ -93,11 +93,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="viking_room.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\runtime\runtime.vcxproj">
       <Project>{f89f6060-5bee-421f-b28d-22f94782ce13}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="viking_room.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

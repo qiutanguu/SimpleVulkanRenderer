@@ -1,5 +1,5 @@
-#include "instance.h"
-#include "common.h"
+#include "vk_instance.h"
+#include "vk_common.h"
 #include <glfw/glfw3.h>
 
 namespace flower {namespace graphics{
@@ -119,13 +119,8 @@ namespace flower {namespace graphics{
 	{
 		std::vector<std::vector<const char *>> validation_layer_priority_list =
 		{
-			// The preferred validation layer is "VK_LAYER_KHRONOS_validation"
 			{"VK_LAYER_KHRONOS_validation"},
-
-			// Otherwise we fallback to using the LunarG meta layer
 			{"VK_LAYER_LUNARG_standard_validation"},
-
-			// Otherwise we attempt to enable the individual layers that compose the LunarG meta layer since it doesn't exist
 			{
 				"VK_LAYER_GOOGLE_threading",
 				"VK_LAYER_LUNARG_parameter_validation",
@@ -133,8 +128,6 @@ namespace flower {namespace graphics{
 				"VK_LAYER_LUNARG_core_validation",
 				"VK_LAYER_GOOGLE_unique_objects",
 			},
-
-			// Otherwise as a last resort we fallback to attempting to enable the LunarG core layer
 			{"VK_LAYER_LUNARG_core_validation"}
 		};
 
@@ -152,7 +145,11 @@ namespace flower {namespace graphics{
 	}
 
 
-	void instance::initialize(const std::vector<const char*>& required_extensions,const std::vector<const char*>& required_validation_layers,vk_version version,const std::string & application_name)
+	void vk_instance::initialize(
+		const std::vector<const char*>& required_extensions,
+		const std::vector<const char*>& required_validation_layers,
+		vk_version version,
+		const std::string & application_name)
 	{
 		// 1. 查询支持的实例插件
 		uint32_t instance_extension_count;
@@ -303,7 +300,7 @@ namespace flower {namespace graphics{
 #endif
 
 		// 创建vulkan实例
-		auto result = vkCreateInstance(&instance_info,nullptr,&vk_instance);
+		auto result = vkCreateInstance(&instance_info,nullptr,&instance);
 		if(result!=VK_SUCCESS)
 		{
 			LOG_VULKAN_FATAL("无法创建vulkan实例！");
@@ -313,7 +310,7 @@ namespace flower {namespace graphics{
 #if defined(FLOWER_DEBUG)
 		if(debug_utils)
 		{
-			result = create_debug_Utils_messenger_EXT(vk_instance,&debug_utils_create_info,nullptr,&debugUtilsMessenger);
+			result = create_debug_Utils_messenger_EXT(instance,&debug_utils_create_info,nullptr,&debugUtilsMessenger);
 			if(result!=VK_SUCCESS)
 			{
 				LOG_VULKAN_FATAL("无法创建debug utils messenger！");
@@ -322,7 +319,7 @@ namespace flower {namespace graphics{
 		}
 		else
 		{
-			result = create_debug_report_callback_EXT(vk_instance,&debug_report_create_info,nullptr,&debugReportCallback);
+			result = create_debug_report_callback_EXT(instance,&debug_report_create_info,nullptr,&debugReportCallback);
 			if(result!=VK_SUCCESS)
 			{
 				LOG_VULKAN_FATAL("无法创建debug report callback！");
@@ -332,22 +329,22 @@ namespace flower {namespace graphics{
 #endif
 	}
 
-	void instance::destroy()
+	void vk_instance::destroy()
 	{
 #if defined(FLOWER_DEBUG)
 		if(debugUtilsMessenger!=VK_NULL_HANDLE)
 		{
-			destroy_debug_Utils_messenger_EXT(vk_instance,debugUtilsMessenger,nullptr);
+			destroy_debug_Utils_messenger_EXT(instance,debugUtilsMessenger,nullptr);
 		}
 		if(debugReportCallback!=VK_NULL_HANDLE)
 		{
-			destroy_debug_report_callback_EXT(vk_instance,debugReportCallback,nullptr);
+			destroy_debug_report_callback_EXT(instance,debugReportCallback,nullptr);
 		}
 #endif
 
-		if(vk_instance!=VK_NULL_HANDLE)
+		if(instance!=VK_NULL_HANDLE)
 		{
-			vkDestroyInstance(vk_instance,nullptr);
+			vkDestroyInstance(instance,nullptr);
 		}
 	}
 }}

@@ -4,35 +4,6 @@
 
 namespace flower
 {
-	/*
-	  简单的 job system 实现
-	  适合并行无返回值的短小多任务并行执行。
-	  调用顺序：
-	  1. initialize();
-	  2. execute() 或 dispatch();
-	  3. wait_for_all();
-	  4. destroy();
-	  例子：
-		对于任务void Job();
-		串行执行如下：
-		  global_timer::reset();
-		 	Job();
-		 	Job();
-		 	Job();
-		 	Job();
-		 	Job();
-		  global_timer::get_timer_milli_sec();
-	  改成Jobsystem调用，如下：
-	    global_timer::reset();
-		  job_system::execute([]{Job();});
-		  job_system::execute([]{Job();});
-		  job_system::execute([]{Job();});
-		  job_system::execute([]{Job();});
-		  job_system::execute([]{Job();});
-		  job_system::wait_for_all();
-	    global_timer::get_timer_milli_sec();
-	  所有任务将在job_system::wait_for_all()后执行完毕。
-	*/
 	namespace job_system
 	{
 		// 初始化。

@@ -1,44 +1,47 @@
-#include "swapchain.h"
-#include "device.h"
+#include "vk_swapchain.h"
+#include "vk_device.h"
 #include <glfw/glfw3.h>
 #include "core/core.h"
 
 namespace flower { namespace graphics{
 	
-	void swapchain::initialize(device in_device,VkSurfaceKHR in_surface,GLFWwindow* in_window)
+	void vk_swapchain::initialize(vk_device in_device,VkSurfaceKHR in_surface,GLFWwindow* in_window)
 	{
-		vk_device = in_device;
+		device = in_device;
 		surface = in_surface;
 		window = in_window;
 
-		createSwapChain();
+		create_swapchain();
 	}
 	
-	void swapchain::destroy()
+	void vk_swapchain::destroy()
 	{
-		for (auto imageView : swapChainImageViews) 
+		for (auto imageView : swapchain_imageViews) 
 		{
-			vkDestroyImageView(vk_device.logic_device,imageView,nullptr);
+			vkDestroyImageView(device,imageView,nullptr);
 		}
+		swapchain_imageViews.resize(0);
 
-		vkDestroySwapchainKHR(vk_device.logic_device, swapChain, nullptr);
+		vkDestroySwapchainKHR(device, swapchain, nullptr);
 	}
-	
-	void swapchain::createSwapChain()
-	{
-		auto swapChainSupport = vk_device.query_swapchain_support();
 
-		VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-		VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-		VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+	
+	
+	void vk_swapchain::create_swapchain()
+	{
+		auto swapchain_support = device.query_swapchain_support();
+
+		VkSurfaceFormatKHR surfaceFormat = choose_swap_surface_format(swapchain_support.formats);
+		VkPresentModeKHR presentMode = choose_swap_present_mode(swapchain_support.presentModes);
+		VkExtent2D extent = choose_swap_extent(swapchain_support.capabilities);
 
 		// 至少加载一张图片.
-		uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1; 
+		uint32_t imageCount = swapchain_support.capabilities.minImageCount + 1; 
 
 		// 应确保不超过最大图像数，其中0为特殊值表示没有最大图像数：																	   
-		if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) 
+		if (swapchain_support.capabilities.maxImageCount > 0 && imageCount > swapchain_support.capabilities.maxImageCount) 
 		{
-			imageCount = swapChainSupport.capabilities.maxImageCount;
+			imageCount = swapchain_support.capabilities.maxImageCount;
 		}
 
 		VkSwapchainCreateInfoKHR createInfo{};
@@ -48,15 +51,12 @@ namespace flower { namespace graphics{
 		createInfo.imageFormat = surfaceFormat.format;
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
 		createInfo.imageExtent = extent;
-		// 每个交换层理应只需要一张图片
-		createInfo.imageArrayLayers = 1; 
+		createInfo.imageArrayLayers = 1; // 每个交换层理应只需要一张图片
 		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-		auto indices = vk_device.find_queue_families();
+		auto indices = device.find_queue_families();
 		uint32_t queueFamilyIndices[] = { indices.graphics_family, indices.present_family };
 
-		
-		
 		if (indices.graphics_family != indices.present_family) 
 		{
 			// VK_SHARING_MODE_CONCURRENT：
@@ -75,7 +75,7 @@ namespace flower { namespace graphics{
 		}
 
 		// 不希望对图像进行旋转
-		createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+		createInfo.preTransform = swapchain_support.capabilities.currentTransform;
 
 		// 是否应将Alpha通道用于与窗口系统中的其他窗口混合
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
@@ -84,28 +84,28 @@ namespace flower { namespace graphics{
 		// VK_TRUE则意味着我们不在乎被遮盖的像素的颜色
 		createInfo.clipped = VK_TRUE; 
 
-		if (vkCreateSwapchainKHR(vk_device.logic_device, &createInfo, nullptr, &swapChain) != VK_SUCCESS) 
+		if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapchain) != VK_SUCCESS) 
 		{
 			LOG_VULKAN_FATAL("交换链创建失败！");
 		}
 
-		vkGetSwapchainImagesKHR(vk_device.logic_device, swapChain, &imageCount, nullptr);
-		swapChainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(vk_device.logic_device, swapChain, &imageCount, swapChainImages.data());
+		// 申请图片
+		vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr);
+		swapchain_images.resize(imageCount);
+		vkGetSwapchainImagesKHR(device, swapchain, &imageCount, swapchain_images.data());
 
-		swapChainImageFormat = surfaceFormat.format;
-		swapChainExtent = extent;
+		swapchain_imageFormat = surfaceFormat.format;
+		swapchain_extent = extent;
 
 		// 在这里创建SwapChain需要的ImageViews
-		swapChainImageViews.resize(swapChainImages.size());
-		for (size_t i = 0; i < swapChainImages.size(); i++) 
+		swapchain_imageViews.resize(swapchain_images.size());
+		for (size_t i = 0; i < swapchain_images.size(); i++) 
 		{
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = swapChainImages[i];
-			// 交换链一般为2D图片
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
-			createInfo.format = swapChainImageFormat;
+			createInfo.image = swapchain_images[i];
+			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 交换链一般为2D图片
+			createInfo.format = swapchain_imageFormat;
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -117,14 +117,14 @@ namespace flower { namespace graphics{
 			createInfo.subresourceRange.layerCount = 1;
 
 			// 记得销毁
-			if (vkCreateImageView(vk_device.logic_device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) 
+			if (vkCreateImageView(device, &createInfo, nullptr, &swapchain_imageViews[i]) != VK_SUCCESS) 
 			{
 				LOG_VULKAN_FATAL("创建交换链图片视图失败！");
 			}
 		}
 	}
 
-	VkSurfaceFormatKHR swapchain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
+	VkSurfaceFormatKHR vk_swapchain::choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 	{
 		for (const auto& availableFormat : availableFormats) 
 		{
@@ -137,7 +137,7 @@ namespace flower { namespace graphics{
 		return availableFormats[0];
 	}
 
-	VkPresentModeKHR swapchain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
+	VkPresentModeKHR vk_swapchain::choose_swap_present_mode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 	{
 		for (const auto& availablePresentMode : availablePresentModes) 
 		{
@@ -150,8 +150,7 @@ namespace flower { namespace graphics{
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
-
-	VkExtent2D swapchain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+	VkExtent2D vk_swapchain::choose_swap_extent(const VkSurfaceCapabilitiesKHR& capabilities)
 	{
 		if (capabilities.currentExtent.width != UINT32_MAX) 
 		{

@@ -77,6 +77,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
+#include <stb/stb_image.h>
+#include <tinyobjloader/tiny_obj_loader.h>
+
 namespace flower
 {
 	struct non_copyable

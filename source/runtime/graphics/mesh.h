@@ -1,9 +1,16 @@
 #pragma once
 #include "vulkan/vulkan.h"
 #include "core/core.h"
-#include "buffer.h"
+#include "vk/vk_buffer.h"
 
 namespace flower{ namespace graphics{
+
+	struct uniform_buffer_mvp
+	{
+		alignas(16) glm::mat4 model;
+		alignas(16) glm::mat4 view;
+		alignas(16) glm::mat4 proj;
+	};
 
 	// ±ê×¼¶¥µã pos color textureCoord
 	struct vertex 
@@ -12,7 +19,8 @@ namespace flower{ namespace graphics{
 		glm::vec3 color;
 		glm::vec2 texCoord;
 
-		bool operator==(const vertex& other) const {
+		bool operator==(const vertex& other) const 
+		{
 			return pos == other.pos && color == other.color && texCoord == other.texCoord;
 		}
 

@@ -1,6 +1,5 @@
 #include "core.h"
 #include "application.h"
-#include "graphics/context.h"
 
 namespace flower
 {
@@ -29,26 +28,32 @@ namespace flower
 		glfwSetScrollCallback(window, scroll_callback);
 
 		// 禁用鼠标图标
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		this->width = width;
 		this->height = height;
 
 		LOG_INFO("创建应用大小为宽：{0}，高：{1}。",this->width,this->height);
 
-		// 创建图形内容
-		graphics_context = graphics::context(window);
-		graphics_context.initialize();
-
 		scene_view_cam = camera(glm::vec3(0.0f, 0.0f, 3.0f));
 		scene_view_cam.lastX = this->width / 2.0f;
 		scene_view_cam.lastY = this->height / 2.0f;
 	}
 
+	void application::initialize_modules()
+	{
+		for(auto& runtime_module : modules)
+		{
+			runtime_module->initialize();
+		}
+	}
+
 	void application::destroy()
 	{
-		// 释放图形内容
-		graphics_context.destroy();
+		for(auto& runtime_module : modules)
+		{
+			runtime_module->destroy();
+		}
 
 		glfwDestroyWindow(window);
 		glfwTerminate();
@@ -56,23 +61,31 @@ namespace flower
 
 	void application::loop()
 	{
-		
+		for(auto& runtime_module : modules)
+		{
+			runtime_module->after_initialize();
+		}
 
 		while (!glfwWindowShouldClose(window)) 
 		{
-			float currentFrame = glfwGetTime();
-			deltaTime = currentFrame - lastFrame;
-			lastFrame = currentFrame;
+			float current_time = glfwGetTime();
+			delta_time = current_time - last_time;
+			last_time = current_time;
 			
 			processInput(window);
-			graphics_context.draw(scene_view_cam);
 
+			for(auto& runtime_module : modules)
+			{
+				runtime_module->tick(current_time,delta_time);
+			}
 
 			glfwPollEvents();
 		}
 
-		// 确保所有图形内容全部完成再退出
-		graphics_context.wait_idle();
+		for(auto& runtime_module : modules)
+		{
+			runtime_module->before_destroy();
+		}
 	}
 
 	void application::framebuffer_resize_callback(GLFWwindow* window, int width, int height)
@@ -81,8 +94,6 @@ namespace flower
 
 		app->width = width;
 		app->height = height;
-
-		app->graphics_context.vk_render_context.framebuffer_resized  = true;
 	}
 
 	void application::mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -120,12 +131,12 @@ namespace flower
 			glfwSetWindowShouldClose(window, true);
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::forward, deltaTime);
+			scene_view_cam.ProcessKeyboard(camera_utils::move_type::forward, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::backward, deltaTime);
+			scene_view_cam.ProcessKeyboard(camera_utils::move_type::backward, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::left, deltaTime);
+			scene_view_cam.ProcessKeyboard(camera_utils::move_type::left, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::right, deltaTime);
+			scene_view_cam.ProcessKeyboard(camera_utils::move_type::right, delta_time);
 	}
 }

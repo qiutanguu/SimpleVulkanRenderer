@@ -1,12 +1,12 @@
 #pragma once
 #include "core.h"
-#include "graphics/context.h"
+#include "interface.h"
+#include <glfw/glfw3.h>
 #include "camera.h"
+#include <memory>
 
 namespace flower
 {
-	namespace graphics { class context; }
-
 	class application : non_copyable
 	{
 	public:
@@ -14,9 +14,13 @@ namespace flower
 		~application() { }
 
 		void initialize(uint32_t width = 1280u,uint32_t height = 960u,const char* title = "flower",bool full_screen = false);
+		void initialize_modules();
 		void loop();
 		void destroy();
 
+		auto get_window() { return window; }
+		auto& get_cam() { return scene_view_cam; }
+		std::vector< std::shared_ptr<iruntime_module>> modules = {};
 
 	protected:
 		static void framebuffer_resize_callback(GLFWwindow* window, int width, int height);
@@ -26,14 +30,14 @@ namespace flower
 
 	protected:
 		GLFWwindow* window;
-		graphics::context graphics_context = {};
+		
 		camera scene_view_cam = {};
 
 		uint32_t width = 1280u;
 		uint32_t height = 960u;
 
 		// timing
-		float deltaTime = 0.0f;
-		float lastFrame = 0.0f;
+		float delta_time = 0.0f;
+		float last_time = 0.0f;
 	};
 }

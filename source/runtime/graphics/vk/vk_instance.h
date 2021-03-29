@@ -13,11 +13,16 @@ namespace flower { namespace graphics{
 		vk_1_2,
 	};
 
-	class instance
+	class vk_instance
 	{
 	public:
-		instance(){ }
-		~instance(){ }
+		vk_instance(){ }
+		~vk_instance(){ }
+
+		operator VkInstance()
+		{
+			return instance;
+		}
 
 		void initialize(
 			const std::vector<const char *> &required_extensions,
@@ -42,7 +47,7 @@ namespace flower { namespace graphics{
 		// 获取启用的插件
 		const std::vector<const char*>& GetExtensions(){ return enable_exts; }
 
-		VkInstance vk_instance;
+		VkInstance instance;
 	private:
 		std::vector<const char *> enable_exts;
 

@@ -1,57 +1,34 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
+#include "vk_common.h"
 
 namespace flower { namespace graphics{
-	
-	// 交换链支持细节
-	struct swapchain_support_details 
-	{
-		// 基本表面功能（交换链中图像的最小/最大数量，图像的最小/最大宽度和高度）
-		VkSurfaceCapabilitiesKHR capabilities; 
 
-		// 表面格式（像素格式，色彩空间）
-		std::vector<VkSurfaceFormatKHR> formats; 
-
-		// 可用的演示模式
-		std::vector<VkPresentModeKHR> presentModes;
-	};
-
-	// 队列族对应的次序
-	class queue_family_indices 
-	{
-		friend class device;
-	public:
-		uint32_t graphics_family; // 图形队列族
-		uint32_t present_family;  // 显示队列族
-		uint32_t compute_faimly;  // 计算队列族
-
-		bool isComplete() 
-		{
-			return graphics_family_set && present_family_set && compute_faimly_set;
-		}
-	private:
-		bool graphics_family_set = false;
-		bool present_family_set = false;
-		bool compute_faimly_set = false;
-	};
-
-	class device
+	class vk_device
 	{
 	public:
-		device(){ }
-		~device(){ }
-		void initialize(VkInstance instance,VkSurfaceKHR surface,VkPhysicalDeviceFeatures features = {},const std::vector<const char*>& device_request_extens= {});
+		operator VkDevice() { return device; }
+
+		vk_device(){ }
+		~vk_device(){ }
+
+		void initialize(
+			VkInstance instance,
+			VkSurfaceKHR surface,
+			VkPhysicalDeviceFeatures features = {},
+			const std::vector<const char*>& device_request_extens= {});
+
 		void destroy();
 
 		// 查找队列族次序
-		queue_family_indices find_queue_families();
+		vk_queue_family_indices find_queue_families();
 
 		// 内存类型查询
 		uint32_t find_memory_type(uint32_t typeFilter,VkMemoryPropertyFlags properties);
 
 		// 查询交换链支持细节
-		swapchain_support_details query_swapchain_support();
+		vk_swapchain_support_details query_swapchain_support();
 
 		// 打印所有gpu中队列族的信息
 		void print_all_queue_families_info();
@@ -75,7 +52,7 @@ namespace flower { namespace graphics{
 
 	public:
 		VkPhysicalDevice physical_device;
-		VkDevice logic_device;
+		VkDevice device;
 
 		VkQueue graphics_queue; // 图形队列
 		VkQueue present_queue;  // 显示队列

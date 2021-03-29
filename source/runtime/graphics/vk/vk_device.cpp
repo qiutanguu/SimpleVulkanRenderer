@@ -1,10 +1,10 @@
-#include "device.h"
-#include "common.h"
+#include "vk_device.h"
+#include "vk_common.h"
 #include <set>
 
 namespace flower{ namespace graphics{
 
-	void device::initialize(VkInstance instance,VkSurfaceKHR surface,VkPhysicalDeviceFeatures features,const std::vector<const char*>& device_request_extens)
+	void vk_device::initialize(VkInstance instance,VkSurfaceKHR surface,VkPhysicalDeviceFeatures features,const std::vector<const char*>& device_request_extens)
 	{
 		this->instance = instance;
 		this->surface = surface;
@@ -18,15 +18,15 @@ namespace flower{ namespace graphics{
 		create_logic_device();
 	}
 
-	void device::destroy()
+	void vk_device::destroy()
 	{
-		if (logic_device != VK_NULL_HANDLE)
+		if (device != VK_NULL_HANDLE)
 		{
-			vkDestroyDevice(logic_device, nullptr);
+			vkDestroyDevice(device, nullptr);
 		}
 	}
 
-	void device::create_logic_device()
+	void vk_device::create_logic_device()
 	{
 		// 1. 指定要创建的队列
 		auto indices = find_queue_families();
@@ -61,18 +61,18 @@ namespace flower{ namespace graphics{
 		createInfo.ppEnabledLayerNames = NULL;
 		createInfo.enabledLayerCount = 0;
 
-		if (vkCreateDevice(physical_device, &createInfo, nullptr, &logic_device) != VK_SUCCESS) 
+		if (vkCreateDevice(physical_device, &createInfo, nullptr, &device) != VK_SUCCESS) 
 		{
 			LOG_VULKAN_FATAL("创建逻辑设备失败！");
 		}
 
 		// 获取队列
-		vkGetDeviceQueue(logic_device,indices.graphics_family,0,&graphics_queue);
-		vkGetDeviceQueue(logic_device,indices.present_family,0,&present_queue);
-		vkGetDeviceQueue(logic_device,indices.compute_faimly,0,&compute_queue);
+		vkGetDeviceQueue(device,indices.graphics_family,0,&graphics_queue);
+		vkGetDeviceQueue(device,indices.present_family,0,&present_queue);
+		vkGetDeviceQueue(device,indices.compute_faimly,0,&compute_queue);
 	}
 
-	void device::pick_suitable_gpu(VkInstance& instance,const std::vector<const char*>& device_request_extens)
+	void vk_device::pick_suitable_gpu(VkInstance& instance,const std::vector<const char*>& device_request_extens)
 	{
 		// 1. 查询所有的Gpu
 		uint32_t physical_device_count{0};
@@ -123,10 +123,10 @@ namespace flower{ namespace graphics{
 	}
 
 
-	bool device::is_physical_device_suitable(const std::vector<const char*>& device_request_extens)
+	bool vk_device::is_physical_device_suitable(const std::vector<const char*>& device_request_extens)
 	{
 		// 满足所有的队列族
-		queue_family_indices indices = find_queue_families();
+		vk_queue_family_indices indices = find_queue_families();
 
 		// 支持所有的设备插件
 		bool extensionsSupported = check_device_extension_support(device_request_extens);
@@ -139,12 +139,12 @@ namespace flower{ namespace graphics{
 			swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 		}
 
-		return indices.isComplete() && extensionsSupported && swapChainAdequate;
+		return indices.is_completed() && extensionsSupported && swapChainAdequate;
 	}
 
-	queue_family_indices device::find_queue_families()
+	vk_queue_family_indices vk_device::find_queue_families()
 	{
-		queue_family_indices indices;
+		vk_queue_family_indices indices;
 
 		// 1. 找到所有的队列族
 		uint32_t queueFamilyCount = 0;
@@ -176,7 +176,7 @@ namespace flower{ namespace graphics{
 				indices.present_family_set = true;
 			}
 
-			if (indices.isComplete()) {
+			if (indices.is_completed()) {
 				break;
 			}
 
@@ -186,10 +186,10 @@ namespace flower{ namespace graphics{
 		return indices;
 	}
 
-	swapchain_support_details device::query_swapchain_support()
+	vk_swapchain_support_details vk_device::query_swapchain_support()
 	{
 		// 查询基本表面功能
-		swapchain_support_details details;
+		vk_swapchain_support_details details;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
 
 		// 查询表面格式
@@ -213,7 +213,7 @@ namespace flower{ namespace graphics{
 		return details;
 	}
 
-	uint32_t device::find_memory_type(uint32_t typeFilter,VkMemoryPropertyFlags properties)
+	uint32_t vk_device::find_memory_type(uint32_t typeFilter,VkMemoryPropertyFlags properties)
 	{
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(physical_device, &memProperties);
@@ -229,7 +229,7 @@ namespace flower{ namespace graphics{
 		LOG_VULKAN_FATAL("找不到合适的内存类型！");
 	}
 
-	void device::print_all_queue_families_info()
+	void vk_device::print_all_queue_families_info()
 	{
 		// 1. 找到所有的队列族
 		uint32_t queueFamilyCount = 0;
@@ -244,7 +244,7 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	bool device::check_device_extension_support(const std::vector<const char*>& device_request_extens)
+	bool vk_device::check_device_extension_support(const std::vector<const char*>& device_request_extens)
 	{
 		uint32_t extensionCount;
 		vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extensionCount, nullptr);

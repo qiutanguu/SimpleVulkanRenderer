@@ -1,4 +1,4 @@
-#include "model.h"
+#include "mesh.h"
 #include "tinyobjloader/tiny_obj_loader.h"
 
 namespace flower{ namespace graphics{
