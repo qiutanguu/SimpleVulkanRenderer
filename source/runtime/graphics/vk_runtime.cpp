@@ -21,6 +21,7 @@ namespace flower{ namespace graphics{
 		create_frame_buffers();
 		create_command_pool();
 		create_command_buffers();
+		create_sync_objects();
 
 		initialize_special();
 		
@@ -36,6 +37,7 @@ namespace flower{ namespace graphics{
 		destroy_frame_buffers();
 		destroy_command_buffers();
 		destroy_render_pass();
+		destroy_sync_objects();
 		destroy_command_pool();
 
 		swapchain.destroy();
@@ -68,6 +70,47 @@ namespace flower{ namespace graphics{
 		create_depth_resources();
 		create_frame_buffers();
 		create_command_buffers();
+
+		images_inFlight.resize(swapchain.get_imageViews().size(), VK_NULL_HANDLE);
+	}
+
+	void vk_runtime::create_sync_objects()
+	{
+		const auto image_nums = swapchain.get_images().size();
+
+		// 为每个处理中的帧添加同步讯号
+		semaphores_image_available.resize(MAX_FRAMES_IN_FLIGHT);
+		semaphores_render_finished.resize(MAX_FRAMES_IN_FLIGHT);
+		inFlight_fences.resize(MAX_FRAMES_IN_FLIGHT);
+		images_inFlight.resize(image_nums,VK_NULL_HANDLE);
+
+		VkSemaphoreCreateInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		for(size_t i = 0; i<MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			if(
+				vkCreateSemaphore(device,&semaphoreInfo,nullptr,&semaphores_image_available[i])!=VK_SUCCESS||
+				vkCreateSemaphore(device,&semaphoreInfo,nullptr,&semaphores_render_finished[i])!=VK_SUCCESS||
+				vkCreateFence(device,&fenceInfo,nullptr,&inFlight_fences[i])!=VK_SUCCESS)
+			{
+				LOG_VULKAN_FATAL("为帧对象创建同步对象时出错！");
+			}
+		}
+	}
+
+	void vk_runtime::destroy_sync_objects()
+	{
+		for(size_t i = 0; i<MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			vkDestroySemaphore(device,semaphores_image_available[i],nullptr);
+			vkDestroySemaphore(device,semaphores_render_finished[i],nullptr);
+			vkDestroyFence(device,inFlight_fences[i],nullptr);
+		}
 	}
 
 	void vk_runtime::cleanup_swapchain_default()
@@ -94,11 +137,39 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void vk_runtime::draw_default()
+	void vk_runtime::present(std::vector<VkSemaphore>& wait_semaphores,uint32_t back_buffer_index)
 	{
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+		presentInfo.waitSemaphoreCount = wait_semaphores.size();
+		presentInfo.pWaitSemaphores = wait_semaphores.data();
+
+		VkSwapchainKHR swapChains[] = {swapchain};
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapChains;
+		presentInfo.pImageIndices = &back_buffer_index;
+
+		auto result = vkQueuePresentKHR(device.present_queue,&presentInfo);
+
+		if(result==VK_ERROR_OUT_OF_DATE_KHR||result==VK_SUBOPTIMAL_KHR||framebuffer_resized)
+		{
+			framebuffer_resized = false;
+			recreate_swapchain();
+		}
+		else if(result!=VK_SUCCESS)
+		{
+			LOG_VULKAN_FATAL("显示交换链图片失败！");
+		}
+		current_frame = (current_frame +1)%MAX_FRAMES_IN_FLIGHT;
+	}
+
+	void vk_runtime::acquire_next_present_image(uint32_t* image_index)
+	{
+		// 检查窗口大小是否改变
 		int current_width;
 		int current_height;
-		glfwGetWindowSize(window, &current_width, &current_height);
+		glfwGetWindowSize(window,&current_width,&current_height);
 
 		if(current_width!=last_width||current_height!=last_height)
 		{
@@ -108,57 +179,16 @@ namespace flower{ namespace graphics{
 		}
 
 		// 检查交换链
-		uint32_t image_index;
-		VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, semaphores_image_available[current_frame], VK_NULL_HANDLE, &image_index);
+		VkResult result = vkAcquireNextImageKHR(device,swapchain,UINT64_MAX,semaphores_image_available[current_frame],VK_NULL_HANDLE,image_index);
 
-		if (result == VK_ERROR_OUT_OF_DATE_KHR) 
+		if(result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			recreate_swapchain();
-			return;
-		} 
-		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) 
+		}
+		else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 		{
 			LOG_VULKAN_FATAL("请求交换链图片失败!");
 		}
-
-		update_before_commit(image_index);
-
-		std::vector<VkSemaphore> wait_semaphores = {
-			semaphores_image_available[current_frame]
-		};
-
-		std::vector<VkPipelineStageFlags> wait_stages = { 
-			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT 
-		};
-
-		graphics_command_buffers[image_index]->wait_flags = wait_stages;
-		graphics_command_buffers[image_index]->wait_semaphores = wait_semaphores;
-		graphics_command_buffers[image_index]->submit();
-
-		VkPresentInfoKHR presentInfo{};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = wait_semaphores.data();
-
-		VkSwapchainKHR swapChains[] = { swapchain };
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = swapChains;
-
-		presentInfo.pImageIndices = &image_index;
-
-		result = vkQueuePresentKHR(device.present_queue, &presentInfo);
-
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized) 
-		{
-			framebuffer_resized = false;
-			recreate_swapchain();
-		} 
-		else if (result != VK_SUCCESS) 
-		{
-			LOG_VULKAN_FATAL("显示交换链图片失败！");
-		}
-		current_frame = (current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void vk_runtime::destroy_command_buffers()
@@ -233,7 +263,7 @@ namespace flower{ namespace graphics{
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 
-			// 在这里绑定对应的 renderpass
+			// 在这里绑定对应的 render pass
 			framebufferInfo.renderPass = render_pass; 
 
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());

@@ -23,14 +23,13 @@ namespace flower{ namespace graphics{
 		virtual void destroy_special() override;
 		virtual void recreate_swapchain() override;
 		virtual void cleanup_swapchain() override;
-		virtual void update_before_commit(uint32_t backBuffer_index) override;
+		
 
 	private:
-		// ubo
 		std::vector<std::shared_ptr<vk_buffer>> uniformBuffers;
 		void create_uniform_buffer();
 
-
+		void update_before_commit(uint32_t backBuffer_index);
 		void record_renderCommand();
 
 		mesh mesh_data = {};

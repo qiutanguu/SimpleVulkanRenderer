@@ -122,6 +122,8 @@ namespace flower { namespace graphics{
 				LOG_VULKAN_FATAL("创建交换链图片视图失败！");
 			}
 		}
+
+		LOG_VULKAN_TRACE("创建Vulkan SwapChain成功，BackBuffer数{0}。",swapchain_imageViews.size());
 	}
 
 	VkSurfaceFormatKHR vk_swapchain::choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR>& availableFormats)

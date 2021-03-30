@@ -106,13 +106,13 @@
     <ClInclude Include="graphics\vk\vk_texture.h" />
     <ClInclude Include="graphics\vk\vk_buffer.h" />
     <ClInclude Include="graphics\vk\vk_common.h" />
-    <ClInclude Include="graphics\vk_rhi.h" />
     <ClInclude Include="graphics\vk_runtime.h" />
     <ClInclude Include="graphics\vk\vk_device.h" />
     <ClInclude Include="graphics\vk\vk_instance.h" />
     <ClInclude Include="graphics\mesh.h" />
     <ClInclude Include="graphics\vk\vk_sampler.h" />
     <ClInclude Include="graphics\vk\vk_swapchain.h" />
+    <ClInclude Include="ui\ui_shader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\application.cpp" />
@@ -124,7 +124,6 @@
     <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_buffer.cpp" />
     <ClCompile Include="graphics\vk\vk_common.cpp" />
-    <ClCompile Include="graphics\vk_rhi.cpp" />
     <ClCompile Include="graphics\vk_runtime.cpp" />
     <ClCompile Include="graphics\vk\vk_device.cpp" />
     <ClCompile Include="graphics\vk\vk_instance.cpp" />

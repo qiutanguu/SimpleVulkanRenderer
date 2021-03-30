@@ -28,7 +28,7 @@ namespace flower
 		glfwSetScrollCallback(window, scroll_callback);
 
 		// ½ûÓÃÊó±êÍ¼±ê
-		// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		this->width = width;
 		this->height = height;

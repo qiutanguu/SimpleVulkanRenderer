@@ -11,7 +11,19 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::tick(float time, float delta_time)
 	{
-		vk_runtime::draw_default();
+		uint32_t back_buffer_index;
+		vk_runtime::acquire_next_present_image(&back_buffer_index);
+
+		update_before_commit(back_buffer_index);
+
+		std::vector<VkPipelineStageFlags> wait_flags = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+		std::vector<VkSemaphore> wait_semaphores = {semaphores_image_available[current_frame]};
+
+		graphics_command_buffers[back_buffer_index]->wait_flags = wait_flags;
+		graphics_command_buffers[back_buffer_index]->wait_semaphores = wait_semaphores;
+		graphics_command_buffers[back_buffer_index]->submit(semaphores_image_available[current_frame]);
+
+		vk_runtime::present(wait_semaphores,back_buffer_index);
 	}
 
 	void viking_room_scene::initialize_special()

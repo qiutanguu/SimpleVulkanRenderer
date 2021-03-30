@@ -52,8 +52,6 @@ namespace flower { namespace graphics{
 		virtual void recreate_swapchain() = 0;
 		virtual void cleanup_swapchain() = 0;
 
-		
-
 	public:
 		vk_runtime(GLFWwindow* window) : window(window),instance({}),device({}) { }
 		vk_runtime() {}
@@ -74,11 +72,8 @@ namespace flower { namespace graphics{
 		void cleanup_swapchain_default();
 		size_t current_frame = 0;
 
-		// 默认绘制函数，同时提供虚函数update_before_commit插入中间以便更新ubo
-		void draw_default();
-		// 见 draw_default
-		virtual void update_before_commit(uint32_t backBuffer_index) {}
-
+		void present(std::vector<VkSemaphore>& wait_semaphores,uint32_t back_buffer_index);
+		void acquire_next_present_image(uint32_t* image_index);
 	private:
 		void create_command_buffers();
 		void destroy_command_buffers();
@@ -94,6 +89,9 @@ namespace flower { namespace graphics{
 
 		void create_render_pass();
 		void destroy_render_pass();
+
+		void create_sync_objects();
+		void destroy_sync_objects();
 
 	protected:
 		GLFWwindow* window;
@@ -116,7 +114,12 @@ namespace flower { namespace graphics{
 		// 命令缓冲
 		std::vector<std::shared_ptr<vk_command_buffer>> graphics_command_buffers;
 
-		
+		const int MAX_FRAMES_IN_FLIGHT = 2; // 同时处理的帧数
+		std::vector<VkSemaphore> semaphores_image_available;
+		std::vector<VkSemaphore> semaphores_render_finished;
+		std::vector<VkFence> inFlight_fences;
+		std::vector<VkFence> images_inFlight;
+
 
 	protected:
 		bool framebuffer_resized = false;
