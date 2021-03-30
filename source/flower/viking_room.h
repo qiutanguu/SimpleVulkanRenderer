@@ -27,7 +27,7 @@ namespace flower{ namespace graphics{
 
 	private:
 		// ubo
-		std::vector<vk_buffer> uniformBuffers;
+		std::vector<std::shared_ptr<vk_buffer>> uniformBuffers;
 		void create_uniform_buffer();
 
 
@@ -58,8 +58,8 @@ namespace flower{ namespace graphics{
 		void createTextureSampler();
 
 		// ¶¥µãbuffer
-		vk_buffer vertexBuffer ={};
-		vk_buffer indexBuffer = {};
+		std::shared_ptr<vk_buffer> vertexBuffer;
+		std::shared_ptr<vk_buffer> indexBuffer;
 		void upload_vertex_buffer();
 
 		camera& scene_view_cam;

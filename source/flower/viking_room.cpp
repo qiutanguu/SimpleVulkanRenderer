@@ -1,4 +1,5 @@
 #include "viking_room.h"
+#include "graphics/vk/vk_buffer.h"
 #include "core/core.h"
 
 namespace flower{ namespace graphics{
@@ -35,10 +36,7 @@ namespace flower{ namespace graphics{
 	{
 		vkDestroyPipeline(device, renderPipeline, nullptr);
 		vkDestroyPipelineLayout(device,pipelineLayout,nullptr);
-		for (size_t i = 0; i < uniformBuffers.size(); i++) 
-		{
-			uniformBuffers[i].destroy();
-		}
+
 		uniformBuffers.resize(0);
 
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -47,8 +45,9 @@ namespace flower{ namespace graphics{
 		vkDestroyImage(device, textureImage, nullptr);
 		vkFreeMemory(device, textureImageMemory, nullptr);
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-		vertexBuffer.destroy();
-		indexBuffer.destroy();
+
+		vertexBuffer.reset();
+		indexBuffer.reset();
 	}
 
 	void viking_room_scene::recreate_swapchain()
@@ -69,10 +68,6 @@ namespace flower{ namespace graphics{
 
 		vkDestroyPipeline(device, renderPipeline, nullptr);
 		vkDestroyPipelineLayout(device,pipelineLayout,nullptr);
-		for (size_t i = 0; i < uniformBuffers.size(); i++) 
-		{
-			uniformBuffers[i].destroy();
-		}
 		uniformBuffers.resize(0);
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 	}
@@ -90,9 +85,9 @@ namespace flower{ namespace graphics{
 		ubo.view = scene_view_cam.get_view_matrix();
 		ubo.proj = scene_view_cam.GetProjectMatrix(swapchain.get_swapchain_extent().width,swapchain.get_swapchain_extent().height);
 
-		uniformBuffers[backBuffer_index].map();
-		uniformBuffers[backBuffer_index].copy_to( (void*)&ubo,sizeof(ubo));
-		uniformBuffers[backBuffer_index].unmap();
+		uniformBuffers[backBuffer_index]->map();
+		uniformBuffers[backBuffer_index]->copy_to( (void*)&ubo,sizeof(ubo));
+		uniformBuffers[backBuffer_index]->unmap();
 	}
 
 	void viking_room_scene::upload_vertex_buffer()
@@ -100,10 +95,7 @@ namespace flower{ namespace graphics{
 		// ∂•µ„ª∫¥Ê
 		VkDeviceSize bufferSize = sizeof(mesh_data.vertices[0]) * mesh_data.vertices.size();
 
-		vk_buffer stageBuffer {};
-
-		// Stage Buffer
-		stageBuffer.create(
+		auto stageBuffer = vk_buffer::create(
 			device,
 			graphics_command_pool,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -113,7 +105,7 @@ namespace flower{ namespace graphics{
 		);
 
 		// Vertex Buffer
-		vertexBuffer.create(
+		vertexBuffer = vk_buffer::create(
 			device,
 			graphics_command_pool, 
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -122,12 +114,10 @@ namespace flower{ namespace graphics{
 			nullptr
 		);
 
-		vertexBuffer.stage_copy_from(stageBuffer, bufferSize,device.graphics_queue);
-
-		stageBuffer.destroy();
+		vertexBuffer->stage_copy_from(*stageBuffer, bufferSize,device.graphics_queue);
 
 		bufferSize = sizeof(mesh_data.indices[0]) * mesh_data.indices.size();
-		stageBuffer.create(
+		stageBuffer = vk_buffer::create(
 			device,
 			graphics_command_pool, 
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -136,7 +126,7 @@ namespace flower{ namespace graphics{
 			(void *)(mesh_data.indices.data())
 		);
 
-		indexBuffer.create(
+		indexBuffer = vk_buffer::create(
 			device,
 			graphics_command_pool,  
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
@@ -145,8 +135,7 @@ namespace flower{ namespace graphics{
 			nullptr
 		);
 
-		indexBuffer.stage_copy_from(stageBuffer, bufferSize,device.graphics_queue);
-		stageBuffer.destroy();
+		indexBuffer->stage_copy_from(*stageBuffer, bufferSize,device.graphics_queue);
 	}
 
 	void viking_room_scene::createTextureSampler()
@@ -190,8 +179,7 @@ namespace flower{ namespace graphics{
 
 		for (size_t i = 0; i < uniformBuffers.size(); i++) 
 		{
-			vk_buffer buffer{};
-			buffer.create(
+			auto buffer = vk_buffer::create(
 				device,
 				graphics_command_pool,
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
@@ -221,8 +209,7 @@ namespace flower{ namespace graphics{
 			LOG_IO_FATAL("º”‘ÿÕº∆¨{0} ß∞‹£°",path);
 		}
 
-		vk_buffer stageBuffer {};
-		stageBuffer.create(
+		auto stageBuffer = vk_buffer::create(
 			device,
 			graphics_command_pool,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -256,7 +243,7 @@ namespace flower{ namespace graphics{
 		);
 
 		copy_buffer_to_image(
-			stageBuffer.buffer, 
+			stageBuffer->buffer, 
 			textureImage, 
 			static_cast<uint32_t>(texWidth), 
 			static_cast<uint32_t>(texHeight),
@@ -274,8 +261,6 @@ namespace flower{ namespace graphics{
 			device,
 			device.graphics_queue
 		);
-
-		stageBuffer.destroy();
 	}
 
 	void viking_room_scene::record_renderCommand()
@@ -283,14 +268,9 @@ namespace flower{ namespace graphics{
 		// ªÊ÷∆√¸¡Ó
 		for (size_t i = 0; i < graphics_command_buffers.size(); i++) 
 		{
-			VkCommandBufferBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			graphics_command_buffers[i]->begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
 
-			if (vkBeginCommandBuffer(graphics_command_buffers[i], &beginInfo) != VK_SUCCESS) 
-			{
-				LOG_VULKAN_FATAL("ø™ ºº«¬ºªÊ÷∆√¸¡Óª∫≥Â ß∞‹£°");
-			}
-
+			auto& cmd_buffer = graphics_command_buffers[i]->get_instance();
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 			renderPassInfo.renderPass = render_pass;
@@ -305,23 +285,20 @@ namespace flower{ namespace graphics{
 			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassInfo.pClearValues = clearValues.data();
 
-			vkCmdBeginRenderPass(graphics_command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(graphics_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, renderPipeline);
+			vkCmdBeginRenderPass(cmd_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPipeline);
 
-			VkBuffer vertexBuffers[] = { vertexBuffer.buffer };
+			VkBuffer vertexBuffers[] = { vertexBuffer->buffer };
 			VkDeviceSize offsets[] = {0};
 
-			vkCmdBindVertexBuffers(graphics_command_buffers[i], 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(graphics_command_buffers[i], indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-			vkCmdBindDescriptorSets(graphics_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
+			vkCmdBindVertexBuffers(cmd_buffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(cmd_buffer, indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 
-			vkCmdDrawIndexed(graphics_command_buffers[i], static_cast<uint32_t>(mesh_data.indices.size()), 1, 0, 0, 0);
-			vkCmdEndRenderPass(graphics_command_buffers[i]);
+			vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(mesh_data.indices.size()), 1, 0, 0, 0);
+			vkCmdEndRenderPass(cmd_buffer);
 
-			if (vkEndCommandBuffer(graphics_command_buffers[i]) != VK_SUCCESS) 
-			{
-				LOG_VULKAN_FATAL("º«¬ºªÊ÷∆√¸¡Óª∫≥Â ß∞‹£°");
-			}
+			graphics_command_buffers[i]->end();
 		}
 	}
 
@@ -568,7 +545,7 @@ namespace flower{ namespace graphics{
 			// √ø∏ˆΩªªª¡¥ÕºœÒ∂º∞Û∂®∂‘”¶µƒ√Ë ˆ∑˚ºØ
 
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = uniformBuffers[i].buffer;
+			bufferInfo.buffer = uniformBuffers[i]->buffer;
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(uniform_buffer_mvp);
 

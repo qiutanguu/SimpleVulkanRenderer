@@ -102,8 +102,11 @@
     <ClInclude Include="core\log.h" />
     <ClInclude Include="core\ring_buffer.h" />
     <ClInclude Include="core\timer.h" />
+    <ClInclude Include="graphics\vk\vk_command_buffer.h" />
+    <ClInclude Include="graphics\vk\vk_texture.h" />
     <ClInclude Include="graphics\vk\vk_buffer.h" />
     <ClInclude Include="graphics\vk\vk_common.h" />
+    <ClInclude Include="graphics\vk_rhi.h" />
     <ClInclude Include="graphics\vk_runtime.h" />
     <ClInclude Include="graphics\vk\vk_device.h" />
     <ClInclude Include="graphics\vk\vk_instance.h" />
@@ -117,8 +120,11 @@
     <ClCompile Include="core\job_system.cpp" />
     <ClCompile Include="core\log.cpp" />
     <ClCompile Include="core\timer.cpp" />
+    <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
+    <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_buffer.cpp" />
     <ClCompile Include="graphics\vk\vk_common.cpp" />
+    <ClCompile Include="graphics\vk_rhi.cpp" />
     <ClCompile Include="graphics\vk_runtime.cpp" />
     <ClCompile Include="graphics\vk\vk_device.cpp" />
     <ClCompile Include="graphics\vk\vk_instance.cpp" />

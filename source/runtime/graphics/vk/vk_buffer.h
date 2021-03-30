@@ -5,17 +5,26 @@
 
 namespace flower { namespace graphics {
 	
-	// TODO: 添加内存池来管理vk_buffer
 	class vk_buffer
 	{
-	public:
-		vk_buffer(){  }
-		~vk_buffer() {}
-
-		void create(vk_device in_device,VkCommandPool in_commandpool,VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void *data);
-		
+		friend class std::shared_ptr<vk_buffer>;
+	private:
 		void destroy();
 
+	public:
+		~vk_buffer() { destroy(); }
+
+		// 废弃。请使用vk_buffer::create创建vk_buffer对象
+		vk_buffer(vk_device& indevice) : device(indevice){ }
+
+		static std::shared_ptr<vk_buffer> create(
+			vk_device& in_device,
+			VkCommandPool in_commandpool,
+			VkBufferUsageFlags usageFlags, 
+			VkMemoryPropertyFlags memoryPropertyFlags, 
+			VkDeviceSize size, 
+			void *data);
+		
 		VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 		void unmap();
 		VkResult bind(VkDeviceSize offset = 0);
@@ -25,7 +34,6 @@ namespace flower { namespace graphics {
 		VkResult invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 		void stage_copy_from(vk_buffer& inBuffer,VkDeviceSize size,VkQueue execute_queue);
 
-		bool has_created = false;
 		VkBuffer buffer = VK_NULL_HANDLE;
 		VkDeviceMemory memory = VK_NULL_HANDLE;
 		void* mapped = nullptr;
@@ -39,7 +47,7 @@ namespace flower { namespace graphics {
 	private:
 		bool create_buffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void *data);
 
-		vk_device device;
+		vk_device& device;
 		VkCommandPool commandpool;
 	};
 }}

@@ -21,7 +21,6 @@ namespace flower{ namespace graphics{
 		create_frame_buffers();
 		create_command_pool();
 		create_command_buffers();
-		create_sync_objects();
 
 		initialize_special();
 		
@@ -37,7 +36,6 @@ namespace flower{ namespace graphics{
 		destroy_frame_buffers();
 		destroy_command_buffers();
 		destroy_render_pass();
-		destroy_sync_objects();
 		destroy_command_pool();
 
 		swapchain.destroy();
@@ -70,8 +68,6 @@ namespace flower{ namespace graphics{
 		create_depth_resources();
 		create_frame_buffers();
 		create_command_buffers();
-
-		images_inFlight.resize(swapchain.get_imageViews().size(), VK_NULL_HANDLE);
 	}
 
 	void vk_runtime::cleanup_swapchain_default()
@@ -85,16 +81,16 @@ namespace flower{ namespace graphics{
 
 	void vk_runtime::create_command_buffers()
 	{
-		graphics_command_buffers.resize(swapchain_framebuffers.size());
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = graphics_command_pool;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = (uint32_t) graphics_command_buffers.size();
+		graphics_command_buffers.resize(0);
 
-		if (vkAllocateCommandBuffers(device, &allocInfo, graphics_command_buffers.data()) != VK_SUCCESS) 
+		for (size_t i = 0;i < swapchain_framebuffers.size();i++)
 		{
-			LOG_VULKAN_FATAL("申请图形CommandBuffer失败！");
+			graphics_command_buffers.push_back(vk_command_buffer::create(
+				device,
+				graphics_command_pool,
+				VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				device.graphics_queue
+			));
 		}
 	}
 
@@ -111,8 +107,6 @@ namespace flower{ namespace graphics{
 			framebuffer_resized = true;
 		}
 
-		vkWaitForFences(device, 1, &inFlight_fences[current_frame], VK_TRUE, UINT64_MAX);
-
 		// 检查交换链
 		uint32_t image_index;
 		VkResult result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, semaphores_image_available[current_frame], VK_NULL_HANDLE, &image_index);
@@ -127,44 +121,25 @@ namespace flower{ namespace graphics{
 			LOG_VULKAN_FATAL("请求交换链图片失败!");
 		}
 
-
-		if (images_inFlight[image_index] != VK_NULL_HANDLE) 
-		{
-			vkWaitForFences(device, 1, &images_inFlight[image_index], VK_TRUE, UINT64_MAX);
-		}
-		images_inFlight[image_index] = inFlight_fences[current_frame];
-
 		update_before_commit(image_index);
-	
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-		VkSemaphore waitSemaphores[] = { semaphores_image_available[current_frame]};
-		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
+		std::vector<VkSemaphore> wait_semaphores = {
+			semaphores_image_available[current_frame]
+		};
 
-		// 提交当前帧对应的CommandBuffer
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &graphics_command_buffers[image_index];
+		std::vector<VkPipelineStageFlags> wait_stages = { 
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT 
+		};
 
-		VkSemaphore signalSemaphores[] = { semaphores_render_finished[current_frame] };
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = signalSemaphores;
-
-		vkResetFences(device, 1, &inFlight_fences[current_frame]);
-
-		if (vkQueueSubmit(device.graphics_queue, 1, &submitInfo, inFlight_fences[current_frame]) != VK_SUCCESS) 
-		{
-			LOG_VULKAN_FATAL("提交绘制command buffer失败!");
-		}
+		graphics_command_buffers[image_index]->wait_flags = wait_stages;
+		graphics_command_buffers[image_index]->wait_semaphores = wait_semaphores;
+		graphics_command_buffers[image_index]->submit();
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSemaphores;
+		presentInfo.pWaitSemaphores = wait_semaphores.data();
 
 		VkSwapchainKHR swapChains[] = { swapchain };
 		presentInfo.swapchainCount = 1;
@@ -188,7 +163,7 @@ namespace flower{ namespace graphics{
 
 	void vk_runtime::destroy_command_buffers()
 	{
-		vkFreeCommandBuffers(device, graphics_command_pool, static_cast<uint32_t>(graphics_command_buffers.size()), graphics_command_buffers.data());
+		graphics_command_buffers.resize(0);
 	}
 
 	void vk_runtime::create_command_pool()
@@ -238,45 +213,6 @@ namespace flower{ namespace graphics{
 			depthFormat,
 			VK_IMAGE_ASPECT_DEPTH_BIT,
 			device);
-	}
-
-	void vk_runtime::create_sync_objects()
-	{
-		const auto image_nums = swapchain.get_images().size();
-
-		// 为每个处理中的帧添加同步讯号
-		semaphores_image_available.resize(MAX_FRAMES_IN_FLIGHT);
-		semaphores_render_finished.resize(MAX_FRAMES_IN_FLIGHT);
-		inFlight_fences.resize(MAX_FRAMES_IN_FLIGHT);
-		images_inFlight.resize(image_nums, VK_NULL_HANDLE);
-
-		VkSemaphoreCreateInfo semaphoreInfo{};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		VkFenceCreateInfo fenceInfo{};
-		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-		{
-			if (
-				vkCreateSemaphore(device, &semaphoreInfo, nullptr, &semaphores_image_available[i]) != VK_SUCCESS ||
-				vkCreateSemaphore(device, &semaphoreInfo, nullptr, &semaphores_render_finished[i]) != VK_SUCCESS ||
-				vkCreateFence(device, &fenceInfo, nullptr, &inFlight_fences[i]) != VK_SUCCESS)
-			{
-				LOG_VULKAN_FATAL("为帧对象创建同步对象时出错！");
-			}
-		}
-	}
-
-	void vk_runtime::destroy_sync_objects()
-	{
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-		{
-			vkDestroySemaphore(device, semaphores_image_available[i], nullptr);
-			vkDestroySemaphore(device, semaphores_render_finished[i], nullptr);
-			vkDestroyFence(device, inFlight_fences[i], nullptr);
-		}
 	}
 
 	void vk_runtime::create_frame_buffers()

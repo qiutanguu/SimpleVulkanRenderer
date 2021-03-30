@@ -8,6 +8,7 @@
 #include "core/camera.h"
 #include "core/interface.h"
 #include "vk/vk_swapchain.h"
+#include "vk/vk_command_buffer.h"
 
 namespace flower { namespace graphics{
 
@@ -94,9 +95,6 @@ namespace flower { namespace graphics{
 		void create_render_pass();
 		void destroy_render_pass();
 
-		void create_sync_objects();
-		void destroy_sync_objects();
-
 	protected:
 		GLFWwindow* window;
 		VkSurfaceKHR surface;
@@ -116,14 +114,7 @@ namespace flower { namespace graphics{
 		std::vector<VkFramebuffer> swapchain_framebuffers;
 
 		// 命令缓冲
-		std::vector<VkCommandBuffer> graphics_command_buffers;
-
-		// 同步
-		const int MAX_FRAMES_IN_FLIGHT = 2; // 同时处理的帧数
-		std::vector<VkSemaphore> semaphores_image_available;
-		std::vector<VkSemaphore> semaphores_render_finished;
-		std::vector<VkFence> inFlight_fences;
-		std::vector<VkFence> images_inFlight;
+		std::vector<std::shared_ptr<vk_command_buffer>> graphics_command_buffers;
 
 		
 

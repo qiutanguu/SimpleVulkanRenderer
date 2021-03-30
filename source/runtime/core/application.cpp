@@ -68,7 +68,7 @@ namespace flower
 
 		while (!glfwWindowShouldClose(window)) 
 		{
-			float current_time = glfwGetTime();
+			float current_time = (float)glfwGetTime();
 			delta_time = current_time - last_time;
 			last_time = current_time;
 			
@@ -103,16 +103,16 @@ namespace flower
 
 		if (cam.firstMouse)
 		{
-			cam.lastX = xpos;
-			cam.lastY = ypos;
+			cam.lastX = (float)xpos;
+			cam.lastY = (float)ypos;
 			cam.firstMouse = false;
 		}
 
-		float xoffset = xpos - cam.lastX;
-		float yoffset = cam.lastY - ypos; 
+		float xoffset = (float)xpos - cam.lastX;
+		float yoffset = cam.lastY - (float)ypos; 
 
-		cam.lastX = xpos;
-		cam.lastY = ypos;
+		cam.lastX = (float)xpos;
+		cam.lastY = (float)ypos;
 
 		cam.ProcessMouseMovement(xoffset, yoffset);
 	}
@@ -122,7 +122,7 @@ namespace flower
 		auto app = reinterpret_cast<application*>(glfwGetWindowUserPointer(window));
 		auto& cam = app->scene_view_cam;
 
-		cam.ProcessMouseScroll(yoffset);
+		cam.ProcessMouseScroll((float)yoffset);
 	}
 
 	void application::processInput(GLFWwindow *window)

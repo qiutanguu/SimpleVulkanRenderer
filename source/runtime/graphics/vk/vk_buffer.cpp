@@ -2,18 +2,21 @@
 
 namespace flower{ namespace graphics{
 
-	void vk_buffer::create(vk_device in_device,VkCommandPool in_commandpool,VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void *data)
+	std::shared_ptr<vk_buffer> vk_buffer::create(
+		vk_device& in_device,
+		VkCommandPool in_commandpool,
+		VkBufferUsageFlags usageFlags, 
+		VkMemoryPropertyFlags memoryPropertyFlags, 
+		VkDeviceSize size, 
+		void *data)
 	{
-		if(has_created)
-		{
-			LOG_VULKAN_ERROR("VkBuffer已经创建！再次创建将引起内存泄漏！");
-			return;
-		}
+		auto ret_buffer = std::make_shared<vk_buffer>(in_device);
 
-		device = in_device;
-		commandpool = in_commandpool;
+		ret_buffer->commandpool = in_commandpool;
 
-		create_buffer(usageFlags, memoryPropertyFlags, size,data);
+		ret_buffer->create_buffer(usageFlags, memoryPropertyFlags, size,data);
+
+		return ret_buffer;
 	}
 
 	VkResult vk_buffer::map(VkDeviceSize size, VkDeviceSize offset)
@@ -70,10 +73,6 @@ namespace flower{ namespace graphics{
 
 	bool vk_buffer::create_buffer(VkBufferUsageFlags usageFlags,VkMemoryPropertyFlags memoryPropertyFlags,VkDeviceSize size,void* data) 
 	{
-		if(has_created)
-		{
-			return false;
-		}
 
 		//1. 创建 buffer 句柄
 		VkBufferCreateInfo bufferInfo{};
@@ -112,7 +111,6 @@ namespace flower{ namespace graphics{
 		// 内存绑定到句柄中
 		vkBindBufferMemory(device, buffer, memory, 0);
 
-		has_created = true;
 		return true;
 	}
 
@@ -155,12 +153,6 @@ namespace flower{ namespace graphics{
 
 	void vk_buffer::destroy()
 	{
-		if(!has_created)
-		{
-			LOG_VULKAN_ERROR("正在析构未初始化的Buffer！");
-			return;
-		}
-
 		if (buffer != VK_NULL_HANDLE)
 		{
 			vkDestroyBuffer(device, buffer, nullptr);
@@ -169,6 +161,5 @@ namespace flower{ namespace graphics{
 		{
 			vkFreeMemory(device, memory, nullptr);
 		}
-		has_created = false;
 	}
 } }

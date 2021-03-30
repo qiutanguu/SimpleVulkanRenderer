@@ -17,6 +17,9 @@
     <ClInclude Include="graphics\vk\vk_sampler.h" />
     <ClInclude Include="graphics\vk\vk_swapchain.h" />
     <ClInclude Include="core\interface.h" />
+    <ClInclude Include="graphics\vk_rhi.h" />
+    <ClInclude Include="graphics\vk\vk_texture.h" />
+    <ClInclude Include="graphics\vk\vk_command_buffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -31,5 +34,8 @@
     <ClCompile Include="graphics\vk\vk_instance.cpp" />
     <ClCompile Include="graphics\mesh.cpp" />
     <ClCompile Include="graphics\vk\vk_swapchain.cpp" />
+    <ClCompile Include="graphics\vk_rhi.cpp" />
+    <ClCompile Include="graphics\vk\vk_texture.cpp" />
+    <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
   </ItemGroup>
 </Project>
