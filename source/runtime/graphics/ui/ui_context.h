@@ -1,6 +1,10 @@
 #pragma once
+#include "glfw/glfw3.h"
+#include "vulkan/vulkan.h"
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_vulkan.h"
 #include "../vk/vk_device.h"
-#include "../vk/vk_common.h"
 
 namespace flower { namespace graphics{
 	
@@ -9,21 +13,23 @@ namespace flower { namespace graphics{
 	public:
 		ui_context(
 			GLFWwindow* inWindow,
-			vk_device inDevice,
+			vk_device* inDevice,
 			VkSurfaceKHR inSurface,
 			VkInstance inInstance,
-			VkPhysicalDevice inGpu) : 
+			VkCommandPool in_command_pool) : 
 			window(inWindow),
 			device(inDevice),
 			surface(inSurface),
 			instance(inInstance),
-			gpu(inGpu)
+			command_pool(in_command_pool)
 		{
 			
 		}
 		~ui_context() { }
 
-		void initialize();
+		void initialize(uint32_t back_buffer_counts);
+
+		void draw_frame();
 		void destroy();
 	
 
@@ -32,46 +38,22 @@ namespace flower { namespace graphics{
 		VkDescriptorPool descriptor_pool;
 		VkPipelineCache pipeline_cache = VK_NULL_HANDLE;
 	private:
-		void create_descriptor_pool()
-		{
-			VkDescriptorPoolSize pool_sizes[] =
-			{
-				{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-			};
-			VkDescriptorPoolCreateInfo pool_info = {};
-			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-			pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
-			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-			pool_info.pPoolSizes = pool_sizes;
-
-			vk_check(vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptor_pool));
-		}
-
-		void destroy_descriptor_pool()
-		{
-			vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
-		}
+		void create_descriptor_pool();
+		void destroy_descriptor_pool();
+		
 		
 	private:
 		GLFWwindow* window;
 		VkInstance instance;
-		VkPhysicalDevice gpu;
-		vk_device& device;
+		VkCommandPool command_pool;
+		vk_device* device;
 
 		VkSurfaceKHR surface;
+		const uint32_t min_image_count = 2u;
 
-
+		bool show_demo_window = true;
+		bool show_another_window = false;
+		ImVec4 clear_color = ImVec4(0.45f,0.55f,0.60f,1.00f);
 	};
 
 }}

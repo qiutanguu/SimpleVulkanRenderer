@@ -27,12 +27,20 @@ namespace flower{ namespace graphics{
 		
 		// ¼ÇÂ¼³ß´ç´óÐ¡
 		glfwGetWindowSize(window, &last_width, &last_height);
+		ui_context_main = std::make_unique<ui_context>(
+			window,
+			&device,
+			surface,
+			instance,
+			graphics_command_pool);
+
+		ui_context_main->initialize(swapchain.get_imageViews().size());
 	}
 
 	void vk_runtime::destroy()
 	{
 		destroy_special();
-		
+		ui_context_main->destroy();
 		destroy_depth_resources();
 		destroy_frame_buffers();
 		destroy_command_buffers();
@@ -63,6 +71,8 @@ namespace flower{ namespace graphics{
 		}
 
 		vkDeviceWaitIdle(device);
+		ui_context_main->destroy();
+		
 		cleanup_swapchain();
 
 		swapchain.initialize(device,surface,window);
@@ -72,6 +82,7 @@ namespace flower{ namespace graphics{
 		create_command_buffers();
 
 		images_inFlight.resize(swapchain.get_imageViews().size(), VK_NULL_HANDLE);
+		ui_context_main->initialize(swapchain.get_imageViews().size());
 	}
 
 	void vk_runtime::create_sync_objects()

@@ -19,8 +19,10 @@
     <ClInclude Include="core\interface.h" />
     <ClInclude Include="graphics\vk\vk_texture.h" />
     <ClInclude Include="graphics\vk\vk_command_buffer.h" />
-    <ClInclude Include="graphics\ui\ui_shader.h" />
     <ClInclude Include="graphics\ui\ui_context.h" />
+    <ClInclude Include="graphics\ui\ui_shader.h" />
+    <ClInclude Include="graphics\ui\imgui_impl_glfw.h" />
+    <ClInclude Include="graphics\ui\imgui_impl_vulkan.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -38,6 +40,12 @@
     <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
     <ClCompile Include="graphics\ui\ui_context.cpp" />
-    <ClCompile Include="graphics\ui\Source.cpp" />
+    <ClCompile Include="graphics\ui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="graphics\ui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="graphics\ui\imgui.cpp" />
+    <ClCompile Include="graphics\ui\imgui_demo.cpp" />
+    <ClCompile Include="graphics\ui\imgui_draw.cpp" />
+    <ClCompile Include="graphics\ui\imgui_tables.cpp" />
+    <ClCompile Include="graphics\ui\imgui_widgets.cpp" />
   </ItemGroup>
 </Project>
