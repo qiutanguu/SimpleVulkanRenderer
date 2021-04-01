@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace flower { namespace ui{
+namespace flower { namespace graphics{ namespace ui_shader{
 
     static uint32_t glsl_shader_vert_spv[] =
     {
@@ -76,4 +76,4 @@ namespace flower { namespace ui{
         0x00000007,0x0000001d,0x00000012,0x0000001c,0x0003003e,0x00000009,0x0000001d,0x000100fd,
         0x00010038
     };
-} }
+} } }

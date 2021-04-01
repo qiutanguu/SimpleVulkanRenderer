@@ -25,8 +25,6 @@ namespace flower { namespace graphics{
 		vkDestroySwapchainKHR(device, swapchain, nullptr);
 	}
 
-	
-	
 	void vk_swapchain::create_swapchain()
 	{
 		auto swapchain_support = device.query_swapchain_support();
@@ -51,7 +49,7 @@ namespace flower { namespace graphics{
 		createInfo.imageFormat = surfaceFormat.format;
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
 		createInfo.imageExtent = extent;
-		createInfo.imageArrayLayers = 1; // 每个交换层理应只需要一张图片
+		createInfo.imageArrayLayers = 1; 
 		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 		auto indices = device.find_queue_families();
@@ -74,14 +72,9 @@ namespace flower { namespace graphics{
 			createInfo.pQueueFamilyIndices = nullptr; // Optional
 		}
 
-		// 不希望对图像进行旋转
 		createInfo.preTransform = swapchain_support.capabilities.currentTransform;
-
-		// 是否应将Alpha通道用于与窗口系统中的其他窗口混合
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		createInfo.presentMode = presentMode;
-
-		// VK_TRUE则意味着我们不在乎被遮盖的像素的颜色
 		createInfo.clipped = VK_TRUE; 
 
 		if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapchain) != VK_SUCCESS) 
@@ -104,7 +97,7 @@ namespace flower { namespace graphics{
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			createInfo.image = swapchain_images[i];
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 交换链一般为2D图片
+			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
 			createInfo.format = swapchain_imageFormat;
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;

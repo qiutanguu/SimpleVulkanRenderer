@@ -9,12 +9,6 @@ namespace flower { namespace graphics{
 			vkFreeCommandBuffers(device,pool,1,&command_buffer);
 			command_buffer = VK_NULL_HANDLE;
 		}
-
-		if(fence!=VK_NULL_HANDLE)
-		{
-			vkDestroyFence(device,fence,nullptr);
-			fence = VK_NULL_HANDLE;
-		}
 	}
 
 	void vk_command_buffer::begin(VkCommandBufferUsageFlagBits flag)
@@ -49,41 +43,6 @@ namespace flower { namespace graphics{
 		}
 	}
 
-	void vk_command_buffer::submit(VkSemaphore signal_semaphore)
-	{
-		end();
-
-		VkSubmitInfo submit_info{ };
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &command_buffer;
-
-		if(signal_semaphore != VK_NULL_HANDLE)
-		{
-			submit_info.signalSemaphoreCount =  1;
-			submit_info.pSignalSemaphores = &signal_semaphore;
-		}
-		else
-		{
-			submit_info.signalSemaphoreCount = 0;
-		}
-
-		if(wait_flags.size()>0)
-		{
-			submit_info.waitSemaphoreCount = wait_semaphores.size();
-			submit_info.pWaitSemaphores = wait_semaphores.data();
-			submit_info.pWaitDstStageMask = wait_flags.data();
-		}
-
-		vkResetFences(device,1,&fence);
-		if(vkQueueSubmit(queue,1,&submit_info,fence) != VK_SUCCESS)
-		{
-			LOG_VULKAN_FATAL("Ã·ΩªªÊ÷∆command buffer ß∞‹!");
-		}
-		vkWaitForFences(device,1,&fence,true,UINT64_MAX);
-	}
-
 	std::shared_ptr<vk_command_buffer> vk_command_buffer::create(
 		vk_device& in_device,
 		VkCommandPool command_pool,
@@ -113,11 +72,6 @@ namespace flower { namespace graphics{
 		{
 			LOG_VULKAN_FATAL("…Í«ÎÕº–ŒCommandBuffer ß∞‹£°");
 		}
-
-		VkFenceCreateInfo fenceCreateInfo{};
-		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceCreateInfo.flags = 0;
-		vkCreateFence(ret_command_buffer->device,&fenceCreateInfo,nullptr,&(ret_command_buffer->fence));
 
 		return ret_command_buffer;
 	}

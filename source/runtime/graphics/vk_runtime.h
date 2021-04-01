@@ -48,7 +48,6 @@ namespace flower { namespace graphics{
 		virtual void destroy() override final;
 		virtual void destroy_special() = 0;
 
-		// TODO: 重建交换链没有找到太好的抽象方法。
 		virtual void recreate_swapchain() = 0;
 		virtual void cleanup_swapchain() = 0;
 
@@ -70,10 +69,11 @@ namespace flower { namespace graphics{
 	protected:
 		void recreate_swapchain_default();
 		void cleanup_swapchain_default();
-		size_t current_frame = 0;
+		
 
-		void present(std::vector<VkSemaphore>& wait_semaphores,uint32_t back_buffer_index);
-		void acquire_next_present_image(uint32_t* image_index);
+		void submit(std::shared_ptr<vk_command_buffer> buffer_commit);
+		void present();
+		uint32_t acquire_next_present_image();
 	private:
 		void create_command_buffers();
 		void destroy_command_buffers();
@@ -114,6 +114,8 @@ namespace flower { namespace graphics{
 		// 命令缓冲
 		std::vector<std::shared_ptr<vk_command_buffer>> graphics_command_buffers;
 
+		uint32_t image_index;
+		uint32_t current_frame = 0;
 		const int MAX_FRAMES_IN_FLIGHT = 2; // 同时处理的帧数
 		std::vector<VkSemaphore> semaphores_image_available;
 		std::vector<VkSemaphore> semaphores_render_finished;

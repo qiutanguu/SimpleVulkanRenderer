@@ -18,12 +18,13 @@ namespace flower { namespace graphics{
 
 		void initialize(vk_device in_device,VkSurfaceKHR in_surface,GLFWwindow* in_window);
 		void destroy();
-
 		const VkExtent2D& get_swapchain_extent() const { return swapchain_extent; }
 		auto& get_images() { return swapchain_images; }
 		const VkFormat& get_swapchain_image_format() const { return swapchain_imageFormat;}
 		std::vector<VkImageView>& get_imageViews() { return swapchain_imageViews; }
 		VkSwapchainKHR& get_instance(){ return swapchain;}
+
+		uint32_t acquire_next_present_image();
 
 	private:
 		void create_swapchain();

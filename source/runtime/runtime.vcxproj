@@ -112,7 +112,8 @@
     <ClInclude Include="graphics\mesh.h" />
     <ClInclude Include="graphics\vk\vk_sampler.h" />
     <ClInclude Include="graphics\vk\vk_swapchain.h" />
-    <ClInclude Include="ui\ui_shader.h" />
+    <ClInclude Include="graphics\ui\ui_context.h" />
+    <ClInclude Include="graphics\ui\ui_shader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\application.cpp" />
@@ -120,6 +121,8 @@
     <ClCompile Include="core\job_system.cpp" />
     <ClCompile Include="core\log.cpp" />
     <ClCompile Include="core\timer.cpp" />
+    <ClCompile Include="graphics\ui\Source.cpp" />
+    <ClCompile Include="graphics\ui\ui_context.cpp" />
     <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
     <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_buffer.cpp" />
