@@ -9,7 +9,6 @@
 #include "core/interface.h"
 #include "vk/vk_swapchain.h"
 #include "vk/vk_command_buffer.h"
-#include "ui/ui_context.h"
 
 namespace flower { namespace graphics{
 
@@ -102,7 +101,6 @@ namespace flower { namespace graphics{
 		vk_device device;
 		vk_swapchain swapchain;
 		vk_depth_resource depth_resource;
-		std::unique_ptr<ui_context> ui_context_main = nullptr;
 
 		// 图形管线的Command Pool
 		VkCommandPool graphics_command_pool;

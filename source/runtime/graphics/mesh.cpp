@@ -15,13 +15,13 @@ namespace flower{ namespace graphics{
 			LOG_IO_FATAL("º”‘ÿƒ£–Õ{0} ß∞‹:{1}",path.c_str(),(warn + err).c_str());
 		}
 
-		std::unordered_map<vertex, uint32_t> uniqueVertices{};
+		std::unordered_map<using_vertex, uint32_t> uniqueVertices{};
 
 		for (const auto& shape : shapes) 
 		{
 			for (const auto& index : shape.mesh.indices) 
 			{
-				vertex one_vertex{};
+				using_vertex one_vertex{};
 
 				one_vertex.pos = 
 				{
@@ -30,7 +30,7 @@ namespace flower{ namespace graphics{
 					attrib.vertices[3 * index.vertex_index + 2]
 				};
 
-				one_vertex.texCoord = 
+				one_vertex.uv0 = 
 				{
 					attrib.texcoords[2 * index.texcoord_index + 0],
 					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]

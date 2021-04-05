@@ -2,6 +2,8 @@
 #include "graphics/vk_runtime.h"
 #include "graphics/vk/vk_buffer.h"
 #include "graphics/mesh.h"
+#include "graphics/vk/vk_vertex_buffer.h"
+#include "graphics/vk/vk_pipeline.h"
 #include "core/camera.h"
 
 namespace flower{ namespace graphics{
@@ -43,8 +45,8 @@ namespace flower{ namespace graphics{
 		void createDescriptorSet();
 
 		// pipeline 渲染管线
-		VkPipeline renderPipeline;
-		VkPipelineLayout pipelineLayout;
+		VkPipelineLayout pipeline_layout;
+		VkPipeline render_pipeline;
 		void createGraphicsPipeline();
 
 		// 纹理
@@ -57,8 +59,8 @@ namespace flower{ namespace graphics{
 		void createTextureSampler();
 
 		// 顶点buffer
-		std::shared_ptr<vk_buffer> vertexBuffer;
-		std::shared_ptr<vk_buffer> indexBuffer;
+		std::shared_ptr<vk_vertex_buffer> vertex_buffer;
+		std::shared_ptr<vk_index_buffer> index_buffer;
 		void upload_vertex_buffer();
 
 		camera& scene_view_cam;

@@ -76,6 +76,5 @@ namespace flower { namespace graphics{
 		return ret_command_buffer;
 	}
 
-
 } }
 

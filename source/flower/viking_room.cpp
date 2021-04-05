@@ -21,7 +21,10 @@ namespace flower{ namespace graphics{
 	void viking_room_scene::initialize_special()
 	{
 		mesh_data.load_obj_mesh("data/model/viking_room/viking_room.obj");
+		upload_vertex_buffer();
+
 		createDescriptorSetLayout();
+
 		createGraphicsPipeline();
 		createTextureImage();
 		createTextureImageView();
@@ -30,16 +33,13 @@ namespace flower{ namespace graphics{
 		createDescriptorPool();
 		createDescriptorSet();
 
-		// 初始化时将顶点数据上传到gpu
-		upload_vertex_buffer();
-
 		record_renderCommand();
 	}
 	
 	void viking_room_scene::destroy_special()
 	{
-		vkDestroyPipeline(device, renderPipeline, nullptr);
-		vkDestroyPipelineLayout(device,pipelineLayout,nullptr);
+		vkDestroyPipeline(device, render_pipeline, nullptr);
+		vkDestroyPipelineLayout(device,pipeline_layout,nullptr);
 
 		uniformBuffers.resize(0);
 
@@ -50,8 +50,8 @@ namespace flower{ namespace graphics{
 		vkFreeMemory(device, textureImageMemory, nullptr);
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-		vertexBuffer.reset();
-		indexBuffer.reset();
+		vertex_buffer.reset();
+		index_buffer.reset();
 	}
 
 	void viking_room_scene::recreate_swapchain()
@@ -69,9 +69,8 @@ namespace flower{ namespace graphics{
 	void viking_room_scene::cleanup_swapchain()
 	{
 		vk_runtime::cleanup_swapchain_default();
-
-		vkDestroyPipeline(device, renderPipeline, nullptr);
-		vkDestroyPipelineLayout(device,pipelineLayout,nullptr);
+		vkDestroyPipeline(device, render_pipeline, nullptr);
+		vkDestroyPipelineLayout(device,pipeline_layout,nullptr);
 		uniformBuffers.resize(0);
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 	}
@@ -96,50 +95,8 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::upload_vertex_buffer()
 	{
-		// 顶点缓存
-		VkDeviceSize bufferSize = sizeof(mesh_data.vertices[0]) * mesh_data.vertices.size();
-
-		auto stageBuffer = vk_buffer::create(
-			device,
-			graphics_command_pool,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			bufferSize,
-			(void *)(mesh_data.vertices.data())
-		);
-
-		// Vertex Buffer
-		vertexBuffer = vk_buffer::create(
-			device,
-			graphics_command_pool, 
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			bufferSize,
-			nullptr
-		);
-
-		vertexBuffer->stage_copy_from(*stageBuffer, bufferSize,device.graphics_queue);
-
-		bufferSize = sizeof(mesh_data.indices[0]) * mesh_data.indices.size();
-		stageBuffer = vk_buffer::create(
-			device,
-			graphics_command_pool, 
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			bufferSize,
-			(void *)(mesh_data.indices.data())
-		);
-
-		indexBuffer = vk_buffer::create(
-			device,
-			graphics_command_pool,  
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			bufferSize,
-			nullptr
-		);
-
-		indexBuffer->stage_copy_from(*stageBuffer, bufferSize,device.graphics_queue);
+		vertex_buffer = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_data.vertices);
+		index_buffer = vk_index_buffer::create(&device,graphics_command_pool,mesh_data.indices);
 	}
 
 	void viking_room_scene::createTextureSampler()
@@ -290,14 +247,15 @@ namespace flower{ namespace graphics{
 			renderPassInfo.pClearValues = clearValues.data();
 
 			vkCmdBeginRenderPass(cmd_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderPipeline);
 
-			VkBuffer vertexBuffers[] = { vertexBuffer->buffer };
-			VkDeviceSize offsets[] = {0};
+			vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline);
+			
 
-			vkCmdBindVertexBuffers(cmd_buffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(cmd_buffer, indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
-			vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
+			vertex_buffer->bind(cmd_buffer);
+			index_buffer->bind(cmd_buffer);
+
+
+			vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptorSets[i], 0, nullptr);
 
 			vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(mesh_data.indices.size()), 1, 0, 0, 0);
 			vkCmdEndRenderPass(cmd_buffer);
@@ -308,11 +266,26 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::createGraphicsPipeline()
 	{
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;
+
+		if(vkCreatePipelineLayout(device,&pipelineLayoutInfo,nullptr,&pipeline_layout)!=VK_SUCCESS)
+		{
+			LOG_VULKAN_FATAL("创建管线布局失败！");
+		}
+
 		auto vertShaderCode = read_file_binary("data/model/viking_room/viking_room_vert.spv");
 		auto fragShaderCode = read_file_binary("data/model/viking_room/viking_room_frag.spv");
 
 		vk_shader_module vertShaderModule(device.device,vertShaderCode);
 		vk_shader_module fragShaderModule(device.device,fragShaderCode);
+
+		auto bindingDescription = vertex_buffer->get_binding_func();
+		auto attributeDescriptions = vertex_buffer->get_attributes_func();
 
 		// 顶点着色器填充
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -331,8 +304,8 @@ namespace flower{ namespace graphics{
 		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 		// 管线顶点输入信息
-		auto bindingDescription = vertex::getBindingDescription();
-		auto attributeDescriptions = vertex::getAttributeDescriptions();
+		
+
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
@@ -420,16 +393,7 @@ namespace flower{ namespace graphics{
 		// Pipeline动态状态
 		// 在视口大小改变等状态下，复用Pipeline而不是重新创建
 		// 管道Layout （Uniform、 Sampler）等
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 1; 
-		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout; 
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-		pipelineLayoutInfo.pPushConstantRanges = nullptr; 
-		if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) 
-		{
-			LOG_VULKAN_FATAL("创建管线布局失败！");
-		}
+		
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -457,13 +421,13 @@ namespace flower{ namespace graphics{
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = nullptr; 
-		pipelineInfo.layout = pipelineLayout;
+		pipelineInfo.layout = pipeline_layout;
 		pipelineInfo.renderPass = render_pass;
 		pipelineInfo.subpass = 0; // sub Pass 索引
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; 
 		pipelineInfo.basePipelineIndex = -1; 
 
-		if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &renderPipeline) != VK_SUCCESS) 
+		if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &render_pipeline) != VK_SUCCESS) 
 		{
 			LOG_VULKAN_FATAL("创建管线pipeline失败！");
 		}

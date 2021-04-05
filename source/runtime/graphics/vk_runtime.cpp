@@ -27,20 +27,11 @@ namespace flower{ namespace graphics{
 		
 		// 记录尺寸大小
 		glfwGetWindowSize(window, &last_width, &last_height);
-		ui_context_main = std::make_unique<ui_context>(
-			window,
-			&device,
-			surface,
-			instance,
-			graphics_command_pool);
-
-		ui_context_main->initialize(swapchain.get_imageViews().size());
 	}
 
 	void vk_runtime::destroy()
 	{
 		destroy_special();
-		ui_context_main->destroy();
 		destroy_depth_resources();
 		destroy_frame_buffers();
 		destroy_command_buffers();
@@ -71,7 +62,6 @@ namespace flower{ namespace graphics{
 		}
 
 		vkDeviceWaitIdle(device);
-		ui_context_main->destroy();
 		
 		cleanup_swapchain();
 
@@ -82,7 +72,6 @@ namespace flower{ namespace graphics{
 		create_command_buffers();
 
 		images_inFlight.resize(swapchain.get_imageViews().size(), VK_NULL_HANDLE);
-		ui_context_main->initialize(swapchain.get_imageViews().size());
 	}
 
 	void vk_runtime::create_sync_objects()
@@ -156,7 +145,7 @@ namespace flower{ namespace graphics{
 		// 等待交换链图片可用。
 		std::vector<VkSemaphore> wait_semaphores = { semaphores_image_available[current_frame] };
 		std::vector<VkPipelineStageFlags> wait_stages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		submitInfo.waitSemaphoreCount = wait_semaphores.size();
+		submitInfo.waitSemaphoreCount = (uint32_t)wait_semaphores.size();
 		submitInfo.pWaitSemaphores = wait_semaphores.data();
 		submitInfo.pWaitDstStageMask = wait_stages.data();
 

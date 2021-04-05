@@ -13,9 +13,9 @@ namespace flower { namespace graphics {
 
 	public:
 		~vk_buffer() { destroy(); }
-
-		// 废弃。请使用vk_buffer::create创建vk_buffer对象
 		vk_buffer(vk_device& indevice) : device(indevice){ }
+		operator VkBuffer() { return buffer; }
+		operator VkDeviceMemory() { return memory; }
 
 		static std::shared_ptr<vk_buffer> create(
 			vk_device& in_device,

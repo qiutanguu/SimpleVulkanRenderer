@@ -19,10 +19,13 @@
     <ClInclude Include="core\interface.h" />
     <ClInclude Include="graphics\vk\vk_texture.h" />
     <ClInclude Include="graphics\vk\vk_command_buffer.h" />
-    <ClInclude Include="graphics\ui\ui_context.h" />
-    <ClInclude Include="graphics\ui\ui_shader.h" />
-    <ClInclude Include="graphics\ui\imgui_impl_glfw.h" />
-    <ClInclude Include="graphics\ui\imgui_impl_vulkan.h" />
+    <ClInclude Include="graphics\vk\vk_vertex_buffer.h" />
+    <ClInclude Include="graphics\global_uniform_buffers.h" />
+    <ClInclude Include="graphics\vk\vk_shader.h" />
+    <ClInclude Include="graphics\vk\vk_descriptor.h" />
+    <ClInclude Include="graphics\vk\vk_pipeline.h" />
+    <ClInclude Include="graphics\material.h" />
+    <ClInclude Include="graphics\render_target.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -39,13 +42,11 @@
     <ClCompile Include="graphics\vk\vk_swapchain.cpp" />
     <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
-    <ClCompile Include="graphics\ui\ui_context.cpp" />
-    <ClCompile Include="graphics\ui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="graphics\ui\imgui_impl_vulkan.cpp" />
-    <ClCompile Include="graphics\ui\imgui.cpp" />
-    <ClCompile Include="graphics\ui\imgui_demo.cpp" />
-    <ClCompile Include="graphics\ui\imgui_draw.cpp" />
-    <ClCompile Include="graphics\ui\imgui_tables.cpp" />
-    <ClCompile Include="graphics\ui\imgui_widgets.cpp" />
+    <ClCompile Include="graphics\vk\vk_vertex_buffer.cpp" />
+    <ClCompile Include="graphics\vk\vk_shader.cpp" />
+    <ClCompile Include="graphics\vk\vk_descriptor.cpp" />
+    <ClCompile Include="graphics\vk\vk_pipeline.cpp" />
+    <ClCompile Include="graphics\material.cpp" />
+    <ClCompile Include="graphics\render_target.cpp" />
   </ItemGroup>
 </Project>

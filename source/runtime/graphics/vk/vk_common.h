@@ -65,6 +65,10 @@ namespace flower { namespace graphics {
 	{
 		constexpr auto VS = "main";
 		constexpr auto FS = "main";
+		constexpr auto GS = "main";
+		constexpr auto TSE = "main";
+		constexpr auto TSC = "main";
+		constexpr auto CS = "main";
 	}
 
 	// …Ó∂»ª∫≥Â
