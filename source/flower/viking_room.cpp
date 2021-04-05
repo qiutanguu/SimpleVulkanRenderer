@@ -20,15 +20,15 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::initialize_special()
 	{
-		mesh_data.load_obj_mesh("data/model/viking_room/viking_room.obj");
+		mesh_data.load_obj_mesh_new("data/model/viking_room/viking_room.obj","");
+		// mesh_sponza.load_obj_mesh_new("data/model/sponza/sponza.obj");
 		upload_vertex_buffer();
 
 		createDescriptorSetLayout();
 
 		createGraphicsPipeline();
 		createTextureImage();
-		createTextureImageView();
-		createTextureSampler();
+
 		create_uniform_buffer();
 		createDescriptorPool();
 		createDescriptorSet();
@@ -44,10 +44,7 @@ namespace flower{ namespace graphics{
 		uniformBuffers.resize(0);
 
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-		vkDestroySampler(device, textureSampler, nullptr);
-		vkDestroyImageView(device, textureImageView, nullptr);
-		vkDestroyImage(device, textureImage, nullptr);
-		vkFreeMemory(device, textureImageMemory, nullptr);
+		mesh_texture.reset();
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
 		vertex_buffer.reset();
@@ -99,39 +96,6 @@ namespace flower{ namespace graphics{
 		index_buffer = vk_index_buffer::create(&device,graphics_command_pool,mesh_data.indices);
 	}
 
-	void viking_room_scene::createTextureSampler()
-	{
-		VkSamplerCreateInfo samplerInfo{};
-		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
-
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-
-		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(device.physical_device, &properties);
-
-		samplerInfo.anisotropyEnable = VK_TRUE;
-		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-		samplerInfo.unnormalizedCoordinates = VK_FALSE;
-
-		samplerInfo.compareEnable = VK_FALSE;
-		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-
-		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		samplerInfo.mipLodBias = 0.0f;
-		samplerInfo.minLod = 0.0f;
-		samplerInfo.maxLod = 0.0f;
-
-		if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) 
-		{
-			LOG_VULKAN_FATAL("创建纹理采样器失败！");
-		}
-	}
-
 	void viking_room_scene::create_uniform_buffer()
 	{
 		VkDeviceSize bufferSize = sizeof(uniform_buffer_mvp);
@@ -153,74 +117,17 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void viking_room_scene::createTextureImageView()
-	{
-		textureImageView = create_imageView(&textureImage, VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT,device);
-	}
-
 	void viking_room_scene::createTextureImage()
 	{
-		auto path = "data/model/viking_room/viking_room.png";
-		int texWidth, texHeight, texChannels;
-		stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		VkDeviceSize imageSize = texWidth * texHeight * 4;
+		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,"data/model/viking_room/viking_room.png");
 
-		if (!pixels) 
-		{
-			LOG_IO_FATAL("加载图片{0}失败！",path);
-		}
-
-		auto stageBuffer = vk_buffer::create(
-			device,
-			graphics_command_pool,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			imageSize,
-			pixels
-		);
-
-		stbi_image_free(pixels);
-
-		create_image(
-			texWidth, 
-			texHeight, 
-			VK_FORMAT_R8G8B8A8_SRGB, 
-			VK_IMAGE_TILING_OPTIMAL, 
-			VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-			textureImage, 
-			textureImageMemory,
-			device
-		);
-
-		transition_image_layout(
-			textureImage, 
-			VK_FORMAT_R8G8B8A8_SRGB, 
-			VK_IMAGE_LAYOUT_UNDEFINED,
-			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			graphics_command_pool,
-			device,
-			device.graphics_queue
-		);
-
-		copy_buffer_to_image(
-			stageBuffer->buffer, 
-			textureImage, 
-			static_cast<uint32_t>(texWidth), 
-			static_cast<uint32_t>(texHeight),
-			graphics_command_pool,
-			device,
-			device.graphics_queue
-		);
-
-		transition_image_layout(
-			textureImage, 
-			VK_FORMAT_R8G8B8A8_SRGB, 
-			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			graphics_command_pool,
-			device,
-			device.graphics_queue
+		mesh_texture->update_sampler(
+			VK_FILTER_LINEAR,
+			VK_FILTER_LINEAR,
+			VK_SAMPLER_MIPMAP_MODE_LINEAR,
+			VK_SAMPLER_ADDRESS_MODE_REPEAT,
+			VK_SAMPLER_ADDRESS_MODE_REPEAT,
+			VK_SAMPLER_ADDRESS_MODE_REPEAT
 		);
 	}
 
@@ -266,18 +173,6 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::createGraphicsPipeline()
 	{
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;
-
-		if(vkCreatePipelineLayout(device,&pipelineLayoutInfo,nullptr,&pipeline_layout)!=VK_SUCCESS)
-		{
-			LOG_VULKAN_FATAL("创建管线布局失败！");
-		}
-
 		auto vertShaderCode = read_file_binary("data/model/viking_room/viking_room_vert.spv");
 		auto fragShaderCode = read_file_binary("data/model/viking_room/viking_room_frag.spv");
 
@@ -289,23 +184,15 @@ namespace flower{ namespace graphics{
 
 		// 顶点着色器填充
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = vertShaderModule.get_handle();
-		vertShaderStageInfo.pName = shader_main_function_name::VS;
+		pipeline::shader_vertex_config(vertShaderStageInfo,vertShaderModule.get_handle());
 
 		// 片元着色器填充
 		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = fragShaderModule.get_handle();
-		fragShaderStageInfo.pName = shader_main_function_name::FS;
+		pipeline::shader_fragment_config(fragShaderStageInfo,fragShaderModule.get_handle());
 
 		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 		// 管线顶点输入信息
-		
-
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
@@ -315,9 +202,7 @@ namespace flower{ namespace graphics{
 
 		// 组件信息
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
+		pipeline::input_assembly_config(inputAssembly);
 
 		// 视口和裁剪区域
 		VkViewport viewport{};
@@ -331,69 +216,26 @@ namespace flower{ namespace graphics{
 		scissor.offset = {0, 0};
 		scissor.extent = swapchain.get_swapchain_extent();
 		VkPipelineViewportStateCreateInfo viewportState{};
-		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportState.viewportCount = 1;
-		viewportState.pViewports = &viewport;
-		viewportState.scissorCount = 1;
-		viewportState.pScissors = &scissor;
+		pipeline::viewport_config(viewportState,&viewport,&scissor);
 
 		// 光栅化器配置
 		VkPipelineRasterizationStateCreateInfo rasterizer{};
-		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizer.depthClampEnable = VK_FALSE;
-		rasterizer.rasterizerDiscardEnable = VK_FALSE;
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode =     VK_CULL_MODE_NONE;
-		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		rasterizer.depthBiasEnable = VK_FALSE;
-		rasterizer.depthBiasConstantFactor = 0.0f; 
-		rasterizer.depthBiasClamp = 0.0f; 
-		rasterizer.depthBiasSlopeFactor = 0.0f; 
+		pipeline::rasterizer_config(rasterizer);
 
 		// MSAA
 		VkPipelineMultisampleStateCreateInfo multisampling{};
-		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-		multisampling.minSampleShading = 1.0f;
-		multisampling.pSampleMask = nullptr;
-		multisampling.alphaToCoverageEnable = VK_FALSE; 
-		multisampling.alphaToOneEnable = VK_FALSE;
+		pipeline::msaa_config(multisampling);
 
 		// 混合
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
-		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; 
-		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; 
-		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; 
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; 
-		colorBlendAttachment.blendEnable = VK_TRUE;
-		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
-		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.logicOpEnable = VK_FALSE;
-		colorBlending.logicOp = VK_LOGIC_OP_COPY; 
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlendAttachment;
-		colorBlending.blendConstants[0] = 0.0f; 
-		colorBlending.blendConstants[1] = 0.0f; 
-		colorBlending.blendConstants[2] = 0.0f; 
-		colorBlending.blendConstants[3] = 0.0f; 
+		pipeline::colorBlendAttachment_config(colorBlendAttachment);
+		pipeline::colorBlend_config(colorBlending,&colorBlendAttachment);
 
-		// Pipeline动态状态
-		// 在视口大小改变等状态下，复用Pipeline而不是重新创建
-		// 管道Layout （Uniform、 Sampler）等
-		
+		// 深度和模板测试
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		pipeline::depthStencil_config(depthStencil);
+
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -404,20 +246,6 @@ namespace flower{ namespace graphics{
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizer;
 		pipelineInfo.pMultisampleState = &multisampling;
-
-		// 深度和模板测试
-		VkPipelineDepthStencilStateCreateInfo depthStencil{};
-		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
-		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-		depthStencil.depthBoundsTestEnable = VK_FALSE;
-		depthStencil.minDepthBounds = 0.0f; 
-		depthStencil.maxDepthBounds = 1.0f; 
-		depthStencil.stencilTestEnable = VK_FALSE;
-		depthStencil.front = {}; 
-		depthStencil.back = {}; 
-
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = nullptr; 
@@ -489,6 +317,18 @@ namespace flower{ namespace graphics{
 		{
 			LOG_VULKAN_FATAL("创建描述符集布局失败！");
 		}
+
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;
+
+		if(vkCreatePipelineLayout(device,&pipelineLayoutInfo,nullptr,&pipeline_layout)!=VK_SUCCESS)
+		{
+			LOG_VULKAN_FATAL("创建管线布局失败！");
+		}
 	}
 
 	void viking_room_scene::createDescriptorSet()
@@ -517,11 +357,6 @@ namespace flower{ namespace graphics{
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(uniform_buffer_mvp);
 
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = textureImageView;
-			imageInfo.sampler = textureSampler;
-
 			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -538,7 +373,7 @@ namespace flower{ namespace graphics{
 			descriptorWrites[1].dstArrayElement = 0;
 			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptorWrites[1].descriptorCount = 1;
-			descriptorWrites[1].pImageInfo = &imageInfo;
+			descriptorWrites[1].pImageInfo = &(mesh_texture->descriptor_info);
 
 			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 		}

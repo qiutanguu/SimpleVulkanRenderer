@@ -63,6 +63,8 @@ namespace flower{ namespace graphics{
 		std::vector<uint32_t> indices;
 
 		void load_obj_mesh(std::string path);
+
+		void load_obj_mesh_new(std::string mesh_path,std::string mat_path);
 	};
 
 } }

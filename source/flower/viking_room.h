@@ -4,6 +4,7 @@
 #include "graphics/mesh.h"
 #include "graphics/vk/vk_vertex_buffer.h"
 #include "graphics/vk/vk_pipeline.h"
+#include "graphics/vk/vk_texture.h"
 #include "core/camera.h"
 
 namespace flower{ namespace graphics{
@@ -35,6 +36,7 @@ namespace flower{ namespace graphics{
 		void record_renderCommand();
 
 		mesh mesh_data = {};
+		mesh mesh_sponza = {};
 
 		// 图形管线描述符池
 		VkDescriptorPool descriptorPool;
@@ -50,13 +52,8 @@ namespace flower{ namespace graphics{
 		void createGraphicsPipeline();
 
 		// 纹理
-		VkImage textureImage;
-		VkDeviceMemory textureImageMemory;
-		VkImageView textureImageView;
-		VkSampler textureSampler;
+		std::shared_ptr<vk_texture> mesh_texture;
 		void createTextureImage();
-		void createTextureImageView();
-		void createTextureSampler();
 
 		// 顶点buffer
 		std::shared_ptr<vk_vertex_buffer> vertex_buffer;

@@ -1,28 +1,32 @@
 #pragma once
 #include "vk_common.h"
 #include "vk_command_buffer.h"
+#include "vk_device.h"
 
 namespace flower { namespace graphics{
 
-	struct vk_texture
+	class vk_texture
 	{
-		VkDevice device;
+	private:
+		vk_device* device;
+
+	public:
 		VkImage image;
-		VkImageLayout image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 		VkDeviceMemory image_memory = VK_NULL_HANDLE;
 		VkImageView image_view = VK_NULL_HANDLE;
 		VkSampler image_sampler = VK_NULL_HANDLE;
-		VkDescriptorImageInfo descriptor_info;
+
+		VkImageLayout image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+		VkDescriptorImageInfo descriptor_info{ };
+
 		int32_t width = 0;
 		int32_t height = 0;
-		int32_t depth = 1;
-		int32_t mipLevels = 0;
-		int32_t layerCount = 1;
-		VkSampleCountFlagBits num_samples = VK_SAMPLE_COUNT_1_BIT;
-		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
-		bool is_cube_map = false;
+		int32_t channels = 1;
 
-		vk_texture(){ }
+		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+
+		vk_texture(vk_device* in_device): device(in_device){ }
 		~vk_texture();
 		void update_sampler(
 			VkFilter mag_filter = VK_FILTER_LINEAR, 
@@ -35,14 +39,9 @@ namespace flower { namespace graphics{
 
 	#pragma region creator
 		static std::shared_ptr<vk_texture> create_2d(
-			const uint8_t* rgbaData, 
-			uint32_t size, 
-			VkFormat format, 
-			int32_t width, 
-			int32_t height, 
-			vk_device* in_device, 
-			std::shared_ptr<vk_command_buffer> in_cmd_buffer, 
-			VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+			vk_device* in_device,
+			VkCommandPool in_pool,
+			const std::string& image_path
 		); 
 	#pragma endregion
 	};
