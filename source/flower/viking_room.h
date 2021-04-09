@@ -53,11 +53,16 @@ namespace flower{ namespace graphics{
 
 		// Œ∆¿Ì
 		std::shared_ptr<vk_texture> mesh_texture;
+		std::vector<std::shared_ptr<vk_texture>> sponza_textures;
 		void createTextureImage();
 
 		// ∂•µ„buffer
 		std::shared_ptr<vk_vertex_buffer> vertex_buffer;
 		std::shared_ptr<vk_index_buffer> index_buffer;
+
+		std::shared_ptr<vk_vertex_buffer> sponza_vertex_buffer;
+		std::vector<std::shared_ptr<vk_index_buffer>> sponza_index_buffer;
+
 		void upload_vertex_buffer();
 
 		camera& scene_view_cam;

@@ -21,7 +21,7 @@ namespace flower{ namespace graphics{
 	void viking_room_scene::initialize_special()
 	{
 		mesh_data.load_obj_mesh_new("data/model/viking_room/viking_room.obj","");
-		// mesh_sponza.load_obj_mesh_new("data/model/sponza/sponza.obj");
+		mesh_sponza.load_obj_mesh_new("data/model/sponza/sponza.obj","");
 		upload_vertex_buffer();
 
 		createDescriptorSetLayout();
@@ -45,10 +45,14 @@ namespace flower{ namespace graphics{
 
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 		mesh_texture.reset();
+		sponza_textures.resize(0);
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
 		vertex_buffer.reset();
 		index_buffer.reset();
+
+		sponza_vertex_buffer.reset();
+		sponza_index_buffer.resize(0);
 	}
 
 	void viking_room_scene::recreate_swapchain()
@@ -80,7 +84,7 @@ namespace flower{ namespace graphics{
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 		uniform_buffer_mvp ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 
 		ubo.view = scene_view_cam.get_view_matrix();
 		ubo.proj = scene_view_cam.GetProjectMatrix(swapchain.get_swapchain_extent().width,swapchain.get_swapchain_extent().height);
@@ -94,6 +98,14 @@ namespace flower{ namespace graphics{
 	{
 		vertex_buffer = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_data.vertices);
 		index_buffer = vk_index_buffer::create(&device,graphics_command_pool,mesh_data.indices);
+
+		sponza_vertex_buffer = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_sponza.vertices);
+		for (auto& submesh : mesh_sponza.sub_meshes)
+		{
+			auto& indices = submesh.indices;
+			sponza_index_buffer.push_back(vk_index_buffer::create(&device,graphics_command_pool,indices));
+		}
+		
 	}
 
 	void viking_room_scene::create_uniform_buffer()
@@ -119,7 +131,31 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::createTextureImage()
 	{
-		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,"data/model/viking_room/viking_room.png");
+		sponza_textures.resize(mesh_sponza.sub_meshes.size());
+		
+		for (size_t i = 0; i < mesh_sponza.sub_meshes.size(); i ++)
+		{
+			std::string pathpad = "data/model/sponza/";
+
+			if(mesh_sponza.sub_meshes[i].material_using.map_Kd_set && mesh_sponza.sub_meshes[i].material_using.map_Kd!= "")
+			{
+				std::string combinePath = pathpad + mesh_sponza.sub_meshes[i].material_using.map_Kd;
+
+				sponza_textures[i] = vk_texture::create_2d(&device,graphics_command_pool,combinePath);
+
+				sponza_textures[i]->update_sampler(
+					VK_FILTER_LINEAR,
+					VK_FILTER_LINEAR,
+					VK_SAMPLER_MIPMAP_MODE_LINEAR,
+					VK_SAMPLER_ADDRESS_MODE_REPEAT,
+					VK_SAMPLER_ADDRESS_MODE_REPEAT,
+					VK_SAMPLER_ADDRESS_MODE_REPEAT
+				);
+			}
+
+		}
+		
+		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,"data/model/viking_room/viking_room.jpg");
 
 		mesh_texture->update_sampler(
 			VK_FILTER_LINEAR,
@@ -154,19 +190,24 @@ namespace flower{ namespace graphics{
 			renderPassInfo.pClearValues = clearValues.data();
 
 			vkCmdBeginRenderPass(cmd_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
 			vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline);
-			
 
-			vertex_buffer->bind(cmd_buffer);
-			index_buffer->bind(cmd_buffer);
+			// bind VAO
+			sponza_vertex_buffer->bind(cmd_buffer);
 
+			for (int32_t j = 0; j < mesh_sponza.sub_meshes.size(); j++)
+			{
+				auto index = i * mesh_sponza.sub_meshes.size() + j;
 
-			vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptorSets[i], 0, nullptr);
+				vkCmdBindDescriptorSets(cmd_buffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipeline_layout,0,1,&descriptorSets[index],0,nullptr);
 
-			vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(mesh_data.indices.size()), 1, 0, 0, 0);
+				auto& buf = sponza_index_buffer[j];
+				buf->bind(cmd_buffer);
+				
+				vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(mesh_sponza.sub_meshes[j].indices.size()), 1, 0, 0, 0);
+			}
+
 			vkCmdEndRenderPass(cmd_buffer);
-
 			graphics_command_buffers[i]->end();
 		}
 	}
@@ -269,17 +310,17 @@ namespace flower{ namespace graphics{
 
 		// 第一种类型选择 uniform buffer
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapchainnums);
+		poolSizes[0].descriptorCount = 1000u;// static_cast<uint32_t>(swapchainnums);
 
 		// 第二种类型选择 combine_Image_sampler
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapchainnums);
+		poolSizes[1].descriptorCount = 1000u; //static_cast<uint32_t>(swapchainnums);
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(swapchainnums);
+		poolInfo.maxSets = 10000u; // static_cast<uint32_t>(swapchainnums);
 
 		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) 
 		{
@@ -335,14 +376,15 @@ namespace flower{ namespace graphics{
 	{
 		const auto& swapchain_num = swapchain.get_imageViews().size();
 
-		std::vector<VkDescriptorSetLayout> layouts(swapchain_num, descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> layouts(swapchain_num * mesh_sponza.sub_meshes.size(), descriptorSetLayout);
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = descriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(swapchain_num);
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(swapchain_num * mesh_sponza.sub_meshes.size());
 		allocInfo.pSetLayouts = layouts.data();
 
-		descriptorSets.resize(swapchain_num);
+		// 为每个交换链每个sub mesh 添加一个描述符集
+		descriptorSets.resize(swapchain_num * mesh_sponza.sub_meshes.size());
 		if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) 
 		{
 			LOG_VULKAN_FATAL("申请描述符集失败！");
@@ -351,31 +393,45 @@ namespace flower{ namespace graphics{
 		for (size_t i = 0; i < swapchain_num; i++)
 		{
 			// 每个交换链图像都绑定对应的描述符集
+			auto& texture = mesh_texture->descriptor_info;
 
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = uniformBuffers[i]->buffer;
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(uniform_buffer_mvp);
+			for (size_t j = 0; j < mesh_sponza.sub_meshes.size(); j ++)
+			{
+				auto index = i * mesh_sponza.sub_meshes.size() + j;
 
-			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+				if (mesh_sponza.sub_meshes[j].material_using.map_Kd != "")
+				{
+					texture = sponza_textures[j]->descriptor_info;
+				}
+				
 
-			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = descriptorSets[i];
-			descriptorWrites[0].dstBinding = 0;
-			descriptorWrites[0].dstArrayElement = 0;
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrites[0].descriptorCount = 1;
-			descriptorWrites[0].pBufferInfo = &bufferInfo;
+				VkDescriptorBufferInfo bufferInfo{};
+				bufferInfo.buffer = uniformBuffers[i]->buffer;
+				bufferInfo.offset = 0;
+				bufferInfo.range = sizeof(uniform_buffer_mvp);
 
-			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[1].dstSet = descriptorSets[i];
-			descriptorWrites[1].dstBinding = 1;
-			descriptorWrites[1].dstArrayElement = 0;
-			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrites[1].descriptorCount = 1;
-			descriptorWrites[1].pImageInfo = &(mesh_texture->descriptor_info);
+				std::array<VkWriteDescriptorSet,2> descriptorWrites{};
 
-			vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+				descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[0].dstSet = descriptorSets[index];
+				descriptorWrites[0].dstBinding = 0;
+				descriptorWrites[0].dstArrayElement = 0;
+				descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				descriptorWrites[0].descriptorCount = 1;
+				descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+				descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[1].dstSet = descriptorSets[index];
+				descriptorWrites[1].dstBinding = 1;
+				descriptorWrites[1].dstArrayElement = 0;
+				descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				descriptorWrites[1].descriptorCount = 1;
+				descriptorWrites[1].pImageInfo = &texture;
+
+				vkUpdateDescriptorSets(device,static_cast<uint32_t>(descriptorWrites.size()),descriptorWrites.data(),0,nullptr);
+			}
+
+			
 		}
 	}
 

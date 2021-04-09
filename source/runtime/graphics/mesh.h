@@ -53,16 +53,30 @@ namespace flower{ namespace graphics{
 		}
 	};
 
+	struct material
+	{
+		std::string map_Kd; // diffuse
+		bool map_Kd_set  = false;
+
+	};
+
+	struct sub_mesh
+	{
+		std::vector<uint32_t> indices;
+
+		material material_using;
+	};
 	
 	// 按材质划分Mesh
 	struct mesh
 	{
 		using using_vertex = vertex_pcu;
 
+		std::vector<sub_mesh> sub_meshes;
+
+		// 存储的所有顶点
 		std::vector<using_vertex> vertices;
 		std::vector<uint32_t> indices;
-
-		void load_obj_mesh(std::string path);
 
 		void load_obj_mesh_new(std::string mesh_path,std::string mat_path);
 	};
