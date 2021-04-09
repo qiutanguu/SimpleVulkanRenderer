@@ -139,7 +139,7 @@ namespace flower { namespace graphics {
 		VkDevice& device;
 	};
 
-	inline VkImageView create_imageView(VkImage* image,VkFormat format, VkImageAspectFlags aspectFlags,VkDevice device)
+	inline VkImageView create_imageView(VkImage* image,VkFormat format, VkImageAspectFlags aspectFlags,VkDevice device,uint32_t mipMaplevels = 1)
 	{
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -148,7 +148,7 @@ namespace flower { namespace graphics {
 		viewInfo.format = format;
 		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		viewInfo.subresourceRange.baseMipLevel = 0;
-		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.levelCount = mipMaplevels;
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 		viewInfo.subresourceRange.aspectMask = aspectFlags;
@@ -277,7 +277,8 @@ namespace flower { namespace graphics {
 		VkImageLayout newLayout,
 		VkCommandPool commandpool,
 		VkDevice device,
-		VkQueue in_graphics_queue)
+		VkQueue in_graphics_queue,
+		uint32_t mipmapLevels = 1)
 	{
 		VkCommandBuffer commandBuffer = begin_single_time_commands(commandpool,device);
 
@@ -290,7 +291,7 @@ namespace flower { namespace graphics {
 		barrier.image = image;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.levelCount = mipmapLevels;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = 1;
 
@@ -305,8 +306,7 @@ namespace flower { namespace graphics {
 			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		}
-		else if 
-		(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
 		{
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -340,7 +340,8 @@ namespace flower { namespace graphics {
 		VkMemoryPropertyFlags properties,
 		VkImage& image,
 		VkDeviceMemory& imageMemory,
-		class vk_device& in_device);
+		class vk_device& in_device,
+		uint32_t miplevels = 1);
 
 	inline void create_texture2D_imageView(VkImage* image,VkImageView* view,VkDevice device)
 	{

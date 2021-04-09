@@ -11,6 +11,8 @@ namespace flower { namespace graphics{
 		vk_device* device;
 
 	public:
+		uint32_t mip_levels;
+		
 		VkImage image;
 		VkDeviceMemory image_memory = VK_NULL_HANDLE;
 		VkImageView image_view = VK_NULL_HANDLE;

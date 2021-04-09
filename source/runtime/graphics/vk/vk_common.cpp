@@ -12,7 +12,8 @@ namespace flower{ namespace graphics{
 		VkMemoryPropertyFlags properties,
 		VkImage& image,
 		VkDeviceMemory& imageMemory,
-		vk_device& in_device)
+		vk_device& in_device,
+		uint32_t miplevels)
 	{
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -20,7 +21,7 @@ namespace flower{ namespace graphics{
 		imageInfo.extent.width = width;
 		imageInfo.extent.height = height;
 		imageInfo.extent.depth = 1;
-		imageInfo.mipLevels = 1;
+		imageInfo.mipLevels = miplevels;
 		imageInfo.arrayLayers = 1;
 		imageInfo.format = format;
 		imageInfo.tiling = tiling;

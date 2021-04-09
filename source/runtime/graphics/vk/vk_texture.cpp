@@ -96,16 +96,20 @@ namespace flower { namespace graphics{
         ret->height = texHeight;
         ret->channels = texChannels;
 
+        // + 1 至少有一个mip
+        ret->mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
         create_image(
             texWidth, 
             texHeight, 
             VK_FORMAT_R8G8B8A8_SRGB, 
             VK_IMAGE_TILING_OPTIMAL, 
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
             ret->image, 
             ret->image_memory,
-            *in_device
+            *in_device,
+            ret->mip_levels
         );
 
         transition_image_layout(
@@ -115,7 +119,8 @@ namespace flower { namespace graphics{
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             in_pool,
             *in_device,
-            in_device->graphics_queue
+			in_device->graphics_queue,
+			ret->mip_levels
         );
 
         copy_buffer_to_image(
@@ -135,15 +140,13 @@ namespace flower { namespace graphics{
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             in_pool,
             *in_device,
-            in_device->graphics_queue
+			in_device->graphics_queue,
+			ret->mip_levels
         );
 
         ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        ret->image_view = create_imageView(&ret->image, VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT,*in_device);
-        
+		ret->image_view = create_imageView(&ret->image,VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT,*in_device,ret->mip_levels);
         ret->format = VK_FORMAT_R8G8B8A8_SRGB;
-
         ret->descriptor_info.sampler = ret->image_sampler;
         ret->descriptor_info.imageLayout = ret->image_layout;
         ret->descriptor_info.imageView = ret->image_view;
