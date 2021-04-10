@@ -2,6 +2,8 @@
 #include "vk_buffer.h"
 
 namespace flower { namespace graphics{
+
+   
 	
 	vk_texture::~vk_texture()
 	{
@@ -58,7 +60,8 @@ namespace flower { namespace graphics{
         sampler_info.anisotropyEnable = VK_FALSE;
 
         sampler_info.minLod = 0.0f;
-        sampler_info.maxLod = 0.0f;
+        sampler_info.maxLod =  static_cast<float>(mip_levels);
+        sampler_info.mipLodBias = 0.0f;
 
         vk_check(vkCreateSampler(*device, &sampler_info, nullptr, &image_sampler));
 
@@ -133,16 +136,7 @@ namespace flower { namespace graphics{
             in_device->graphics_queue
         );
 
-        transition_image_layout(
-            ret->image, 
-            VK_FORMAT_R8G8B8A8_SRGB, 
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            in_pool,
-            *in_device,
-			in_device->graphics_queue,
-			ret->mip_levels
-        );
+        generate_mipmaps(ret->image,VK_FORMAT_R8G8B8A8_SRGB,texWidth,texHeight,ret->mip_levels,in_pool,*in_device,in_device->graphics_queue,in_device->physical_device);
 
         ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		ret->image_view = create_imageView(&ret->image,VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT,*in_device,ret->mip_levels);

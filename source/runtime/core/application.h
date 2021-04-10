@@ -13,7 +13,7 @@ namespace flower
 		explicit application() { }
 		~application() { }
 
-		void initialize(uint32_t width = 1280u,uint32_t height = 960u,const char* title = "flower",bool full_screen = false);
+		void initialize(uint32_t width = 1280u,uint32_t height = 960u,const char* title = "flower",bool full_screen = true);
 		void initialize_modules();
 		void loop();
 		void destroy();
