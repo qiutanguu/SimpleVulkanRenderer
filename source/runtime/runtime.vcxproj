@@ -67,8 +67,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core.lib;spirv-cross-hlsl.lib;spirv-cross-glsl.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -89,8 +89,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core.lib;spirv-cross-hlsl.lib;spirv-cross-glsl.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -104,7 +104,9 @@
     <ClInclude Include="core\timer.h" />
     <ClInclude Include="graphics\global_uniform_buffers.h" />
     <ClInclude Include="graphics\vk\vk_command_buffer.h" />
+    <ClInclude Include="graphics\vk\vk_descriptor_set.h" />
     <ClInclude Include="graphics\vk\vk_pipeline.h" />
+    <ClInclude Include="graphics\vk\vk_shader.h" />
     <ClInclude Include="graphics\vk\vk_vertex_buffer.h" />
     <ClInclude Include="graphics\vk\vk_texture.h" />
     <ClInclude Include="graphics\vk\vk_buffer.h" />
@@ -122,7 +124,9 @@
     <ClCompile Include="core\log.cpp" />
     <ClCompile Include="core\timer.cpp" />
     <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
+    <ClCompile Include="graphics\vk\vk_descriptor_set.cpp" />
     <ClCompile Include="graphics\vk\vk_pipeline.cpp" />
+    <ClCompile Include="graphics\vk\vk_shader.cpp" />
     <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_buffer.cpp" />
     <ClCompile Include="graphics\vk\vk_common.cpp" />

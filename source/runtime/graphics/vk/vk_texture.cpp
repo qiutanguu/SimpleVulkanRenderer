@@ -3,8 +3,6 @@
 
 namespace flower { namespace graphics{
 
-   
-	
 	vk_texture::~vk_texture()
 	{
         if (image_view != VK_NULL_HANDLE) 
@@ -72,7 +70,7 @@ namespace flower { namespace graphics{
         descriptor_info.sampler = image_sampler;
     }
 
-    std::shared_ptr<vk_texture> vk_texture::create_2d(vk_device* in_device,VkCommandPool in_pool,const std::string& path)
+    std::shared_ptr<vk_texture> vk_texture::create_2d(vk_device* in_device,VkCommandPool in_pool,VkFormat format,const std::string& path)
     {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -97,15 +95,15 @@ namespace flower { namespace graphics{
         auto ret = std::make_shared<vk_texture>(in_device);
         ret->width = texWidth;
         ret->height = texHeight;
-        ret->channels = texChannels;
+        ret->depth = 1;
 
         // + 1 至少有一个mip
         ret->mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
-        create_image(
+        create_texture2D(
             texWidth, 
             texHeight, 
-            VK_FORMAT_R8G8B8A8_SRGB, 
+            format, 
             VK_IMAGE_TILING_OPTIMAL, 
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
@@ -117,7 +115,7 @@ namespace flower { namespace graphics{
 
         transition_image_layout(
             ret->image, 
-            VK_FORMAT_R8G8B8A8_SRGB, 
+            format, 
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             in_pool,
@@ -136,11 +134,11 @@ namespace flower { namespace graphics{
             in_device->graphics_queue
         );
 
-        generate_mipmaps(ret->image,VK_FORMAT_R8G8B8A8_SRGB,texWidth,texHeight,ret->mip_levels,in_pool,*in_device,in_device->graphics_queue,in_device->physical_device);
+        generate_mipmaps(ret->image,format,texWidth,texHeight,ret->mip_levels,in_pool,*in_device,in_device->graphics_queue,in_device->physical_device);
 
         ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		ret->image_view = create_imageView(&ret->image,VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT,*in_device,ret->mip_levels);
-        ret->format = VK_FORMAT_R8G8B8A8_SRGB;
+		ret->image_view = create_imageView(&ret->image,format,VK_IMAGE_ASPECT_COLOR_BIT,*in_device,ret->mip_levels);
+        ret->format = format;
         ret->descriptor_info.sampler = ret->image_sampler;
         ret->descriptor_info.imageLayout = ret->image_layout;
         ret->descriptor_info.imageView = ret->image_view;

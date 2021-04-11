@@ -18,6 +18,9 @@ namespace flower { namespace graphics{
 		void begin(VkCommandBufferUsageFlagBits flag = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 		void end();
 
+		void begin_onetime();
+		void flush();
+
 		static std::shared_ptr<vk_command_buffer> create(
 			vk_device& in_device, 
 			VkCommandPool command_pool, 

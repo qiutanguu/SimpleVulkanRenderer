@@ -43,6 +43,25 @@ namespace flower { namespace graphics{
 		}
 	}
 
+	void vk_command_buffer::begin_onetime()
+	{
+		begin();
+	}
+
+	void vk_command_buffer::flush()
+	{
+		end();
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &command_buffer;
+
+		vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+
+		vkQueueWaitIdle(queue);
+	}
+
 	std::shared_ptr<vk_command_buffer> vk_command_buffer::create(
 		vk_device& in_device,
 		VkCommandPool command_pool,

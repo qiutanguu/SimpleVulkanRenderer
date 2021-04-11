@@ -48,7 +48,7 @@ namespace flower{ namespace graphics{
 
 		// pipeline 渲染管线
 		VkPipelineLayout pipeline_layout;
-		VkPipeline render_pipeline;
+		std::shared_ptr<vk_pipeline> pipeline_render;
 		void createGraphicsPipeline();
 
 		// 纹理
@@ -57,10 +57,7 @@ namespace flower{ namespace graphics{
 		void createTextureImage();
 
 		// 顶点buffer
-		std::shared_ptr<vk_vertex_buffer> vertex_buffer;
-		std::shared_ptr<vk_index_buffer> index_buffer;
-
-		std::shared_ptr<vk_vertex_buffer> sponza_vertex_buffer;
+		std::shared_ptr<vk_vertex_buffer> sponza_vertex_buf;
 		std::vector<std::shared_ptr<vk_index_buffer>> sponza_index_buffer;
 
 		void upload_vertex_buffer();

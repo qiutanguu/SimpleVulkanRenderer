@@ -1,5 +1,6 @@
 #include "viking_room.h"
 #include "graphics/vk/vk_buffer.h"
+#include "graphics/vk/vk_shader.h"
 #include "core/core.h"
 
 namespace flower{ namespace graphics{
@@ -38,7 +39,8 @@ namespace flower{ namespace graphics{
 	
 	void viking_room_scene::destroy_special()
 	{
-		vkDestroyPipeline(device, render_pipeline, nullptr);
+		pipeline_render.reset();
+
 		vkDestroyPipelineLayout(device,pipeline_layout,nullptr);
 
 		uniformBuffers.resize(0);
@@ -48,10 +50,7 @@ namespace flower{ namespace graphics{
 		sponza_textures.resize(0);
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-		vertex_buffer.reset();
-		index_buffer.reset();
-
-		sponza_vertex_buffer.reset();
+		sponza_vertex_buf.reset();
 		sponza_index_buffer.resize(0);
 	}
 
@@ -70,7 +69,9 @@ namespace flower{ namespace graphics{
 	void viking_room_scene::cleanup_swapchain()
 	{
 		vk_runtime::cleanup_swapchain_default();
-		vkDestroyPipeline(device, render_pipeline, nullptr);
+
+		pipeline_render.reset();
+
 		vkDestroyPipelineLayout(device,pipeline_layout,nullptr);
 		uniformBuffers.resize(0);
 		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -96,16 +97,12 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::upload_vertex_buffer()
 	{
-		vertex_buffer = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_data.vertices);
-		index_buffer = vk_index_buffer::create(&device,graphics_command_pool,mesh_data.indices);
-
-		sponza_vertex_buffer = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_sponza.vertices);
+		sponza_vertex_buf = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_sponza.vertices_data,mesh_sponza.vertices_attributes);
 		for (auto& submesh : mesh_sponza.sub_meshes)
 		{
 			auto& indices = submesh.indices;
 			sponza_index_buffer.push_back(vk_index_buffer::create(&device,graphics_command_pool,indices));
 		}
-		
 	}
 
 	void viking_room_scene::create_uniform_buffer()
@@ -141,7 +138,7 @@ namespace flower{ namespace graphics{
 			{
 				std::string combinePath = pathpad + mesh_sponza.sub_meshes[i].material_using.map_Kd;
 
-				sponza_textures[i] = vk_texture::create_2d(&device,graphics_command_pool,combinePath);
+				sponza_textures[i] = vk_texture::create_2d(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,combinePath);
 
 				sponza_textures[i]->update_sampler(
 					VK_FILTER_LINEAR,
@@ -152,10 +149,9 @@ namespace flower{ namespace graphics{
 					VK_SAMPLER_ADDRESS_MODE_REPEAT
 				);
 			}
-
 		}
 		
-		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,"data/model/viking_room/viking_room.jpg");
+		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,"data/image/checkerboard.png");
 
 		mesh_texture->update_sampler(
 			VK_FILTER_LINEAR,
@@ -190,10 +186,25 @@ namespace flower{ namespace graphics{
 			renderPassInfo.pClearValues = clearValues.data();
 
 			vkCmdBeginRenderPass(cmd_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline);
 
-			// bind VAO
-			sponza_vertex_buffer->bind(cmd_buffer);
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float) swapchain.get_swapchain_extent().width;
+			viewport.height = (float) swapchain.get_swapchain_extent().height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+
+			VkRect2D scissor{};
+			scissor.offset = {0, 0};
+			scissor.extent = swapchain.get_swapchain_extent();
+
+			vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+			vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+
+			pipeline_render->bind(cmd_buffer);
+
+			sponza_vertex_buf->bind(cmd_buffer);
 
 			for (int32_t j = 0; j < mesh_sponza.sub_meshes.size(); j++)
 			{
@@ -202,9 +213,7 @@ namespace flower{ namespace graphics{
 				vkCmdBindDescriptorSets(cmd_buffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipeline_layout,0,1,&descriptorSets[index],0,nullptr);
 
 				auto& buf = sponza_index_buffer[j];
-				buf->bind(cmd_buffer);
-				
-				vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(mesh_sponza.sub_meshes[j].indices.size()), 1, 0, 0, 0);
+				buf->bind_and_draw(cmd_buffer);
 			}
 
 			vkCmdEndRenderPass(cmd_buffer);
@@ -214,92 +223,17 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::createGraphicsPipeline()
 	{
-		auto vertShaderCode = read_file_binary("data/model/viking_room/viking_room_vert.spv");
-		auto fragShaderCode = read_file_binary("data/model/viking_room/viking_room_frag.spv");
+		auto vert_shader_module = vk_shader_module::create(&device,"data/model/viking_room/viking_room_vert.spv",VK_SHADER_STAGE_VERTEX_BIT);
+		auto frag_shader_module = vk_shader_module::create(&device,"data/model/viking_room/viking_room_frag.spv",VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		vk_shader_module vertShaderModule(device.device,vertShaderCode);
-		vk_shader_module fragShaderModule(device.device,fragShaderCode);
+		auto bindings = sponza_vertex_buf->get_input_binding();
+		auto attributes = sponza_vertex_buf->get_input_attribute(mesh_sponza.vertices_attributes);
 
-		auto bindingDescription = vertex_buffer->get_binding_func();
-		auto attributeDescriptions = vertex_buffer->get_attributes_func();
+		vk_pipeline_info pipe_info;
+		pipe_info.vert_shader_module = vert_shader_module->handle;
+		pipe_info.frag_shader_module = frag_shader_module->handle;
 
-		// 顶点着色器填充
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-		pipeline::shader_vertex_config(vertShaderStageInfo,vertShaderModule.get_handle());
-
-		// 片元着色器填充
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-		pipeline::shader_fragment_config(fragShaderStageInfo,fragShaderModule.get_handle());
-
-		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
-
-		// 管线顶点输入信息
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
-		// 组件信息
-		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-		pipeline::input_assembly_config(inputAssembly);
-
-		// 视口和裁剪区域
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = (float) swapchain.get_swapchain_extent().width;
-		viewport.height = (float) swapchain.get_swapchain_extent().height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		VkRect2D scissor{};
-		scissor.offset = {0, 0};
-		scissor.extent = swapchain.get_swapchain_extent();
-		VkPipelineViewportStateCreateInfo viewportState{};
-		pipeline::viewport_config(viewportState,&viewport,&scissor);
-
-		// 光栅化器配置
-		VkPipelineRasterizationStateCreateInfo rasterizer{};
-		pipeline::rasterizer_config(rasterizer);
-
-		// MSAA
-		VkPipelineMultisampleStateCreateInfo multisampling{};
-		pipeline::msaa_config(multisampling);
-
-		// 混合
-		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-		VkPipelineColorBlendStateCreateInfo colorBlending{};
-		pipeline::colorBlendAttachment_config(colorBlendAttachment);
-		pipeline::colorBlend_config(colorBlending,&colorBlendAttachment);
-
-		// 深度和模板测试
-		VkPipelineDepthStencilStateCreateInfo depthStencil{};
-		pipeline::depthStencil_config(depthStencil);
-
-
-		VkGraphicsPipelineCreateInfo pipelineInfo{};
-		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = 2;
-		pipelineInfo.pStages = shaderStages;
-		pipelineInfo.pVertexInputState = &vertexInputInfo;
-		pipelineInfo.pInputAssemblyState = &inputAssembly;
-		pipelineInfo.pViewportState = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizer;
-		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = &depthStencil;
-		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.pDynamicState = nullptr; 
-		pipelineInfo.layout = pipeline_layout;
-		pipelineInfo.renderPass = render_pass;
-		pipelineInfo.subpass = 0; // sub Pass 索引
-		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; 
-		pipelineInfo.basePipelineIndex = -1; 
-
-		if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &render_pipeline) != VK_SUCCESS) 
-		{
-			LOG_VULKAN_FATAL("创建管线pipeline失败！");
-		}
+		pipeline_render = vk_pipeline::create_single_binding(&device,VK_NULL_HANDLE,pipe_info,bindings,attributes,pipeline_layout,render_pass);
 	}
 
 	void viking_room_scene::createDescriptorPool()

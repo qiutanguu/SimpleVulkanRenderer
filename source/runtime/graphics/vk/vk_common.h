@@ -111,34 +111,6 @@ namespace flower { namespace graphics {
 		bool compute_faimly_set = false;
 	};
 
-	class vk_shader_module : non_copyable
-	{
-	public:
-		vk_shader_module(VkDevice& in_device,const std::vector<char>& code) : device(in_device)
-		{
-			VkShaderModuleCreateInfo createInfo{};
-			createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			createInfo.codeSize = code.size();
-			createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-			if (vkCreateShaderModule(device, &createInfo, nullptr, &handle) != VK_SUCCESS) 
-			{
-				LOG_VULKAN_ERROR("´´½¨shaderÄ£¿éÊ§°Ü£¡");
-			}
-		}
-
-		~vk_shader_module()
-		{
-			vkDestroyShaderModule(device, handle, nullptr);
-		}
-
-		VkShaderModule& get_handle() { return handle; }
-
-	private:
-		VkShaderModule handle { VK_NULL_HANDLE };
-		VkDevice& device;
-	};
-
 	inline VkImageView create_imageView(VkImage* image,VkFormat format, VkImageAspectFlags aspectFlags,VkDevice device,uint32_t mipMaplevels = 1)
 	{
 		VkImageViewCreateInfo viewInfo{};
@@ -420,7 +392,7 @@ namespace flower { namespace graphics {
 		end_single_time_commands(commandBuffer,in_graphics_queue,commandpool,device);
 	}
 
-	void create_image(
+	void create_texture2D(
 		uint32_t width,
 		uint32_t height,
 		VkFormat format,

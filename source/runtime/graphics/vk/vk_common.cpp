@@ -3,7 +3,7 @@
 
 namespace flower{ namespace graphics{
 
-	void create_image(
+	void create_texture2D(
 		uint32_t width,
 		uint32_t height,
 		VkFormat format,

@@ -2,111 +2,205 @@
 
 namespace flower { namespace graphics{
 
-	void pipeline::input_assembly_config(VkPipelineInputAssemblyStateCreateInfo& inputAssembly)
+	vk_pipeline_info::vk_pipeline_info()
 	{
-		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
+		input_assembly_state = {};
+		input_assembly_state.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		input_assembly_state.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+		rasterization_state = {};
+		rasterization_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		rasterization_state.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterization_state.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterization_state.frontFace  = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		rasterization_state.depthClampEnable  = VK_FALSE;
+		rasterization_state.rasterizerDiscardEnable = VK_FALSE;
+		rasterization_state.depthBiasEnable  = VK_FALSE;
+		rasterization_state.depthBiasConstantFactor = 0.0f;
+		rasterization_state.lineWidth = 1.0f;
+		rasterization_state.depthBiasClamp = 0.0f;
+		rasterization_state.depthBiasSlopeFactor = 0.0f;
+
+		for (int32_t i = 0; i < 8; i++)
+		{
+			blend_attachment_states[i] = {};
+			blend_attachment_states[i].colorWriteMask = (
+				VK_COLOR_COMPONENT_R_BIT |
+				VK_COLOR_COMPONENT_G_BIT |
+				VK_COLOR_COMPONENT_B_BIT |
+				VK_COLOR_COMPONENT_A_BIT
+				);
+			blend_attachment_states[i].blendEnable = VK_FALSE;
+			blend_attachment_states[i].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			blend_attachment_states[i].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+			blend_attachment_states[i].colorBlendOp = VK_BLEND_OP_ADD;
+			blend_attachment_states[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			blend_attachment_states[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+			blend_attachment_states[i].alphaBlendOp = VK_BLEND_OP_ADD;
+		}
+
+		depth_stencil_state = {};
+		depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depth_stencil_state.depthTestEnable = VK_TRUE;
+		depth_stencil_state.depthWriteEnable = VK_TRUE;
+		depth_stencil_state.depthCompareOp	= VK_COMPARE_OP_LESS_OR_EQUAL;
+		depth_stencil_state.depthBoundsTestEnable = VK_FALSE;
+		depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
+		depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
+		depth_stencil_state.back.compareOp 	= VK_COMPARE_OP_ALWAYS;
+		depth_stencil_state.stencilTestEnable 	= VK_TRUE;
+		depth_stencil_state.front = depth_stencil_state.back;
+
+		multisample_state = {};
+		multisample_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisample_state.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisample_state.pSampleMask = nullptr;
+
+		tessellation_state = {};
+		tessellation_state.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+		tessellation_state.patchControlPoints = 0;
 	}
 
-	void pipeline::viewport_config(VkPipelineViewportStateCreateInfo& viewportState,VkViewport* viewport,VkRect2D* scissor)
+	void vk_pipeline_info::fill_sahder_stages(std::vector<VkPipelineShaderStageCreateInfo>& shaderStages)
 	{
+		if (vert_shader_module != VK_NULL_HANDLE) 
+		{
+			VkPipelineShaderStageCreateInfo shader_stage_create_info {};
+			shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_create_info.stage  = VK_SHADER_STAGE_VERTEX_BIT;
+			shader_stage_create_info.module = vert_shader_module;
+			shader_stage_create_info.pName  = "main";
+			shaderStages.push_back(shader_stage_create_info);
+		}
+
+		if (frag_shader_module != VK_NULL_HANDLE) 
+		{
+			VkPipelineShaderStageCreateInfo shader_stage_create_info {};
+			shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_create_info.stage  = VK_SHADER_STAGE_FRAGMENT_BIT;
+			shader_stage_create_info.module = frag_shader_module;
+			shader_stage_create_info.pName  = "main";
+			shaderStages.push_back(shader_stage_create_info);
+		}
+
+		if (comp_shader_module != VK_NULL_HANDLE) 
+		{
+			VkPipelineShaderStageCreateInfo shader_stage_create_info {};
+			shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_create_info.stage  = VK_SHADER_STAGE_COMPUTE_BIT;
+			shader_stage_create_info.module = comp_shader_module;
+			shader_stage_create_info.pName  = "main";
+			shaderStages.push_back(shader_stage_create_info);
+		}
+
+		if (geom_shader_module != VK_NULL_HANDLE) 
+		{
+			VkPipelineShaderStageCreateInfo shader_stage_create_info {};
+			shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_create_info.stage  = VK_SHADER_STAGE_GEOMETRY_BIT;
+			shader_stage_create_info.module = geom_shader_module;
+			shader_stage_create_info.pName  = "main";
+			shaderStages.push_back(shader_stage_create_info);
+		}
+
+		if (tesc_shader_module != VK_NULL_HANDLE) 
+		{
+			VkPipelineShaderStageCreateInfo shader_stage_create_info {};
+			shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_create_info.stage  = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+			shader_stage_create_info.module = tesc_shader_module;
+			shader_stage_create_info.pName  = "main";
+			shaderStages.push_back(shader_stage_create_info);
+		}
+
+		if (tese_shader_module != VK_NULL_HANDLE) 
+		{
+			VkPipelineShaderStageCreateInfo shader_stage_create_info {};
+			shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_stage_create_info.stage  = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+			shader_stage_create_info.module = tese_shader_module;
+			shader_stage_create_info.pName  = "main";
+			shaderStages.push_back(shader_stage_create_info);
+		}
+	}
+
+	std::shared_ptr<vk_pipeline> vk_pipeline::create_multi_binding(
+		vk_device* in_device,
+		VkPipelineCache pipelineCache,
+		vk_pipeline_info& pipelineInfo,
+		const std::vector<VkVertexInputBindingDescription>& input_bindings,
+		const std::vector<VkVertexInputAttributeDescription>& vertex_input_attributs,
+		VkPipelineLayout in_pipeline_layout,
+		VkRenderPass renderPass)
+	{
+		auto ret = std::make_shared<vk_pipeline>(in_device,in_pipeline_layout);
+		
+		VkPipelineVertexInputStateCreateInfo vertex_input_state{ };
+		vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertex_input_state.vertexBindingDescriptionCount = (uint32_t)input_bindings.size();
+		vertex_input_state.pVertexBindingDescriptions = input_bindings.data();
+		vertex_input_state.vertexAttributeDescriptionCount = (uint32_t)vertex_input_attributs.size();
+		vertex_input_state.pVertexAttributeDescriptions = vertex_input_attributs.data();
+
+		VkPipelineColorBlendStateCreateInfo color_blend_state{ };
+		color_blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		color_blend_state.attachmentCount = pipelineInfo.color_attachment_count;
+		color_blend_state.pAttachments = pipelineInfo.blend_attachment_states;
+
+		VkPipelineViewportStateCreateInfo viewportState{ };
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		viewportState.viewportCount = 1;
-		viewportState.pViewports = viewport;
-		viewportState.scissorCount = 1;
-		viewportState.pScissors = scissor;
+		viewportState.scissorCount  = 1;
+
+		std::vector<VkDynamicState> dynamicStateEnables;
+		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
+
+		VkPipelineDynamicStateCreateInfo dynamicState{ };
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.dynamicStateCount = 2;
+		dynamicState.pDynamicStates = dynamicStateEnables.data();
+
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		if (pipelineInfo.shaders) 
+			shaderStages = pipelineInfo.shaders->shader_stage_create_infos;
+		else 
+			pipelineInfo.fill_sahder_stages(shaderStages);
+
+		VkGraphicsPipelineCreateInfo pipelineCreateInfo{ };
+		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineCreateInfo.layout = in_pipeline_layout;
+		pipelineCreateInfo.renderPass = renderPass;
+		pipelineCreateInfo.subpass = pipelineInfo.subpass;
+		pipelineCreateInfo.stageCount = (uint32_t)shaderStages.size();
+		pipelineCreateInfo.pStages = shaderStages.data();
+
+		pipelineCreateInfo.pVertexInputState = &vertex_input_state;
+		pipelineCreateInfo.pInputAssemblyState = &(pipelineInfo.input_assembly_state);
+		pipelineCreateInfo.pRasterizationState = &(pipelineInfo.rasterization_state);
+		pipelineCreateInfo.pColorBlendState = &color_blend_state;
+		pipelineCreateInfo.pMultisampleState = &(pipelineInfo.multisample_state);
+		pipelineCreateInfo.pViewportState = &viewportState;
+		pipelineCreateInfo.pDepthStencilState = &(pipelineInfo.depth_stencil_state);
+		pipelineCreateInfo.pDynamicState = &dynamicState;
+
+		if (pipelineInfo.tessellation_state.patchControlPoints != 0) 
+		{
+			pipelineCreateInfo.pTessellationState = &(pipelineInfo.tessellation_state);
+		}
+
+		vk_check(vkCreateGraphicsPipelines(*in_device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &(ret->pipeline)));
+
+		return ret;
 	}
 
-	void pipeline::msaa_config(VkPipelineMultisampleStateCreateInfo& inout)
+	std::shared_ptr<vk_pipeline> vk_pipeline::create_single_binding(vk_device* in_device,VkPipelineCache pipelineCache,vk_pipeline_info& pipelineInfo,VkVertexInputBindingDescription& inputBindings,const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,VkPipelineLayout pipelineLayout,VkRenderPass renderPass)
 	{
-		inout.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		inout.sampleShadingEnable = VK_FALSE;
-		inout.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-		inout.minSampleShading = 1.0f;
-		inout.pSampleMask = nullptr;
-		inout.alphaToCoverageEnable = VK_FALSE;
-		inout.alphaToOneEnable = VK_FALSE;
+		return create_multi_binding(in_device,pipelineCache,pipelineInfo,{inputBindings},vertexInputAttributes,pipelineLayout,renderPass);
 	}
 
-	void pipeline::rasterizer_config(VkPipelineRasterizationStateCreateInfo& inout)
+	void vk_pipeline::bind(VkCommandBuffer cmd_buf,VkPipelineBindPoint bind_point)
 	{
-		inout.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		inout.depthClampEnable = VK_FALSE;
-		inout.rasterizerDiscardEnable = VK_FALSE;
-		inout.polygonMode = VK_POLYGON_MODE_FILL;
-		inout.lineWidth = 1.0f;
-		inout.cullMode = VK_CULL_MODE_NONE;
-		inout.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		inout.depthBiasEnable = VK_FALSE;
-		inout.depthBiasConstantFactor = 0.0f;
-		inout.depthBiasClamp = 0.0f;
-		inout.depthBiasSlopeFactor = 0.0f;
+		vkCmdBindPipeline(cmd_buf, bind_point, pipeline);
 	}
-
-	void pipeline::colorBlendAttachment_config(VkPipelineColorBlendAttachmentState& inout)
-	{
-		inout.colorWriteMask = VK_COLOR_COMPONENT_R_BIT|VK_COLOR_COMPONENT_G_BIT|VK_COLOR_COMPONENT_B_BIT|VK_COLOR_COMPONENT_A_BIT;
-		inout.blendEnable = VK_FALSE;
-		inout.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-		inout.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-		inout.colorBlendOp = VK_BLEND_OP_ADD;
-		inout.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		inout.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		inout.alphaBlendOp = VK_BLEND_OP_ADD;
-		inout.blendEnable = VK_TRUE;
-		inout.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-		inout.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		inout.colorBlendOp = VK_BLEND_OP_ADD;
-		inout.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		inout.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		inout.alphaBlendOp = VK_BLEND_OP_ADD;
-	}
-
-	void pipeline::colorBlend_config(VkPipelineColorBlendStateCreateInfo& inout,
-	VkPipelineColorBlendAttachmentState* attachment)
-	{
-		inout.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		inout.logicOpEnable = VK_FALSE;
-		inout.logicOp = VK_LOGIC_OP_COPY;
-		inout.attachmentCount = 1;
-		inout.pAttachments = attachment;
-		inout.blendConstants[0] = 0.0f;
-		inout.blendConstants[1] = 0.0f;
-		inout.blendConstants[2] = 0.0f;
-		inout.blendConstants[3] = 0.0f;
-	}
-
-	void pipeline::depthStencil_config(VkPipelineDepthStencilStateCreateInfo& depthStencil)
-	{
-		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
-		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-		depthStencil.depthBoundsTestEnable = VK_FALSE;
-		depthStencil.minDepthBounds = 0.0f;
-		depthStencil.maxDepthBounds = 1.0f;
-		depthStencil.stencilTestEnable = VK_FALSE;
-		depthStencil.front = {};
-		depthStencil.back = {};
-	}
-
-	void pipeline::shader_vertex_config(VkPipelineShaderStageCreateInfo& vertShaderStageInfo,VkShaderModule shaderModule)
-	{
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = shaderModule;
-		vertShaderStageInfo.pName = shader_main_function_name::VS;
-	}
-
-	void pipeline::shader_fragment_config(VkPipelineShaderStageCreateInfo& fragShaderStageInfo,VkShaderModule shaderModule)
-	{
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = shaderModule;
-		fragShaderStageInfo.pName = shader_main_function_name::FS;
-	}
-
-	
-
 }}

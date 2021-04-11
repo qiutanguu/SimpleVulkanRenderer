@@ -90,6 +90,17 @@ namespace flower{ namespace graphics{
 					{
 						uniqueVertices[one_vertex] = static_cast<uint32_t>(vertices.size());
 						vertices.push_back(one_vertex);
+
+						vertices_data.push_back(one_vertex.pos.x);
+						vertices_data.push_back(one_vertex.pos.y);
+						vertices_data.push_back(one_vertex.pos.z);
+
+						vertices_data.push_back(one_vertex.color.x);
+						vertices_data.push_back(one_vertex.color.y);
+						vertices_data.push_back(one_vertex.color.z);
+
+						vertices_data.push_back(one_vertex.uv0.x);
+						vertices_data.push_back(one_vertex.uv0.y);
 					}
 
 					indices.push_back(uniqueVertices[one_vertex]);

@@ -11,7 +11,7 @@ namespace flower { namespace graphics{
 		vk_device* device;
 
 	public:
-		uint32_t mip_levels;
+		uint32_t mip_levels = 0;
 		
 		VkImage image;
 		VkDeviceMemory image_memory = VK_NULL_HANDLE;
@@ -20,11 +20,17 @@ namespace flower { namespace graphics{
 
 		VkImageLayout image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-		VkDescriptorImageInfo descriptor_info{ };
+		VkDescriptorImageInfo descriptor_info;
 
 		int32_t width = 0;
 		int32_t height = 0;
-		int32_t channels = 1;
+		int32_t depth = 1; // depth
+
+		// cubemap 为6,Texture Array 为自定义
+		int32_t layer_count = 1;
+		VkSampleCountFlagBits numSamples = VK_SAMPLE_COUNT_1_BIT;
+
+		bool is_cube_map = false;
 
 		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 
@@ -43,6 +49,7 @@ namespace flower { namespace graphics{
 		static std::shared_ptr<vk_texture> create_2d(
 			vk_device* in_device,
 			VkCommandPool in_pool,
+			VkFormat format,
 			const std::string& image_path
 		); 
 	#pragma endregion

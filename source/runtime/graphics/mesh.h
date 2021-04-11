@@ -18,39 +18,6 @@ namespace flower{ namespace graphics{
 		{
 			return pos == other.pos && color == other.color && uv0 == other.uv0;
 		}
-
-		static VkVertexInputBindingDescription get_binding() 
-		{
-			VkVertexInputBindingDescription bindingDescription{};
-			bindingDescription.binding = 0;
-			bindingDescription.stride = sizeof(vertex_pcu);
-			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // 顶点偏移
-
-			return bindingDescription;
-		}
-
-		static std::vector<VkVertexInputAttributeDescription> get_attributes() 
-		{
-			std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
-			attributeDescriptions.resize(3);
-
-			attributeDescriptions[0].binding = 0;
-			attributeDescriptions[0].location = 0;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[0].offset = offsetof(vertex_pcu, pos);
-
-			attributeDescriptions[1].binding = 0;
-			attributeDescriptions[1].location = 1;
-			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[1].offset = offsetof(vertex_pcu, color);
-
-			attributeDescriptions[2].binding = 0;
-			attributeDescriptions[2].location = 2;
-			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-			attributeDescriptions[2].offset = offsetof(vertex_pcu, uv0);
-
-			return attributeDescriptions;
-		}
 	};
 
 	struct material
@@ -73,6 +40,9 @@ namespace flower{ namespace graphics{
 		using using_vertex = vertex_pcu;
 
 		std::vector<sub_mesh> sub_meshes;
+
+		std::vector<float> vertices_data;
+		std::vector<vertex_attribute>  vertices_attributes = { vertex_attribute::pos, vertex_attribute::color, vertex_attribute::uv0  };
 
 		// 存储的所有顶点
 		std::vector<using_vertex> vertices;

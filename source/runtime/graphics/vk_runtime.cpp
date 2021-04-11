@@ -267,7 +267,7 @@ namespace flower{ namespace graphics{
 	{
 		VkFormat depthFormat = find_depth_format(device.physical_device);
 		const auto& extent = swapchain.get_swapchain_extent();
-		create_image(
+		create_texture2D(
 			extent.width, 
 			extent.height, 
 			depthFormat, 

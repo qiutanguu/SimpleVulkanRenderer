@@ -116,7 +116,7 @@ namespace flower { namespace graphics{
 
 		uint32_t image_index;
 		uint32_t current_frame = 0;
-		const int MAX_FRAMES_IN_FLIGHT = 2; // 同时处理的帧数
+		const int MAX_FRAMES_IN_FLIGHT = 3; // 同时处理的帧数
 		std::vector<VkSemaphore> semaphores_image_available;
 		std::vector<VkSemaphore> semaphores_render_finished;
 		std::vector<VkFence> inFlight_fences;

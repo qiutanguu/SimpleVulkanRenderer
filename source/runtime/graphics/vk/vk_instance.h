@@ -32,8 +32,6 @@ namespace flower { namespace graphics{
 
 		void destroy();
 
-
-
 		// ²å¼þÊÇ·ñ¿ªÆô
 		inline bool extension_is_enabled(const char *extension) const 
 		{ 
