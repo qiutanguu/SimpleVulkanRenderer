@@ -67,7 +67,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core.lib;spirv-cross-hlsl.lib;spirv-cross-glsl.lib</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core_debug.lib;spirv-cross-hlsl_debug.lib;spirv-cross-glsl_debug.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>

@@ -1,5 +1,9 @@
 #pragma once
 #include "vk_common.h"
+#include "vk_vertex_buffer.h"
+#include "vk_device.h"
+#include "vk_buffer.h"
+#include "vk_texture.h"
 
 namespace flower{ namespace graphics{
 
@@ -20,9 +24,31 @@ namespace flower{ namespace graphics{
 		VkDescriptorType get_descriptor_type(int32_t set, int32_t binding);
 		void add_descriptor_set_layout_binding(const std::string& varName, int32_t set, VkDescriptorSetLayoutBinding binding);
 
-	public:
 		std::unordered_map<std::string, bind_info> params_map;
 		std::vector<vk_descriptor_set_layout_info> set_layouts;
+	};
+
+	struct input_attribute
+	{
+		vertex_attribute attribute;
+		int32_t	location;
+	};
+
+	class vk_descriptor_set
+	{
+	public:
+		vk_descriptor_set(vk_device* in_device) : device(in_device) { }
+		~vk_descriptor_set(){ }
+
+		void set_image(const std::string& name,std::shared_ptr<vk_texture> texture);
+		void set_buffer(const std::string& name, std::shared_ptr<vk_buffer> buffer);
+
+	private:
+		vk_device* device;
+
+	public:
+		vk_descriptor_set_layouts_info set_layouts_info;
+		std::vector<VkDescriptorSet> descriptor_sets;
 	};
 
 	class vk_descriptor_set_pool
@@ -44,11 +70,6 @@ namespace flower{ namespace graphics{
 		std::vector<VkDescriptorSetLayout>	descriptor_set_layouts;
 
 		VkDescriptorPool pool;
-	};
-
-	class vk_descriptor_set
-	{
-
 	};
 
 } }

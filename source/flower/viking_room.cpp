@@ -223,8 +223,8 @@ namespace flower{ namespace graphics{
 
 	void viking_room_scene::createGraphicsPipeline()
 	{
-		auto vert_shader_module = vk_shader_module::create(&device,"data/model/viking_room/viking_room_vert.spv",VK_SHADER_STAGE_VERTEX_BIT);
-		auto frag_shader_module = vk_shader_module::create(&device,"data/model/viking_room/viking_room_frag.spv",VK_SHADER_STAGE_FRAGMENT_BIT);
+		auto vert_shader_module = vk_shader_module::create(&device,"data/model/sponza/vert.spv",VK_SHADER_STAGE_VERTEX_BIT);
+		auto frag_shader_module = vk_shader_module::create(&device,"data/model/sponza/frag.spv",VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		auto bindings = sponza_vertex_buf->get_input_binding();
 		auto attributes = sponza_vertex_buf->get_input_attribute(mesh_sponza.vertices_attributes);

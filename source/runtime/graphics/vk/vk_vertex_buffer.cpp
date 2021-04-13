@@ -5,6 +5,7 @@ namespace flower { namespace graphics{
 	std::shared_ptr<vk_index_buffer> vk_index_buffer::create(vk_device* in_device,VkCommandPool pool,std::vector<uint32_t> indices)
 	{
 		std::shared_ptr<vk_index_buffer> ret = std::make_shared<vk_index_buffer>(in_device);
+
 		ret->index_count = (int32_t) indices.size();
 		ret->index_type = VK_INDEX_TYPE_UINT32;
 

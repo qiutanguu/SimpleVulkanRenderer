@@ -34,6 +34,23 @@ namespace flower { namespace graphics{
 
 	class vk_shader_mix
 	{
+        struct buffer_info
+        {
+			uint32_t set = 0;
+            uint32_t binding = 0;
+            uint32_t buffer_size = 0;
+			VkDescriptorType descriptor_type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			VkShaderStageFlags stage_flags = 0;
+        };
+
+		struct image_info
+		{
+            uint32_t set = 0;
+            uint32_t binding = 0;
+			VkDescriptorType descriptor_type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			VkShaderStageFlags stage_flags = 0;
+		};
+
     public:
         vk_shader_mix(vk_device* in_device, bool dynamic_uniform_buffer) : device(in_device),dynamic_uniform_buffer(dynamic_uniform_buffer) {  }
         ~vk_shader_mix(){ }
@@ -52,11 +69,20 @@ namespace flower { namespace graphics{
         void parser();
         void parser_shader_module(std::shared_ptr<vk_shader_module> shader);
 
-        void parser_uniform_buffer(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources, VkShaderStageFlags stageFlags);
+        void generate_layout();
+        void generate_input_info();
+
+		void process_storage_buffers(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources,VkShaderStageFlags stageFlags);
+		void process_storage_images(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources,VkShaderStageFlags stageFlags);
+		void process_input(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources,VkShaderStageFlags stageFlags);
+		void process_textures(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources,VkShaderStageFlags stageFlags);
+		void process_attachments(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources,VkPipelineStageFlags stageFlags);
+		void process_uiform_buffers(spirv_cross::Compiler& compiler,spirv_cross::ShaderResources& resources,VkShaderStageFlags stageFlags);
 
     private:
         vk_device* device;
         bool dynamic_uniform_buffer = false;
+        std::vector<input_attribute> inner_attributes;
 
     public:
         std::shared_ptr<vk_shader_module> vert_shader_module;
@@ -68,6 +94,19 @@ namespace flower { namespace graphics{
 
         std::vector<VkPipelineShaderStageCreateInfo> shader_stage_create_infos;
         vk_descriptor_set_layouts_info set_layouts_info;
+
+		std::vector<vertex_attribute> per_vertex_attributes;
+		std::vector<vertex_attribute> instances_attributes;
+        
+        std::vector<VkVertexInputAttributeDescription> input_attributes;
+        std::vector<VkVertexInputBindingDescription> input_bindings;
+
+        std::vector<VkDescriptorSetLayout> shader_descriptor_set_layouts;
+		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+        std::vector<vk_descriptor_set_pool*> descriptor_set_pools;
+
+		std::unordered_map<std::string,buffer_info>	buffer_params;
+		std::unordered_map<std::string,image_info> image_params;
 	};
 
 }}
