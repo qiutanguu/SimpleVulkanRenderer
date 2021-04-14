@@ -61,14 +61,15 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)external\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core_debug.lib;spirv-cross-hlsl_debug.lib;spirv-cross-glsl_debug.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-cored.lib;spirv-cross-hlsld.lib;spirv-cross-glsld.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -81,6 +82,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)external\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -90,7 +92,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core.lib;spirv-cross-hlsl.lib;spirv-cross-glsl.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>

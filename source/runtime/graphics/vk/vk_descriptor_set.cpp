@@ -119,14 +119,14 @@ namespace flower{ namespace graphics{
 			{
 				VkDescriptorPoolSize pool_size = {};
 				pool_size.type = set_layout_info.bindings[j].descriptorType;
-				pool_size.descriptorCount = set_layout_info.bindings[j].descriptorCount;
+				pool_size.descriptorCount = (set_layout_info.bindings[j].descriptorCount) * max_set;
 				pool_sizes.push_back(pool_size);
 			}
 		}
 
 		VkDescriptorPoolCreateInfo descriptor_pool_info {};
 		descriptor_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		descriptor_pool_info.poolSizeCount = pool_sizes.size();
+		descriptor_pool_info.poolSizeCount = (uint32_t)pool_sizes.size();
 		descriptor_pool_info.pPoolSizes = pool_sizes.data();
 		descriptor_pool_info.maxSets = max_set;
 		vk_check(vkCreateDescriptorPool(*device,&descriptor_pool_info,nullptr,&pool));
@@ -134,7 +134,7 @@ namespace flower{ namespace graphics{
 
 	vk_descriptor_set_pool::~vk_descriptor_set_pool()
 	{
-		if(pool!=VK_NULL_HANDLE)
+		if(pool != VK_NULL_HANDLE)
 		{
 			vkDestroyDescriptorPool(*device,pool,nullptr);
 			pool = VK_NULL_HANDLE;
@@ -148,12 +148,12 @@ namespace flower{ namespace graphics{
 			return false;
 		}
 
-		used_set += descriptor_set_layouts.size();
+		used_set += (int32_t)descriptor_set_layouts.size();
 
 		VkDescriptorSetAllocateInfo allocInfo { };
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = pool;
-		allocInfo.descriptorSetCount = descriptor_set_layouts.size();
+		allocInfo.descriptorSetCount = (uint32_t)descriptor_set_layouts.size();
 		allocInfo.pSetLayouts = descriptor_set_layouts.data();
 		vk_check(vkAllocateDescriptorSets(*device,&allocInfo,descriptorSet));
 

@@ -1,7 +1,35 @@
 #include "vk_shader.h"
+
+#pragma warning(push)
+#pragma warning(disable:4099)
 #include "spirv_cross/spirv_cross.hpp"
+#pragma warning(pop)
 
 namespace flower { namespace graphics{
+
+	vk_shader_mix::~vk_shader_mix()
+	{
+		vert_shader_module.reset();
+		frag_shader_module.reset();
+		geom_shader_module.reset();
+		comp_shader_module.reset();
+		tesc_shader_module.reset();
+		tese_shader_module.reset();
+
+		for(int32_t i = 0; i < shader_descriptor_set_layouts.size(); ++i)
+		{
+			vkDestroyDescriptorSetLayout(*device,shader_descriptor_set_layouts[i],nullptr);
+		}
+		shader_descriptor_set_layouts.clear();
+
+		if( pipeline_layout != VK_NULL_HANDLE)
+		{
+			vkDestroyPipelineLayout(*device,pipeline_layout,nullptr);
+			pipeline_layout = VK_NULL_HANDLE;
+		}
+
+		descriptor_set_pools.resize(0);
+	}
 
 	std::shared_ptr<vk_shader_module> vk_shader_module::create(
 		vk_device* in_device,
@@ -47,6 +75,34 @@ namespace flower { namespace graphics{
 		ret->parser();
 
 		return ret;
+	}
+
+	std::shared_ptr<vk_descriptor_set> vk_shader_mix::allocate_descriptor_set()
+	{
+		if(set_layouts_info.set_layouts.size() == 0 )
+		{
+			return nullptr;
+		}
+
+		auto dvkSet = std::make_shared<vk_descriptor_set>(device);
+
+		dvkSet->set_layouts_info = set_layouts_info;
+		dvkSet->descriptor_sets.resize(set_layouts_info.set_layouts.size());
+
+		for(int32_t i = (int32_t)descriptor_set_pools.size() - 1; i>=0; --i)
+		{
+			if(descriptor_set_pools[i]->allocate_descriptor_set(dvkSet->descriptor_sets.data()))
+			{
+				return dvkSet;
+			}
+		}
+
+		auto set_pool = std::make_shared<vk_descriptor_set_pool>(device,64,set_layouts_info,shader_descriptor_set_layouts);
+
+		descriptor_set_pools.push_back(set_pool);
+		set_pool->allocate_descriptor_set(dvkSet->descriptor_sets.data());
+
+		return dvkSet;
 	}
 
 	void vk_shader_mix::parser()
@@ -136,7 +192,7 @@ namespace flower { namespace graphics{
 			spirv_cross::SPIRType base_type = compiler.get_type(res.base_type_id);
 			const std::string& varName = compiler.get_name(res.id);
 			const std::string& typeName = compiler.get_name(res.base_type_id);
-			uint32_t uniformBufferStructSize = compiler.get_declared_struct_size(type);
+			uint32_t uniformBufferStructSize = (uint32_t)compiler.get_declared_struct_size(type);
 
 			int32_t set = compiler.get_decoration(res.id,spv::DecorationDescriptorSet);
 			int32_t binding = compiler.get_decoration(res.id,spv::DecorationBinding);
@@ -517,7 +573,7 @@ namespace flower { namespace graphics{
 
 			VkDescriptorSetLayoutCreateInfo descSetLayoutInfo{ };
 			descSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			descSetLayoutInfo.bindingCount = setLayoutInfo.bindings.size();
+			descSetLayoutInfo.bindingCount = (uint32_t)setLayoutInfo.bindings.size();
 			descSetLayoutInfo.pBindings = setLayoutInfo.bindings.data();
 			vk_check(vkCreateDescriptorSetLayout(*device,&descSetLayoutInfo,nullptr,&descriptorSetLayout));
 
@@ -526,7 +582,7 @@ namespace flower { namespace graphics{
 
 		VkPipelineLayoutCreateInfo pipeLayoutInfo { };
 		pipeLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipeLayoutInfo.setLayoutCount = shader_descriptor_set_layouts.size();
+		pipeLayoutInfo.setLayoutCount = (uint32_t)shader_descriptor_set_layouts.size();
 		pipeLayoutInfo.pSetLayouts = shader_descriptor_set_layouts.data();
 		vk_check(vkCreatePipelineLayout(*device,&pipeLayoutInfo,nullptr,&pipeline_layout));
 	}

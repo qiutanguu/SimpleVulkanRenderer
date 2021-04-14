@@ -1,5 +1,5 @@
 #include "core/application.h"
-#include "viking_room.h"
+#include "sponza.h"
 
 int main()
 {
@@ -8,7 +8,7 @@ int main()
 	app.initialize();
 	
 	std::shared_ptr<flower::iruntime_module> vk_module =
-		std::make_shared<flower::graphics::viking_room_scene>(app.get_cam(),app.get_window());
+		std::make_shared<flower::graphics::sponza>(app.get_cam(),app.get_window());
 
 	app.modules.push_back(vk_module);
 	app.initialize_modules();

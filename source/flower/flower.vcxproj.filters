@@ -2,9 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="viking_room.cpp" />
+    <ClCompile Include="sponza.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="viking_room.h" />
+    <ClInclude Include="sponza.h" />
   </ItemGroup>
 </Project>

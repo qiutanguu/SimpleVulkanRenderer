@@ -68,9 +68,9 @@ namespace flower{ namespace graphics{
 		
 	private:
 		vk_device* device;
-		VkPipelineLayout layout;
 	public:
 		VkPipeline pipeline;
+		VkPipelineLayout layout;
 	};
 
 }}

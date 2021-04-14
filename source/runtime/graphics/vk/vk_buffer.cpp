@@ -16,6 +16,7 @@ namespace flower{ namespace graphics{
 		ret_buffer->commandpool = in_commandpool;
 
 		ret_buffer->create_buffer(usageFlags, memoryPropertyFlags, size,data);
+		ret_buffer->setup_descriptor();
 
 		return ret_buffer;
 	}

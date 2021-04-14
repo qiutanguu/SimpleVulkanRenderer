@@ -53,7 +53,7 @@ namespace flower { namespace graphics{
 
     public:
         vk_shader_mix(vk_device* in_device, bool dynamic_uniform_buffer) : device(in_device),dynamic_uniform_buffer(dynamic_uniform_buffer) {  }
-        ~vk_shader_mix(){ }
+        ~vk_shader_mix();
 
         static std::shared_ptr<vk_shader_mix> create(
             vk_device* in_device, 
@@ -65,6 +65,9 @@ namespace flower { namespace graphics{
             const char* tesc_path = nullptr, 
             const char* tese_path = nullptr
         );
+
+		std::shared_ptr<vk_descriptor_set> allocate_descriptor_set();
+		
     private:
         void parser();
         void parser_shader_module(std::shared_ptr<vk_shader_module> shader);
@@ -103,7 +106,7 @@ namespace flower { namespace graphics{
 
         std::vector<VkDescriptorSetLayout> shader_descriptor_set_layouts;
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-        std::vector<vk_descriptor_set_pool*> descriptor_set_pools;
+        std::vector<std::shared_ptr<vk_descriptor_set_pool>> descriptor_set_pools;
 
 		std::unordered_map<std::string,buffer_info>	buffer_params;
 		std::unordered_map<std::string,image_info> image_params;
