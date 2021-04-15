@@ -24,8 +24,6 @@ namespace flower{ namespace graphics{
 		create_sync_objects();
 
 		initialize_special();
-		
-		// 记录尺寸大小
 		glfwGetWindowSize(window, &last_width, &last_height);
 	}
 
@@ -52,7 +50,6 @@ namespace flower{ namespace graphics{
 
 	void vk_runtime::recreate_swapchain_default()
 	{
-		// 最小化时不做任何事情
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(window, &width, &height);
 		while (width == 0 ||height == 0) 
@@ -368,7 +365,7 @@ namespace flower{ namespace graphics{
 		subpass.pColorAttachments = &colorAttachmentRef;
 		subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-		std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+		std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment};
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());

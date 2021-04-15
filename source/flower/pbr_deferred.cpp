@@ -1,16 +1,16 @@
-#include "sponza.h"
+#include "pbr_deferred.h"
 #include "graphics/vk/vk_buffer.h"
 #include "graphics/vk/vk_shader.h"
 #include "core/core.h"
 
 namespace flower{ namespace graphics{
 
-	void sponza::config_before_init()
+	void pbr_deferred::config_before_init()
 	{
 		features.samplerAnisotropy = true;
 	}
 
-	void sponza::tick(float time, float delta_time)
+	void pbr_deferred::tick(float time, float delta_time)
 	{
 		uint32_t back_buffer_index = vk_runtime::acquire_next_present_image();
 
@@ -19,9 +19,9 @@ namespace flower{ namespace graphics{
 		vk_runtime::present();
 	}
 
-	void sponza::initialize_special()
+	void pbr_deferred::initialize_special()
 	{
-		mesh_sponza.load_obj_mesh_new("data/model/sponza/sponza.obj","");
+		mesh_sponza.load_obj_mesh_new(&device,graphics_command_pool,"data/model/sponza/sponza.obj","");
 
 		upload_vertex_buffer();
 		createTextureImage();
@@ -31,13 +31,13 @@ namespace flower{ namespace graphics{
 
 		record_renderCommand();
 	}
-	
-	void sponza::destroy_special()
+
+	void pbr_deferred::destroy_special()
 	{
 		pipeline_render.reset();
 
-
-		uniformBuffers.resize(0);
+		mesh_sponza.sub_meshes.resize(0);
+		buffer_ubo_vp.resize(0);
 
 		mesh_texture.reset();
 		sponza_textures.resize(0);
@@ -48,44 +48,43 @@ namespace flower{ namespace graphics{
 		texture_shader_mix.reset();
 	}
 
-	void sponza::recreate_swapchain()
+	void pbr_deferred::recreate_swapchain()
 	{
 		vk_runtime::recreate_swapchain_default();
 
 		create_uniform_buffer();
 		createGraphicsPipeline();
-		
+
 		record_renderCommand();
 	}
 
-	void sponza::cleanup_swapchain()
+	void pbr_deferred::cleanup_swapchain()
 	{
 		vk_runtime::cleanup_swapchain_default();
 
 		pipeline_render.reset();
 		texture_descriptor_sets.resize(0);
-		uniformBuffers.resize(0);
+		buffer_ubo_vp.resize(0);
 	}
 
-	void sponza::update_before_commit(uint32_t backBuffer_index)
+	void pbr_deferred::update_before_commit(uint32_t backBuffer_index)
 	{
 		static auto startTime = std::chrono::high_resolution_clock::now();
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-		uniform_buffer_mvp ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+		global_matrix_vp ubo_vp{};
 
-		ubo.view = scene_view_cam.get_view_matrix();
-		ubo.proj = scene_view_cam.GetProjectMatrix(swapchain.get_swapchain_extent().width,swapchain.get_swapchain_extent().height);
+		ubo_vp.view = scene_view_cam.get_view_matrix();
+		ubo_vp.proj = scene_view_cam.GetProjectMatrix(swapchain.get_swapchain_extent().width,swapchain.get_swapchain_extent().height);
 
-		uniformBuffers[backBuffer_index]->map();
-		uniformBuffers[backBuffer_index]->copy_to( (void*)&ubo,sizeof(ubo));
-		uniformBuffers[backBuffer_index]->unmap();
+		buffer_ubo_vp[backBuffer_index]->map();
+		buffer_ubo_vp[backBuffer_index]->copy_to( (void*)&ubo_vp,sizeof(ubo_vp));
+		buffer_ubo_vp[backBuffer_index]->unmap();
 	}
 
-	void sponza::upload_vertex_buffer()
+	void pbr_deferred::upload_vertex_buffer()
 	{
 		sponza_vertex_buf = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_sponza.vertices_data,mesh_sponza.vertices_attributes);
 		for (auto& submesh : mesh_sponza.sub_meshes)
@@ -95,13 +94,13 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void sponza::create_uniform_buffer()
+	void pbr_deferred::create_uniform_buffer()
 	{
-		VkDeviceSize bufferSize = sizeof(uniform_buffer_mvp);
+		VkDeviceSize bufferSize = sizeof(global_matrix_vp);
 
-		uniformBuffers.resize(swapchain.get_imageViews().size());
+		buffer_ubo_vp.resize(swapchain.get_imageViews().size());
 
-		for (size_t i = 0; i < uniformBuffers.size(); i++) 
+		for (size_t i = 0; i < buffer_ubo_vp.size(); i++) 
 		{
 			auto buffer = vk_buffer::create(
 				device,
@@ -112,14 +111,14 @@ namespace flower{ namespace graphics{
 				nullptr
 			);
 
-			uniformBuffers[i] = buffer;
+			buffer_ubo_vp[i] = buffer;
 		}
 	}
 
-	void sponza::createTextureImage()
+	void pbr_deferred::createTextureImage()
 	{
 		sponza_textures.resize(mesh_sponza.sub_meshes.size());
-		
+
 		for (size_t i = 0; i < mesh_sponza.sub_meshes.size(); i ++)
 		{
 			std::string pathpad = "data/model/sponza/";
@@ -140,7 +139,7 @@ namespace flower{ namespace graphics{
 				);
 			}
 		}
-		
+
 		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,"data/image/checkerboard.png");
 
 		mesh_texture->update_sampler(
@@ -153,7 +152,7 @@ namespace flower{ namespace graphics{
 		);
 	}
 
-	void sponza::record_renderCommand()
+	void pbr_deferred::record_renderCommand()
 	{
 		// ªÊ÷∆√¸¡Ó
 		for (size_t i = 0; i < graphics_command_buffers.size(); i++) 
@@ -209,7 +208,7 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void sponza::createGraphicsPipeline()
+	void pbr_deferred::createGraphicsPipeline()
 	{
 		texture_shader_mix = vk_shader_mix::create(&device,false,"data/model/sponza/vert.spv","data/model/sponza/frag.spv");
 
@@ -237,8 +236,9 @@ namespace flower{ namespace graphics{
 
 				auto index = i * mesh_sponza.sub_meshes.size() + j;
 				texture_descriptor_sets[index] = texture_shader_mix->allocate_descriptor_set();
-				texture_descriptor_sets[index]->set_buffer("ubo",uniformBuffers[i]);
-				texture_descriptor_sets[index]->set_image("texSampler",texture);
+				texture_descriptor_sets[index]->set_buffer("ub_vp",buffer_ubo_vp[i]);
+				texture_descriptor_sets[index]->set_buffer("ub_m",mesh_sponza.sub_meshes[j].buffer_ubo_model);
+				texture_descriptor_sets[index]->set_image("base_color_texture",texture);
 			}
 		}
 	}

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "graphics/vk_runtime.h"
 #include "graphics/vk/vk_buffer.h"
 #include "graphics/mesh.h"
@@ -9,15 +10,15 @@
 #include "graphics/vk/vk_shader.h"
 
 namespace flower{ namespace graphics{
-	
-	class sponza : public vk_runtime
+
+	class pbr_deferred : public vk_runtime
 	{
 	public:
-		sponza(camera& incam,GLFWwindow* window) : 
+		pbr_deferred(camera& incam,GLFWwindow* window) : 
 			vk_runtime::vk_runtime(window),
 			scene_view_cam(incam)
 		{
-		
+
 		}
 
 	public:
@@ -27,10 +28,9 @@ namespace flower{ namespace graphics{
 		virtual void destroy_special() override;
 		virtual void recreate_swapchain() override;
 		virtual void cleanup_swapchain() override;
-		
 
 	private:
-		std::vector<std::shared_ptr<vk_buffer>> uniformBuffers;
+		std::vector<std::shared_ptr<vk_buffer>> buffer_ubo_vp;
 		void create_uniform_buffer();
 
 		void update_before_commit(uint32_t backBuffer_index);

@@ -23,6 +23,8 @@
     <ClInclude Include="graphics\vk\vk_pipeline.h" />
     <ClInclude Include="graphics\vk\vk_shader.h" />
     <ClInclude Include="graphics\vk\vk_descriptor_set.h" />
+    <ClInclude Include="graphics\pass\render_pass.h" />
+    <ClInclude Include="graphics\pass\base_pass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -43,5 +45,6 @@
     <ClCompile Include="graphics\vk\vk_pipeline.cpp" />
     <ClCompile Include="graphics\vk\vk_shader.cpp" />
     <ClCompile Include="graphics\vk\vk_descriptor_set.cpp" />
+    <ClCompile Include="graphics\pass\base_pass.cpp" />
   </ItemGroup>
 </Project>

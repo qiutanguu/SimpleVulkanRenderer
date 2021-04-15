@@ -31,6 +31,11 @@ namespace flower{ namespace graphics{
 	{
 		std::vector<uint32_t> indices;
 
+		// 每个submesh都有一个model矩阵
+		glm::mat4 model;
+
+		std::shared_ptr<vk_buffer> buffer_ubo_model;
+
 		material material_using;
 	};
 	
@@ -48,7 +53,7 @@ namespace flower{ namespace graphics{
 		std::vector<using_vertex> vertices;
 		std::vector<uint32_t> indices;
 
-		void load_obj_mesh_new(std::string mesh_path,std::string mat_path);
+		void load_obj_mesh_new(vk_device* indevice,VkCommandPool inpool,std::string mesh_path,std::string mat_path);
 	};
 
 } }

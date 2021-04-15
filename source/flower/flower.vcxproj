@@ -95,7 +95,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="sponza.cpp" />
+    <ClCompile Include="pbr_deferred.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\runtime\runtime.vcxproj">
@@ -103,7 +103,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sponza.h" />
+    <ClInclude Include="pbr_deferred.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

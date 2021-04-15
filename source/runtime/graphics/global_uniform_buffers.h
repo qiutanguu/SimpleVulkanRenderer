@@ -6,11 +6,11 @@
 
 namespace flower{ namespace graphics{
 
-	// »ù´¡mvp¾ØÕó
-	struct uniform_buffer_mvp
+	struct global_matrix_vp
 	{
-		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
 		alignas(16) glm::mat4 proj;
 	};
+
+
 }}

@@ -3,7 +3,7 @@
 
 namespace flower{ namespace graphics{
 
-	void mesh::load_obj_mesh_new(std::string path,std::string mat_path)
+	void mesh::load_obj_mesh_new(vk_device* indevice,VkCommandPool inpool,std::string path,std::string mat_path)
 	{
 		tinyobj::ObjReaderConfig reader_config;
 		reader_config.mtl_search_path = mat_path.c_str();
@@ -28,6 +28,28 @@ namespace flower{ namespace graphics{
 
 		std::unordered_map<using_vertex, uint32_t> uniqueVertices{};
 		sub_meshes.resize(materials.size());
+
+		// 设置模型矩阵
+		VkDeviceSize bufferSize = sizeof(glm::mat4);
+		for (auto& submesh : sub_meshes)
+		{
+			auto buffer = vk_buffer::create(
+				*indevice,
+				inpool,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+				bufferSize,
+				nullptr
+			);
+
+			glm::mat4 model_mat = glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
+
+			buffer->map();
+			buffer->copy_to((void*)&model_mat,sizeof(model_mat));
+			buffer->unmap();
+
+			submesh.buffer_ubo_model = buffer;
+		}
 
 		// 遍历每个网格
 		for (size_t s = 0; s < shapes.size(); s++) 

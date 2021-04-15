@@ -196,7 +196,7 @@ namespace flower { namespace graphics{
 
 	std::shared_ptr<vk_pipeline> vk_pipeline::create_single_binding(vk_device* in_device,VkPipelineCache pipelineCache,vk_pipeline_info& pipelineInfo,VkVertexInputBindingDescription& inputBindings,const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,VkPipelineLayout pipelineLayout,VkRenderPass renderPass)
 	{
-		return create_multi_binding(in_device,pipelineCache,pipelineInfo,{inputBindings},vertexInputAttributes,pipelineLayout,renderPass);
+		return create_multi_binding	(in_device,pipelineCache,pipelineInfo,{inputBindings},vertexInputAttributes,pipelineLayout,renderPass);
 	}
 
 	void vk_pipeline::bind(VkCommandBuffer cmd_buf,VkPipelineBindPoint bind_point)
