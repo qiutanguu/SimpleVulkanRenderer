@@ -24,6 +24,9 @@
     <ClInclude Include="graphics\vk\vk_shader.h" />
     <ClInclude Include="graphics\vk\vk_descriptor_set.h" />
     <ClInclude Include="graphics\pass\base_pass.h" />
+    <ClInclude Include="graphics\vk\vk_rendertarget.h" />
+    <ClInclude Include="graphics\vk\vk_renderpass.h" />
+    <ClInclude Include="graphics\vk\vk_framebuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -45,5 +48,8 @@
     <ClCompile Include="graphics\vk\vk_shader.cpp" />
     <ClCompile Include="graphics\vk\vk_descriptor_set.cpp" />
     <ClCompile Include="graphics\pass\base_pass.cpp" />
+    <ClCompile Include="graphics\vk\vk_rendertarget.cpp" />
+    <ClCompile Include="graphics\vk\vk_renderpass.cpp" />
+    <ClCompile Include="graphics\vk\vk_framebuffer.cpp" />
   </ItemGroup>
 </Project>
