@@ -23,7 +23,6 @@
     <ClInclude Include="graphics\vk\vk_pipeline.h" />
     <ClInclude Include="graphics\vk\vk_shader.h" />
     <ClInclude Include="graphics\vk\vk_descriptor_set.h" />
-    <ClInclude Include="graphics\pass\render_pass.h" />
     <ClInclude Include="graphics\pass\base_pass.h" />
   </ItemGroup>
   <ItemGroup>

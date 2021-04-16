@@ -106,7 +106,6 @@
     <ClInclude Include="core\timer.h" />
     <ClInclude Include="graphics\global_uniform_buffers.h" />
     <ClInclude Include="graphics\pass\base_pass.h" />
-    <ClInclude Include="graphics\pass\render_pass.h" />
     <ClInclude Include="graphics\vk\vk_command_buffer.h" />
     <ClInclude Include="graphics\vk\vk_descriptor_set.h" />
     <ClInclude Include="graphics\vk\vk_pipeline.h" />
