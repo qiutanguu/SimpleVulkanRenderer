@@ -194,6 +194,24 @@ namespace flower { namespace graphics{
 		return ret;
 	}
 
+	std::shared_ptr<vk_pipeline> vk_pipeline::create_by_shader(
+		vk_device* in_device,
+		VkPipelineCache pipelineCache,
+		vk_pipeline_info& pipelineInfo,
+		std::shared_ptr<vk_shader_mix> shaders,
+		VkRenderPass renderPass)
+	{
+		return create_multi_binding(
+			in_device,
+			pipelineCache,
+			pipelineInfo,
+			shaders->input_bindings,
+			shaders->input_attributes,
+			shaders->pipeline_layout,
+			renderPass
+		);
+	}
+
 	std::shared_ptr<vk_pipeline> vk_pipeline::create_single_binding(vk_device* in_device,VkPipelineCache pipelineCache,vk_pipeline_info& pipelineInfo,VkVertexInputBindingDescription& inputBindings,const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,VkPipelineLayout pipelineLayout,VkRenderPass renderPass)
 	{
 		return create_multi_binding	(in_device,pipelineCache,pipelineInfo,{inputBindings},vertexInputAttributes,pipelineLayout,renderPass);

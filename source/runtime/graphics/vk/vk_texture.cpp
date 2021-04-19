@@ -31,12 +31,7 @@ namespace flower { namespace graphics{
 	}
 
     void vk_texture::update_sampler(
-        VkFilter mag_filter,
-        VkFilter min_filter,
-        VkSamplerMipmapMode mipmap_mode,
-        VkSamplerAddressMode address_mode_U,
-        VkSamplerAddressMode address_mode_V,
-        VkSamplerAddressMode address_mode_W
+        const sampler_layout& in
     )
     {
         VkPhysicalDeviceProperties properties{};
@@ -44,12 +39,12 @@ namespace flower { namespace graphics{
 
         VkSamplerCreateInfo sampler_info { };
         sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        sampler_info.magFilter = mag_filter;
-        sampler_info.minFilter  = min_filter;
-        sampler_info.mipmapMode = mipmap_mode;
-        sampler_info.addressModeU = address_mode_U;
-        sampler_info.addressModeV = address_mode_V;
-        sampler_info.addressModeW = address_mode_W;
+        sampler_info.magFilter = in.mag_filter;
+        sampler_info.minFilter  = in.min_filter;
+        sampler_info.mipmapMode = in.mipmap_mode;
+        sampler_info.addressModeU = in.address_mode_U;
+        sampler_info.addressModeV = in.address_mode_V;
+        sampler_info.addressModeW = in.address_mode_W;
         sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
         sampler_info.unnormalizedCoordinates = VK_FALSE;
         sampler_info.compareEnable = VK_FALSE;
@@ -70,7 +65,7 @@ namespace flower { namespace graphics{
         descriptor_info.sampler = image_sampler;
     }
 
-    std::shared_ptr<vk_texture> vk_texture::create_2d(vk_device* in_device,VkCommandPool in_pool,VkFormat format,const std::string& path)
+    std::shared_ptr<vk_texture> vk_texture::create_2d_mipmap(vk_device* in_device,VkCommandPool in_pool,VkFormat format,const std::string& path)
     {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -142,6 +137,40 @@ namespace flower { namespace graphics{
         ret->descriptor_info.sampler = ret->image_sampler;
         ret->descriptor_info.imageLayout = ret->image_layout;
         ret->descriptor_info.imageView = ret->image_view;
+
+        return ret;
+    }
+
+    std::shared_ptr<vk_texture> vk_texture::create_depth_no_msaa(
+        vk_device* in_device,
+        vk_swapchain* in_swapchain)
+    {
+        auto ret = std::make_shared<vk_texture>(in_device);
+
+        VkFormat depthFormat = find_depth_format(in_device->physical_device);
+        const auto& extent = in_swapchain->get_swapchain_extent();
+
+        ret->width = extent.width;
+        ret->height = extent.height;
+
+        ret->image_sampler = VK_NULL_HANDLE;
+
+        create_texture2D(
+            extent.width, 
+            extent.height, 
+            depthFormat, 
+            VK_IMAGE_TILING_OPTIMAL, 
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            ret->image, 
+            ret->image_memory,
+            *in_device);
+
+        ret->image_view = create_imageView(
+            &ret->image, 
+            depthFormat,
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            *in_device);
 
         return ret;
     }

@@ -4,12 +4,13 @@
 #include <core/core.h>
 #include <vector>
 #include <glfw/glfw3.h>
-#include "vk/vk_device.h"
 #include "vk/vk_instance.h"
 #include "core/camera.h"
 #include "core/interface.h"
 #include "vk/vk_swapchain.h"
 #include "vk/vk_command_buffer.h"
+#include "scene_textures.h"
+#include "texture_manager.h"
 
 namespace flower { namespace graphics{
 
@@ -79,17 +80,8 @@ namespace flower { namespace graphics{
 		void create_command_buffers();
 		void destroy_command_buffers();
 
-		void create_frame_buffers();
-		void destroy_frame_buffers();
-		
 		void create_command_pool();
 		void destroy_command_pool();
-
-		void create_depth_resources();
-		void destroy_depth_resources();
-
-		void create_render_pass();
-		void destroy_render_pass();
 
 		void create_sync_objects();
 		void destroy_sync_objects();
@@ -101,16 +93,9 @@ namespace flower { namespace graphics{
 		vk_instance instance;
 		vk_device device;
 		vk_swapchain swapchain;
-		vk_depth_resource depth_resource;
 
 		// 图形管线的Command Pool
 		VkCommandPool graphics_command_pool;
-
-		// 默认渲染Pass
-		VkRenderPass render_pass;
-
-		// FrameBuffers
-		std::vector<VkFramebuffer> swapchain_framebuffers;
 
 		// 命令缓冲
 		std::vector<std::shared_ptr<vk_command_buffer>> graphics_command_buffers;

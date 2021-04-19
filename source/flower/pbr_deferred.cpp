@@ -1,7 +1,9 @@
 #include "pbr_deferred.h"
 #include "graphics/vk/vk_buffer.h"
 #include "graphics/vk/vk_shader.h"
+#include "graphics/global_uniform_buffers.h"
 #include "core/core.h"
+#include "graphics/shader_manager.h"
 
 namespace flower{ namespace graphics{
 
@@ -23,17 +25,22 @@ namespace flower{ namespace graphics{
 	{
 		mesh_sponza.load_obj_mesh_new(&device,graphics_command_pool,"data/model/sponza/sponza.obj","");
 
-		upload_vertex_buffer();
+		vk_renderpass_mix_data mixdata(&device,swapchain);
+		pass_deferred = deferred_pass::create(mixdata);
+
+		
 		createTextureImage();
 
 		create_uniform_buffer();
 		createGraphicsPipeline();
-
+		upload_vertex_buffer();
 		record_renderCommand();
 	}
 
 	void pbr_deferred::destroy_special()
 	{
+		pass_deferred.reset();
+
 		pipeline_render.reset();
 
 		mesh_sponza.sub_meshes.resize(0);
@@ -44,13 +51,14 @@ namespace flower{ namespace graphics{
 
 		sponza_vertex_buf.reset();
 		sponza_index_buffer.resize(0);
-
-		texture_shader_mix.reset();
 	}
 
 	void pbr_deferred::recreate_swapchain()
 	{
 		vk_runtime::recreate_swapchain_default();
+
+		vk_renderpass_mix_data mixdata(&device,swapchain);
+		pass_deferred = deferred_pass::create(mixdata);
 
 		create_uniform_buffer();
 		createGraphicsPipeline();
@@ -86,7 +94,13 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::upload_vertex_buffer()
 	{
-		sponza_vertex_buf = vk_vertex_buffer::create(&device,graphics_command_pool,mesh_sponza.vertices_data,mesh_sponza.vertices_attributes);
+		sponza_vertex_buf = vk_vertex_buffer::create(
+			&device,
+			graphics_command_pool,
+			mesh_sponza.raw_data.pack_type_stream(g_shader_manager.texture_map_shader->per_vertex_attributes),
+			g_shader_manager.texture_map_shader->per_vertex_attributes
+		);
+
 		for (auto& submesh : mesh_sponza.sub_meshes)
 		{
 			auto& indices = submesh.indices;
@@ -127,28 +141,18 @@ namespace flower{ namespace graphics{
 			{
 				std::string combinePath = pathpad + mesh_sponza.sub_meshes[i].material_using.map_Kd;
 
-				sponza_textures[i] = vk_texture::create_2d(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,combinePath);
+				sponza_textures[i] = vk_texture::create_2d_mipmap(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,combinePath);
 
 				sponza_textures[i]->update_sampler(
-					VK_FILTER_LINEAR,
-					VK_FILTER_LINEAR,
-					VK_SAMPLER_MIPMAP_MODE_LINEAR,
-					VK_SAMPLER_ADDRESS_MODE_REPEAT,
-					VK_SAMPLER_ADDRESS_MODE_REPEAT,
-					VK_SAMPLER_ADDRESS_MODE_REPEAT
+					sampler_layout::linear_repeat()
 				);
 			}
 		}
 
-		mesh_texture = vk_texture::create_2d(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,"data/image/checkerboard.png");
+		mesh_texture = vk_texture::create_2d_mipmap(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,"data/image/checkerboard.png");
 
 		mesh_texture->update_sampler(
-			VK_FILTER_LINEAR,
-			VK_FILTER_LINEAR,
-			VK_SAMPLER_MIPMAP_MODE_LINEAR,
-			VK_SAMPLER_ADDRESS_MODE_REPEAT,
-			VK_SAMPLER_ADDRESS_MODE_REPEAT,
-			VK_SAMPLER_ADDRESS_MODE_REPEAT
+			sampler_layout::linear_repeat()
 		);
 	}
 
@@ -162,8 +166,12 @@ namespace flower{ namespace graphics{
 			auto& cmd_buffer = graphics_command_buffers[i]->get_instance();
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = render_pass;
-			renderPassInfo.framebuffer = swapchain_framebuffers[i];
+			// renderPassInfo.renderPass = render_pass;
+			// renderPassInfo.framebuffer = swapchain_framebuffers[i];
+
+			renderPassInfo.renderPass = pass_deferred->render_pass;
+			renderPassInfo.framebuffer = pass_deferred->swapchain_framebuffers[i];
+
 			renderPassInfo.renderArea.offset = {0, 0};
 			renderPassInfo.renderArea.extent = swapchain.get_swapchain_extent();
 
@@ -210,16 +218,18 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::createGraphicsPipeline()
 	{
-		texture_shader_mix = vk_shader_mix::create(&device,false,"data/model/sponza/vert.spv","data/model/sponza/frag.spv");
-
-		auto bindings = sponza_vertex_buf->get_input_binding();
-		auto attributes = sponza_vertex_buf->get_input_attribute(mesh_sponza.vertices_attributes);
-
 		vk_pipeline_info pipe_info;
-		pipe_info.vert_shader_module = texture_shader_mix->vert_shader_module->handle;
-		pipe_info.frag_shader_module = texture_shader_mix->frag_shader_module->handle;
 
-		pipeline_render = vk_pipeline::create_single_binding(&device,VK_NULL_HANDLE,pipe_info,bindings,attributes,texture_shader_mix->pipeline_layout,render_pass);
+		pipe_info.vert_shader_module = g_shader_manager.texture_map_shader->vert_shader_module->handle;
+		pipe_info.frag_shader_module = g_shader_manager.texture_map_shader->frag_shader_module->handle;
+
+		pipeline_render = vk_pipeline::create_by_shader(
+			&device,
+			VK_NULL_HANDLE,
+			pipe_info,
+			g_shader_manager.texture_map_shader,
+			pass_deferred->render_pass 
+		);
 
 		const auto& swapchain_num = swapchain.get_imageViews().size();
 		texture_descriptor_sets.resize(swapchain_num * mesh_sponza.sub_meshes.size());
@@ -235,7 +245,8 @@ namespace flower{ namespace graphics{
 				}
 
 				auto index = i * mesh_sponza.sub_meshes.size() + j;
-				texture_descriptor_sets[index] = texture_shader_mix->allocate_descriptor_set();
+
+				texture_descriptor_sets[index] = g_shader_manager.texture_map_shader->allocate_descriptor_set();
 				texture_descriptor_sets[index]->set_buffer("ub_vp",buffer_ubo_vp[i]);
 				texture_descriptor_sets[index]->set_buffer("ub_m",mesh_sponza.sub_meshes[j].buffer_ubo_model);
 				texture_descriptor_sets[index]->set_image("base_color_texture",texture);

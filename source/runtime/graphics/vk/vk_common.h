@@ -71,14 +71,6 @@ namespace flower { namespace graphics {
 		constexpr auto CS = "main";
 	}
 
-	// 深度缓冲
-	struct vk_depth_resource
-	{
-		VkImage depth_image;
-		VkDeviceMemory depth_image_memory;
-		VkImageView depth_imageView;
-	};
-
 	// 交换链支持细节
 	struct vk_swapchain_support_details 
 	{
@@ -160,7 +152,7 @@ namespace flower { namespace graphics {
 		return find_supported_format
 		(
 			physical_device,
-			{VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+			{ VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
 		);

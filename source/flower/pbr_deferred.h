@@ -5,9 +5,10 @@
 #include "graphics/mesh.h"
 #include "graphics/vk/vk_vertex_buffer.h"
 #include "graphics/vk/vk_pipeline.h"
-#include "graphics/vk/vk_texture.h"
 #include "core/camera.h"
 #include "graphics/vk/vk_shader.h"
+
+#include "graphics/pass/deferred_pass.h"
 
 namespace flower{ namespace graphics{
 
@@ -43,7 +44,6 @@ namespace flower{ namespace graphics{
 		std::shared_ptr<vk_pipeline> pipeline_render;
 		void createGraphicsPipeline();
 
-		std::shared_ptr<vk_shader_mix> texture_shader_mix;
 		std::vector<std::shared_ptr<vk_descriptor_set>> texture_descriptor_sets;
 
 		// Œ∆¿Ì
@@ -54,10 +54,11 @@ namespace flower{ namespace graphics{
 		// ∂•µ„buffer
 		std::shared_ptr<vk_vertex_buffer> sponza_vertex_buf;
 		std::vector<std::shared_ptr<vk_index_buffer>> sponza_index_buffer;
-
 		void upload_vertex_buffer();
 
 		camera& scene_view_cam;
+
+		std::shared_ptr<deferred_pass> pass_deferred;
 	};
 
 } }

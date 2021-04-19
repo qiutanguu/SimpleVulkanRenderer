@@ -116,6 +116,10 @@ namespace flower { namespace graphics{
 		return 0;
 	}
 
+	inline int32_t vertex_attribute_count(vertex_attribute va)
+	{
+		return vertex_attribute_size(va) / sizeof(float);
+	}
 
 	inline VkFormat VertexAttributeToVkFormat(vertex_attribute va)
 	{

@@ -111,7 +111,12 @@ namespace flower{ namespace graphics{
 					if (uniqueVertices.count(one_vertex) == 0) 
 					{
 						uniqueVertices[one_vertex] = static_cast<uint32_t>(vertices.size());
+
 						vertices.push_back(one_vertex);
+
+						raw_data.get_stream(vertex_attribute::pos).data.push_back(one_vertex.pos.x);
+						raw_data.get_stream(vertex_attribute::pos).data.push_back(one_vertex.pos.y);
+						raw_data.get_stream(vertex_attribute::pos).data.push_back(one_vertex.pos.z);
 
 						vertices_data.push_back(one_vertex.pos.x);
 						vertices_data.push_back(one_vertex.pos.y);
@@ -121,8 +126,15 @@ namespace flower{ namespace graphics{
 						vertices_data.push_back(one_vertex.color.y);
 						vertices_data.push_back(one_vertex.color.z);
 
+						raw_data.get_stream(vertex_attribute::color).data.push_back(one_vertex.color.x);
+						raw_data.get_stream(vertex_attribute::color).data.push_back(one_vertex.color.y);
+						raw_data.get_stream(vertex_attribute::color).data.push_back(one_vertex.color.z);
+
 						vertices_data.push_back(one_vertex.uv0.x);
 						vertices_data.push_back(one_vertex.uv0.y);
+
+						raw_data.get_stream(vertex_attribute::uv0).data.push_back(one_vertex.uv0.x);
+						raw_data.get_stream(vertex_attribute::uv0).data.push_back(one_vertex.uv0.y);
 					}
 
 					indices.push_back(uniqueVertices[one_vertex]);

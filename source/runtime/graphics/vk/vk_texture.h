@@ -2,8 +2,34 @@
 #include "vk_common.h"
 #include "vk_command_buffer.h"
 #include "vk_device.h"
+#include "vk_swapchain.h"
 
 namespace flower { namespace graphics{
+
+	struct sampler_layout
+	{
+		VkFilter mag_filter;
+		VkFilter min_filter;
+		VkSamplerMipmapMode mipmap_mode;
+		VkSamplerAddressMode address_mode_U; 
+		VkSamplerAddressMode address_mode_V; 
+		VkSamplerAddressMode address_mode_W;
+
+		static sampler_layout linear_repeat()
+		{
+			sampler_layout ret {};
+			ret.mag_filter = VK_FILTER_LINEAR;
+			ret.min_filter = VK_FILTER_LINEAR;
+
+			ret.mipmap_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+			ret.address_mode_U = VK_SAMPLER_ADDRESS_MODE_REPEAT; 
+			ret.address_mode_V = VK_SAMPLER_ADDRESS_MODE_REPEAT; 
+			ret.address_mode_W = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+			return ret;
+		}
+	};
 
 	class vk_texture
 	{
@@ -37,22 +63,20 @@ namespace flower { namespace graphics{
 		vk_texture(vk_device* in_device): device(in_device){ }
 		~vk_texture();
 		void update_sampler(
-			VkFilter mag_filter = VK_FILTER_LINEAR, 
-			VkFilter min_filter = VK_FILTER_LINEAR,
-			VkSamplerMipmapMode mipmap_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-			VkSamplerAddressMode address_mode_U = VK_SAMPLER_ADDRESS_MODE_REPEAT, 
-			VkSamplerAddressMode address_mode_V = VK_SAMPLER_ADDRESS_MODE_REPEAT, 
-			VkSamplerAddressMode address_mode_W = VK_SAMPLER_ADDRESS_MODE_REPEAT
+			const sampler_layout& in
 		);
 
-	#pragma region creator
-		static std::shared_ptr<vk_texture> create_2d(
+		static std::shared_ptr<vk_texture> create_2d_mipmap(
 			vk_device* in_device,
 			VkCommandPool in_pool,
 			VkFormat format,
 			const std::string& image_path
 		); 
-	#pragma endregion
+
+		static std::shared_ptr<vk_texture> create_depth_no_msaa(
+			vk_device* in_device,
+			vk_swapchain* in_swapchain
+		);
 	};
 
 } }

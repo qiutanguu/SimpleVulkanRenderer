@@ -123,7 +123,11 @@ namespace flower { namespace graphics{
 	{
 		for (const auto& availableFormat : availableFormats) 
 		{
-			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
+			// 尽可能使用srgb_r8g8b8 
+			if (
+				availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && 
+				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+			) 
 			{
 				return availableFormat;
 			}

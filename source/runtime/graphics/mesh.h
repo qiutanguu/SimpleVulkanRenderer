@@ -5,6 +5,8 @@
 #include "vk/vk_vertex_buffer.h"
 #include "global_uniform_buffers.h"
 
+#include "scene/vertex.h"
+
 namespace flower{ namespace graphics{
 
 	// 标准顶点 pos color uv0
@@ -47,13 +49,22 @@ namespace flower{ namespace graphics{
 		std::vector<sub_mesh> sub_meshes;
 
 		std::vector<float> vertices_data;
-		std::vector<vertex_attribute>  vertices_attributes = { vertex_attribute::pos, vertex_attribute::color, vertex_attribute::uv0  };
+
+		vertex_raw_data raw_data = {};
+
+		std::vector<vertex_attribute>  vertices_attributes = {
+			vertex_attribute::pos, 
+			vertex_attribute::color, 
+			vertex_attribute::uv0  
+		};
 
 		// 存储的所有顶点
 		std::vector<using_vertex> vertices;
 		std::vector<uint32_t> indices;
 
 		void load_obj_mesh_new(vk_device* indevice,VkCommandPool inpool,std::string mesh_path,std::string mat_path);
+
+		void load_gltf_mesh();
 	};
 
 } }

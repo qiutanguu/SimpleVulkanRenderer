@@ -65,6 +65,14 @@ namespace flower{ namespace graphics{
 			VkPipelineLayout pipelineLayout,
 			VkRenderPass renderPass
 		);
+
+		static std::shared_ptr<vk_pipeline> create_by_shader(
+			vk_device* in_device,
+			VkPipelineCache pipelineCache,
+			vk_pipeline_info& pipelineInfo,
+			std::shared_ptr<vk_shader_mix> shaders,
+			VkRenderPass renderPass
+		);
 		
 	private:
 		vk_device* device;
