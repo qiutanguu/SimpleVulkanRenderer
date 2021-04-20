@@ -150,4 +150,6 @@ namespace flower
 			Up    = glm::normalize(glm::cross(Right, Front));
 		}
 	};
+
+    extern camera g_cam;
 }

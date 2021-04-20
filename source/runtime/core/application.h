@@ -19,7 +19,6 @@ namespace flower
 		void destroy();
 
 		auto get_window() { return window; }
-		auto& get_cam() { return scene_view_cam; }
 		std::vector< std::shared_ptr<iruntime_module>> modules = {};
 
 	protected:
@@ -31,8 +30,6 @@ namespace flower
 	protected:
 		GLFWwindow* window;
 		
-		camera scene_view_cam = {};
-
 		uint32_t width = 1280u;
 		uint32_t height = 960u;
 

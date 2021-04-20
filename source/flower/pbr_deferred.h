@@ -15,9 +15,8 @@ namespace flower{ namespace graphics{
 	class pbr_deferred : public vk_runtime
 	{
 	public:
-		pbr_deferred(camera& incam,GLFWwindow* window) : 
-			vk_runtime::vk_runtime(window),
-			scene_view_cam(incam)
+		pbr_deferred(GLFWwindow* window) : 
+			vk_runtime::vk_runtime(window)
 		{
 
 		}
@@ -31,9 +30,6 @@ namespace flower{ namespace graphics{
 		virtual void cleanup_swapchain() override;
 
 	private:
-		std::vector<std::shared_ptr<vk_buffer>> buffer_ubo_vp;
-		void create_uniform_buffer();
-
 		void update_before_commit(uint32_t backBuffer_index);
 		void record_renderCommand();
 
@@ -46,17 +42,10 @@ namespace flower{ namespace graphics{
 
 		std::vector<std::shared_ptr<vk_descriptor_set>> texture_descriptor_sets;
 
-		// Œ∆¿Ì
-		std::shared_ptr<vk_texture> mesh_texture;
-		std::vector<std::shared_ptr<vk_texture>> sponza_textures;
-		void createTextureImage();
-
 		// ∂•µ„buffer
 		std::shared_ptr<vk_vertex_buffer> sponza_vertex_buf;
 		std::vector<std::shared_ptr<vk_index_buffer>> sponza_index_buffer;
 		void upload_vertex_buffer();
-
-		camera& scene_view_cam;
 
 		std::shared_ptr<deferred_pass> pass_deferred;
 	};

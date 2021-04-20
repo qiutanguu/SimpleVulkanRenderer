@@ -1,5 +1,6 @@
 #include "vk_runtime.h"
 #include "shader_manager.h"
+#include "global_uniform_buffers.h"
 
 namespace flower{ namespace graphics{
 
@@ -24,6 +25,7 @@ namespace flower{ namespace graphics{
 		g_texture_manager.initialize(&device,graphics_command_pool);
 		g_scene_textures.initialize(&device,&swapchain);
 		g_shader_manager.initialize(&device);
+		g_uniform_buffers.initialize(&device,&swapchain,graphics_command_pool);
 		
 		initialize_special();
 		glfwGetWindowSize(window, &last_width, &last_height);
@@ -36,6 +38,7 @@ namespace flower{ namespace graphics{
 		g_texture_manager.release();
 		g_scene_textures.release();
 		g_shader_manager.release();
+		g_uniform_buffers.release();
 
 		destroy_command_buffers();
 		destroy_sync_objects();
@@ -71,6 +74,9 @@ namespace flower{ namespace graphics{
 		// 重新申请所有的rt
 		g_scene_textures.release();
 		g_scene_textures.initialize(&device,&swapchain);
+
+		g_uniform_buffers.release();
+		g_uniform_buffers.initialize(&device,&swapchain,graphics_command_pool);
 
 		create_command_buffers();
 

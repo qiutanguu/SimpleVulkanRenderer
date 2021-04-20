@@ -23,15 +23,11 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::initialize_special()
 	{
-		mesh_sponza.load_obj_mesh_new(&device,graphics_command_pool,"data/model/sponza/sponza.obj","");
-
+		mesh_sponza.load_obj_mesh(&device,graphics_command_pool,"data/model/sponza/sponza.obj","");
+		 
 		vk_renderpass_mix_data mixdata(&device,swapchain);
-		pass_deferred = deferred_pass::create(mixdata);
+		pass_deferred = deferred_pass::create(mixdata);  
 
-		
-		createTextureImage();
-
-		create_uniform_buffer();
 		createGraphicsPipeline();
 		upload_vertex_buffer();
 		record_renderCommand();
@@ -44,10 +40,6 @@ namespace flower{ namespace graphics{
 		pipeline_render.reset();
 
 		mesh_sponza.sub_meshes.resize(0);
-		buffer_ubo_vp.resize(0);
-
-		mesh_texture.reset();
-		sponza_textures.resize(0);
 
 		sponza_vertex_buf.reset();
 		sponza_index_buffer.resize(0);
@@ -60,7 +52,6 @@ namespace flower{ namespace graphics{
 		vk_renderpass_mix_data mixdata(&device,swapchain);
 		pass_deferred = deferred_pass::create(mixdata);
 
-		create_uniform_buffer();
 		createGraphicsPipeline();
 
 		record_renderCommand();
@@ -72,24 +63,11 @@ namespace flower{ namespace graphics{
 
 		pipeline_render.reset();
 		texture_descriptor_sets.resize(0);
-		buffer_ubo_vp.resize(0);
 	}
 
 	void pbr_deferred::update_before_commit(uint32_t backBuffer_index)
 	{
-		static auto startTime = std::chrono::high_resolution_clock::now();
-
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-		global_matrix_vp ubo_vp{};
-
-		ubo_vp.view = scene_view_cam.get_view_matrix();
-		ubo_vp.proj = scene_view_cam.GetProjectMatrix(swapchain.get_swapchain_extent().width,swapchain.get_swapchain_extent().height);
-
-		buffer_ubo_vp[backBuffer_index]->map();
-		buffer_ubo_vp[backBuffer_index]->copy_to( (void*)&ubo_vp,sizeof(ubo_vp));
-		buffer_ubo_vp[backBuffer_index]->unmap();
+		g_uniform_buffers.update(backBuffer_index);
 	}
 
 	void pbr_deferred::upload_vertex_buffer()
@@ -106,54 +84,6 @@ namespace flower{ namespace graphics{
 			auto& indices = submesh.indices;
 			sponza_index_buffer.push_back(vk_index_buffer::create(&device,graphics_command_pool,indices));
 		}
-	}
-
-	void pbr_deferred::create_uniform_buffer()
-	{
-		VkDeviceSize bufferSize = sizeof(global_matrix_vp);
-
-		buffer_ubo_vp.resize(swapchain.get_imageViews().size());
-
-		for (size_t i = 0; i < buffer_ubo_vp.size(); i++) 
-		{
-			auto buffer = vk_buffer::create(
-				device,
-				graphics_command_pool,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				bufferSize,
-				nullptr
-			);
-
-			buffer_ubo_vp[i] = buffer;
-		}
-	}
-
-	void pbr_deferred::createTextureImage()
-	{
-		sponza_textures.resize(mesh_sponza.sub_meshes.size());
-
-		for (size_t i = 0; i < mesh_sponza.sub_meshes.size(); i ++)
-		{
-			std::string pathpad = "data/model/sponza/";
-
-			if(mesh_sponza.sub_meshes[i].material_using.map_Kd_set && mesh_sponza.sub_meshes[i].material_using.map_Kd!= "")
-			{
-				std::string combinePath = pathpad + mesh_sponza.sub_meshes[i].material_using.map_Kd;
-
-				sponza_textures[i] = vk_texture::create_2d_mipmap(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,combinePath);
-
-				sponza_textures[i]->update_sampler(
-					sampler_layout::linear_repeat()
-				);
-			}
-		}
-
-		mesh_texture = vk_texture::create_2d_mipmap(&device,graphics_command_pool,VK_FORMAT_R8G8B8A8_SRGB,"data/image/checkerboard.png");
-
-		mesh_texture->update_sampler(
-			sampler_layout::linear_repeat()
-		);
 	}
 
 	void pbr_deferred::record_renderCommand()
@@ -234,22 +164,16 @@ namespace flower{ namespace graphics{
 		const auto& swapchain_num = swapchain.get_imageViews().size();
 		texture_descriptor_sets.resize(swapchain_num * mesh_sponza.sub_meshes.size());
 
-		auto& texture = mesh_texture;
 		for (size_t i = 0; i < swapchain_num; i++)
 		{
 			for (size_t j = 0; j < mesh_sponza.sub_meshes.size(); j ++)
 			{
-				if (mesh_sponza.sub_meshes[j].material_using.map_Kd != "")
-				{
-					texture = sponza_textures[j];
-				}
-
 				auto index = i * mesh_sponza.sub_meshes.size() + j;
 
 				texture_descriptor_sets[index] = g_shader_manager.texture_map_shader->allocate_descriptor_set();
-				texture_descriptor_sets[index]->set_buffer("ub_vp",buffer_ubo_vp[i]);
+				texture_descriptor_sets[index]->set_buffer("ub_vp",g_uniform_buffers.ubo_vps[i]);
 				texture_descriptor_sets[index]->set_buffer("ub_m",mesh_sponza.sub_meshes[j].buffer_ubo_model);
-				texture_descriptor_sets[index]->set_image("base_color_texture",texture);
+				texture_descriptor_sets[index]->set_image("base_color_texture",g_texture_manager.get_texture_vk( mesh_sponza.sub_meshes[j].material_using.map_diffuse));
 			}
 		}
 	}

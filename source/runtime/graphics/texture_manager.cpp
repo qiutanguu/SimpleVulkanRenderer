@@ -32,6 +32,35 @@ namespace flower { namespace graphics{
 		ASSERT(has_init,"texture manager …–Œ¥≥ı ºªØ£°");
 	}
 
+	void texture_manager::initialize(vk_device* in_device,VkCommandPool in_pool)
+	{
+		device = in_device;
+		pool = in_pool;
+		has_init = true;
 
+		white_16x16 = load_texture_mipmap(
+			VK_FORMAT_R8G8B8A8_UNORM,
+			sampler_layout::linear_repeat(),
+			"data/image/white.png"
+		);
+
+		black_16x16 = load_texture_mipmap(
+			VK_FORMAT_R8G8B8A8_UNORM,
+			sampler_layout::linear_repeat(),
+			"data/image/black.png"
+		);
+
+		checkboard = load_texture_mipmap(
+			VK_FORMAT_R8G8B8A8_UNORM,
+			sampler_layout::linear_repeat(),
+			"data/image/checkerboard.png"
+		);
+
+		default_normal = load_texture_mipmap(
+			VK_FORMAT_R8G8B8A8_UNORM,
+			sampler_layout::linear_repeat(),
+			"data/image/default_normal.TGA"
+		);
+	}
 
 } }

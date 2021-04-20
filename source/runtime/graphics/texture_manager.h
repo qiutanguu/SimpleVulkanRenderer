@@ -22,10 +22,7 @@ namespace flower { namespace graphics{
 			textures = {};
 		}
 
-		void initialize(vk_device* in_device,VkCommandPool in_pool) 
-		{
-			device = in_device; pool = in_pool; has_init = true;
-		}
+		void initialize(vk_device* in_device,VkCommandPool in_pool);
 
 		uint32_t load_texture_mipmap(VkFormat texture_format,const sampler_layout& in,std::string texture_path);
 
@@ -51,6 +48,10 @@ namespace flower { namespace graphics{
 		std::unordered_map<std::string,uint32_t> texture_map = {};
 		std::vector<std::shared_ptr<vk_texture>> textures = {};
 
+		uint32_t white_16x16;
+		uint32_t black_16x16;
+		uint32_t checkboard;
+		uint32_t default_normal;
 	private:
 		bool has_init = false;
 		uint32_t current_id = 0;

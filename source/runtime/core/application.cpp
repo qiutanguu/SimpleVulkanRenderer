@@ -3,6 +3,8 @@
 
 namespace flower
 {
+	camera g_cam = camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
 	void application::initialize(uint32_t width,uint32_t height,const char* title,bool full_screen)
 	{
 		glfwInit();
@@ -35,9 +37,8 @@ namespace flower
 
 		LOG_INFO("创建应用大小为宽：{0}，高：{1}。",this->width,this->height);
 
-		scene_view_cam = camera(glm::vec3(0.0f, 0.0f, 3.0f));
-		scene_view_cam.lastX = this->width / 2.0f;
-		scene_view_cam.lastY = this->height / 2.0f;
+		g_cam.lastX = this->width / 2.0f;
+		g_cam.lastY = this->height / 2.0f;
 	}
 
 	void application::initialize_modules()
@@ -98,31 +99,26 @@ namespace flower
 
 	void application::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	{
-		auto app = reinterpret_cast<application*>(glfwGetWindowUserPointer(window));
-		auto& cam = app->scene_view_cam;
-
-		if (cam.firstMouse)
+		if (g_cam.firstMouse)
 		{
-			cam.lastX = (float)xpos;
-			cam.lastY = (float)ypos;
-			cam.firstMouse = false;
+			g_cam.lastX = (float)xpos;
+			g_cam.lastY = (float)ypos;
+			g_cam.firstMouse = false;
 		}
 
-		float xoffset = (float)xpos - cam.lastX;
-		float yoffset = cam.lastY - (float)ypos; 
+		float xoffset = (float)xpos - g_cam.lastX;
+		float yoffset = g_cam.lastY - (float)ypos; 
 
-		cam.lastX = (float)xpos;
-		cam.lastY = (float)ypos;
+		g_cam.lastX = (float)xpos;
+		g_cam.lastY = (float)ypos;
 
-		cam.ProcessMouseMovement(xoffset, yoffset);
+		g_cam.ProcessMouseMovement(xoffset, yoffset);
 	}
 
 	void application::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	{
 		auto app = reinterpret_cast<application*>(glfwGetWindowUserPointer(window));
-		auto& cam = app->scene_view_cam;
-
-		cam.ProcessMouseScroll((float)yoffset);
+		g_cam.ProcessMouseScroll((float)yoffset);
 	}
 
 	void application::processInput(GLFWwindow *window)
@@ -131,12 +127,12 @@ namespace flower
 			glfwSetWindowShouldClose(window, true);
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::forward, delta_time);
+			g_cam.ProcessKeyboard(camera_utils::move_type::forward, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::backward, delta_time);
+			g_cam.ProcessKeyboard(camera_utils::move_type::backward, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::left, delta_time);
+			g_cam.ProcessKeyboard(camera_utils::move_type::left, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			scene_view_cam.ProcessKeyboard(camera_utils::move_type::right, delta_time);
+			g_cam.ProcessKeyboard(camera_utils::move_type::right, delta_time);
 	}
 }

@@ -7,8 +7,7 @@ int main()
 
 	app.initialize();
 	
-	std::shared_ptr<flower::iruntime_module> vk_module =
-		std::make_shared<flower::graphics::pbr_deferred>(app.get_cam(),app.get_window());
+	std::shared_ptr<flower::iruntime_module> vk_module = std::make_shared<flower::graphics::pbr_deferred>(app.get_window());
 
 	app.modules.push_back(vk_module);
 	app.initialize_modules();
