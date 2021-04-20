@@ -13,7 +13,7 @@
     <ClInclude Include="graphics\vk_runtime.h" />
     <ClInclude Include="graphics\vk\vk_device.h" />
     <ClInclude Include="graphics\vk\vk_instance.h" />
-    <ClInclude Include="graphics\mesh.h" />
+    <ClInclude Include="graphics\scene\mesh.h" />
     <ClInclude Include="graphics\vk\vk_swapchain.h" />
     <ClInclude Include="core\interface.h" />
     <ClInclude Include="graphics\vk\vk_texture.h" />
@@ -27,11 +27,9 @@
     <ClInclude Include="graphics\vk\vk_renderpass.h" />
     <ClInclude Include="graphics\pass\present_pass.h" />
     <ClInclude Include="graphics\global_uniform_buffers.h" />
-    <ClInclude Include="graphics\scene\gltf_scene.h" />
     <ClInclude Include="graphics\texture_manager.h" />
     <ClInclude Include="graphics\shader_manager.h" />
     <ClInclude Include="graphics\scene\vertex.h" />
-    <ClInclude Include="graphics\scene\gltf_node.h" />
     <ClInclude Include="graphics\scene\materials.h" />
   </ItemGroup>
   <ItemGroup>
@@ -45,7 +43,7 @@
     <ClCompile Include="graphics\vk_runtime.cpp" />
     <ClCompile Include="graphics\vk\vk_device.cpp" />
     <ClCompile Include="graphics\vk\vk_instance.cpp" />
-    <ClCompile Include="graphics\mesh.cpp" />
+    <ClCompile Include="graphics\scene\mesh.cpp" />
     <ClCompile Include="graphics\vk\vk_swapchain.cpp" />
     <ClCompile Include="graphics\vk\vk_texture.cpp" />
     <ClCompile Include="graphics\vk\vk_command_buffer.cpp" />
@@ -56,7 +54,6 @@
     <ClCompile Include="graphics\pass\deferred_pass.cpp" />
     <ClCompile Include="graphics\pass\prensent_pass.cpp" />
     <ClCompile Include="graphics\scene_textures.cpp" />
-    <ClCompile Include="graphics\scene\gltf_scene.cpp" />
     <ClCompile Include="graphics\texture_manager.cpp" />
     <ClCompile Include="graphics\shader_manager.cpp" />
     <ClCompile Include="graphics\scene\vertex.cpp" />

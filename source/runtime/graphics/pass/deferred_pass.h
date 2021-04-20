@@ -2,7 +2,7 @@
 
 #include "graphics/vk_runtime.h"
 #include "graphics/vk/vk_buffer.h"
-#include "graphics/mesh.h"
+#include "graphics/scene/mesh.h"
 #include "graphics/vk/vk_vertex_buffer.h"
 #include "graphics/vk/vk_pipeline.h"
 #include "graphics/vk/vk_texture.h"

@@ -9,8 +9,8 @@ namespace flower{ namespace graphics{
 		check_init();
 
 		texture_map_shader = vk_shader_mix::create(device,false,
-			"data/model/sponza/vert.spv",
-			"data/model/sponza/frag.spv"
+			"data\\shader\\compiler\\spv\\texture_vert.spv",
+			"data\\shader\\compiler\\spv\\texture_frag.spv"
 		);
 
 	}

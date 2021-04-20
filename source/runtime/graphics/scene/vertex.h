@@ -6,8 +6,8 @@
 
 namespace flower{ namespace graphics{
 
-	// vertex在内存布局上应该和shader input保持一致。
-	// 但一套vertex可能在多个shader上使用，不同的shader input可能不同。
+	// vertex 在内存布局上应该和 shader input 保持一致。
+	// 但一套vertex可能在多个shader上使用，不同的 shader input 可能不同。
 	// 因此应该把每种类型以连续的内存存储起来。
 	// 在shader布局时在选择拼接。
 
@@ -29,7 +29,7 @@ namespace flower{ namespace graphics{
 
 		int32_t vertex_count();
 
-		// 根据输入的 attribute组合输出对应的数据流
+		// 根据输入的 attribute 组合输出对应的数据流
 		std::vector<float> pack_type_stream(std::vector<vertex_attribute> type_composite)
 		{
 			std::vector<float> ret = {};
