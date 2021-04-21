@@ -33,19 +33,7 @@ namespace flower{ namespace graphics{
 		void update_before_commit(uint32_t backBuffer_index);
 		void record_renderCommand();
 
-		mesh mesh_data = {};
-		mesh mesh_sponza = {};
-
-		// pipeline ‰÷»æπ‹œﬂ
-		std::shared_ptr<vk_pipeline> pipeline_render;
-		void createGraphicsPipeline();
-
-		std::vector<std::shared_ptr<vk_descriptor_set>> texture_descriptor_sets;
-
-		// ∂•µ„buffer
-		std::shared_ptr<vk_vertex_buffer> sponza_vertex_buf;
-		std::vector<std::shared_ptr<vk_index_buffer>> sponza_index_buffer;
-		void upload_vertex_buffer();
+		std::shared_ptr<mesh> mesh_sponza;
 
 		std::shared_ptr<deferred_pass> pass_deferred;
 	};

@@ -30,6 +30,7 @@
     <ClInclude Include="graphics\texture_manager.h" />
     <ClInclude Include="graphics\shader_manager.h" />
     <ClInclude Include="graphics\scene\vertex.h" />
+    <ClInclude Include="graphics\scene\material.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -57,5 +58,6 @@
     <ClCompile Include="graphics\shader_manager.cpp" />
     <ClCompile Include="graphics\scene\vertex.cpp" />
     <ClCompile Include="graphics\global_uniform_buffer.cpp" />
+    <ClCompile Include="graphics\scene\material.cpp" />
   </ItemGroup>
 </Project>

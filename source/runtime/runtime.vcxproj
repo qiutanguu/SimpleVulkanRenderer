@@ -105,6 +105,7 @@
     <ClInclude Include="core\ring_buffer.h" />
     <ClInclude Include="core\timer.h" />
     <ClInclude Include="graphics\global_uniform_buffers.h" />
+    <ClInclude Include="graphics\scene\material.h" />
     <ClInclude Include="graphics\scene\vertex.h" />
     <ClInclude Include="graphics\scene_textures.h" />
     <ClInclude Include="graphics\pass\deferred_pass.h" />
@@ -133,6 +134,7 @@
     <ClCompile Include="core\log.cpp" />
     <ClCompile Include="core\timer.cpp" />
     <ClCompile Include="graphics\global_uniform_buffer.cpp" />
+    <ClCompile Include="graphics\scene\material.cpp" />
     <ClCompile Include="graphics\scene\vertex.cpp" />
     <ClCompile Include="graphics\scene_textures.cpp" />
     <ClCompile Include="graphics\pass\deferred_pass.cpp" />
