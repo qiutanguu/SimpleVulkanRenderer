@@ -40,8 +40,6 @@ namespace flower { namespace graphics{
 	public:
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 		std::vector<VkFramebuffer> swapchain_framebuffers;
-		std::vector<std::shared_ptr<vk_texture>> attach_colors;
-		
 	};
 
 } }

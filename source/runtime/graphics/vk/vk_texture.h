@@ -29,6 +29,20 @@ namespace flower { namespace graphics{
 
 			return ret;
 		}
+
+		static sampler_layout nearset_clamp()
+		{
+			sampler_layout ret {};
+			ret.mag_filter = VK_FILTER_NEAREST;
+			ret.min_filter = VK_FILTER_NEAREST;
+			ret.mipmap_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+			ret.address_mode_U = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
+			ret.address_mode_V = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
+			ret.address_mode_W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+			return ret;
+		}
 	};
 
 	class vk_texture
@@ -78,12 +92,10 @@ namespace flower { namespace graphics{
 			vk_swapchain* in_swapchain
 		);
 
-		static std::shared_ptr<vk_texture> create_rt(
+		static std::shared_ptr<vk_texture> create_color_attachment(
 			vk_device* in_device,
 			VkFormat format,
-			vk_swapchain* in_swapchain,
-			VkImageAspectFlags aspect, 
-			VkImageUsageFlags usage
+			vk_swapchain* in_swapchain
 		);
 	};
 

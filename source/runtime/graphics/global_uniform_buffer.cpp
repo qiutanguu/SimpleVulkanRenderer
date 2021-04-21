@@ -17,9 +17,9 @@ namespace flower{ namespace graphics{
 		ubo_vp.view = g_cam.get_view_matrix();
 		ubo_vp.proj = g_cam.GetProjectMatrix(swaphchain->get_swapchain_extent().width,swaphchain->get_swapchain_extent().height);
 
-		ubo_vps[back_buffer_index]->map();
-		ubo_vps[back_buffer_index]->copy_to((void*)&ubo_vp,sizeof(ubo_vp));
-		ubo_vps[back_buffer_index]->unmap();
+		ubo_vps->map();
+		ubo_vps->copy_to((void*)&ubo_vp,sizeof(ubo_vp));
+		ubo_vps->unmap();
 	}
 
 	void global_uniform_buffers::initialize(vk_device* in_device,vk_swapchain* in_swapchain,VkCommandPool in_pool)
@@ -29,26 +29,20 @@ namespace flower{ namespace graphics{
 		pool = in_pool;
 
 		VkDeviceSize bufferSize = sizeof(global_matrix_vp);
-		ubo_vps.resize(swaphchain->get_imageViews().size());
 
-		for(size_t i = 0; i<ubo_vps.size(); i++)
-		{
-			auto buffer = vk_buffer::create(
-				*device,
-				pool,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				bufferSize,
-				nullptr
-			);
-
-			ubo_vps[i] = buffer;
-		}
+		ubo_vps = vk_buffer::create(
+			*device,
+			pool,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			bufferSize,
+			nullptr
+		);
 	}
 
 	void global_uniform_buffers::release()
 	{
-		ubo_vps.resize(0);
+		ubo_vps.reset();
 	}
 
 }}

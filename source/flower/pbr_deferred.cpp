@@ -25,9 +25,13 @@ namespace flower{ namespace graphics{
 	{
 		vk_renderpass_mix_data mixdata(&device,swapchain);
 		pass_deferred = deferred_pass::create(mixdata);
+		pass_gbuffer = gbuffer_pass::create(mixdata);
 
 		mesh_sponza = std::make_shared<mesh>(&device,graphics_command_pool,g_shader_manager.texture_map_shader);
 		mesh_sponza->load_obj_mesh(&device,graphics_command_pool,"data/model/sponza/sponza.obj","",pass_deferred->render_pass,&swapchain);
+
+		mesh_sponza_gbuffer = std::make_shared<mesh>(&device,graphics_command_pool,g_shader_manager.gbuffer_shader);
+		mesh_sponza_gbuffer->load_obj_mesh(&device,graphics_command_pool,"data/model/sponza/sponza.obj","",pass_gbuffer->render_pass,&swapchain);
 		 
 		record_renderCommand();
 	}
@@ -35,7 +39,9 @@ namespace flower{ namespace graphics{
 	void pbr_deferred::destroy_special()
 	{
 		pass_deferred.reset();
+		pass_gbuffer.reset();
 		mesh_sponza.reset();
+		mesh_sponza_gbuffer.reset();
 	}
 
 	void pbr_deferred::recreate_swapchain()
@@ -44,8 +50,10 @@ namespace flower{ namespace graphics{
 
 		vk_renderpass_mix_data mixdata(&device,swapchain);
 		pass_deferred = deferred_pass::create(mixdata);
-		mesh_sponza->on_swapchain_recreate(&swapchain,pass_deferred->render_pass);
+		pass_gbuffer = gbuffer_pass::create(mixdata);
 
+		mesh_sponza->on_swapchain_recreate(&swapchain,pass_deferred->render_pass);
+		mesh_sponza_gbuffer->on_swapchain_recreate(&swapchain,pass_gbuffer->render_pass);
 		record_renderCommand();
 	}
 

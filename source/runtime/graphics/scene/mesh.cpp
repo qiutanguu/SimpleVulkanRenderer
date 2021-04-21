@@ -41,15 +41,15 @@ namespace flower{ namespace graphics{
 
 	void sub_mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index)
 	{
-		material_using.pipeline->bind(*cmd_buf);
+		mat->pipeline->bind(*cmd_buf);
 
 		vkCmdBindDescriptorSets(
 			*cmd_buf,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			material_using.pipeline->layout,
+			mat->pipeline->layout,
 			0,
 			1,
-			material_using.descriptor_sets[index]->descriptor_sets.data(),
+			mat->descriptor_set->descriptor_sets.data(),
 			0,
 			nullptr
 		);
@@ -68,7 +68,14 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void mesh::load_obj_mesh(vk_device* indevice,VkCommandPool inpool,std::string path,std::string mat_path,VkRenderPass renderpass,vk_swapchain* inswapchain)
+	void mesh::load_obj_mesh(
+		vk_device* indevice,
+		VkCommandPool inpool,
+		std::string path,
+		std::string mat_path,
+		VkRenderPass renderpass,
+		vk_swapchain* inswapchain,
+		material_type mat_type)
 	{
 		std::string mtl_search_path;
 		size_t pos = path.find_last_of("/\\");
@@ -104,6 +111,13 @@ namespace flower{ namespace graphics{
 		std::vector<vertex_standard> vertices;
 
 		sub_meshes.resize(materials.size());
+		for(size_t i = 0; i<materials.size(); i++)
+		{
+			if(mat_type==material_type::pbr_textures)
+			{
+				sub_meshes[i].mat = std::make_shared<material_gbuffer>();
+			}
+		}
 
 		// 遍历每个网格
 		for (size_t s = 0; s < shapes.size(); s++) 
@@ -111,11 +125,10 @@ namespace flower{ namespace graphics{
 			// 遍历每个面
 			size_t index_offset = 0;
 
-
 			for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) 
 			{
 				auto sub_mesh_id = shapes[s].mesh.material_ids[f];
-				if(sub_meshes.size() > 0 && !sub_meshes[sub_mesh_id].material_using.maps_set)
+				if(sub_meshes.size() > 0 && !sub_meshes[sub_mesh_id].mat.maps_set)
 				{
 					auto& set_mat = sub_meshes[sub_mesh_id].material_using;
 					auto& cat_mat = materials[sub_mesh_id];
@@ -242,7 +255,7 @@ namespace flower{ namespace graphics{
 				glm::vec3 deltaPos1 = v_pos[1]-v_pos[0];
 				glm::vec3 deltaPos2 = v_pos[2]-v_pos[0];
 
-				// uv距离
+				// uv 距离
 				glm::vec2 deltaUV1 = v_uv[1]-v_uv[0];
 				glm::vec2 deltaUV2 = v_uv[2]-v_uv[0];
 
@@ -325,10 +338,10 @@ namespace flower{ namespace graphics{
 			buffer->unmap();
 
 			// 设置model矩阵
-			submesh.material_using.model_ubo = buffer;
+			submesh.mat->model_ubo = buffer;
 
 			// 创建材质pipeline
-			submesh.material_using.create_renderpipeline(shader,device,inswapchain,renderpass);
+			submesh.mat->on_create(device,renderpass);
 		}
 	}
 

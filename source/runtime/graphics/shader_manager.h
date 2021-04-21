@@ -12,6 +12,7 @@ namespace flower{ namespace graphics{
 		void release()
 		{
 			texture_map_shader.reset();
+			gbuffer_shader.reset();
 		}
 
 		void initialize(vk_device* in_device) 
@@ -26,6 +27,7 @@ namespace flower{ namespace graphics{
 
 	public:
 		std::shared_ptr<vk_shader_mix> texture_map_shader;
+		std::shared_ptr<vk_shader_mix> gbuffer_shader;
 
 	private:
 		bool has_init = false;

@@ -152,7 +152,7 @@ namespace flower { namespace graphics{
 
         ret->width = extent.width;
         ret->height = extent.height;
-
+        ret->format = depthFormat;
         ret->image_sampler = VK_NULL_HANDLE;
 
         create_texture2D(
@@ -172,14 +172,15 @@ namespace flower { namespace graphics{
             VK_IMAGE_ASPECT_DEPTH_BIT,
             *in_device);
 
+        ret->descriptor_info.sampler = ret->image_sampler;
+
         return ret;
     }
-    std::shared_ptr<vk_texture> vk_texture::create_rt(
+
+    std::shared_ptr<vk_texture> vk_texture::create_color_attachment(
 		vk_device* in_device,
 		VkFormat format,
-        vk_swapchain* in_swapchain,
-		VkImageAspectFlags aspect,
-		VkImageUsageFlags usage
+        vk_swapchain* in_swapchain
         )
     {
 		auto ret = std::make_shared<vk_texture>(in_device);
@@ -195,7 +196,7 @@ namespace flower { namespace graphics{
             extent.height,
             format,
 			VK_IMAGE_TILING_OPTIMAL,
-            usage,
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			ret->image,
 			ret->image_memory,
@@ -204,13 +205,13 @@ namespace flower { namespace graphics{
 		ret->image_view = create_imageView(
 			&ret->image,
             format,
-            aspect,
+            VK_IMAGE_ASPECT_COLOR_BIT,
 			*in_device);
 
-
+        ret->format = format;
         ret->descriptor_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
+        ret->descriptor_info.sampler = ret->image_sampler;
         return ret;
     }
 }}

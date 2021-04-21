@@ -7,7 +7,7 @@
 #include "graphics/vk/vk_pipeline.h"
 #include "core/camera.h"
 #include "graphics/vk/vk_shader.h"
-
+#include "graphics/pass/gbuffer_pass.h"
 #include "graphics/pass/deferred_pass.h"
 
 namespace flower{ namespace graphics{
@@ -34,7 +34,11 @@ namespace flower{ namespace graphics{
 		void record_renderCommand();
 
 		std::shared_ptr<mesh> mesh_sponza;
+		std::shared_ptr<mesh> mesh_sponza_gbuffer;
+
+		std::shared_ptr<gbuffer_pass> pass_gbuffer;
 		std::shared_ptr<deferred_pass> pass_deferred;
+
 	};
 
 } }

@@ -9,6 +9,7 @@
 #include "graphics/vk/vk_shader.h"
 #include "graphics/vk/vk_renderpass.h"
 #include "graphics/vk/vk_device.h"
+#include "graphics/vk/vk_command_buffer.h"
 
 namespace flower { namespace graphics{
 
@@ -39,11 +40,10 @@ namespace flower { namespace graphics{
 
 	private:
 		vk_renderpass_mix_data mix_data;
-
+		std::shared_ptr<vk_command_buffer> cmd_buf = nullptr;
 	public:
 		VkRenderPass render_pass = VK_NULL_HANDLE;
-		std::vector<VkFramebuffer> swapchain_framebuffers;
-		std::vector<std::shared_ptr<vk_texture>> attach_colors;
+		VkFramebuffer framebuffer;
 	};
 
 }}

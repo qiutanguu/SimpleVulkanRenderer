@@ -26,7 +26,7 @@ namespace flower{ namespace graphics{
 		std::shared_ptr<vk_index_buffer> index_buf;
 		
 		// 使用中的材质
-		material material_using;
+		std::shared_ptr<material> mat;
 
 		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index);
 	};
@@ -55,13 +55,21 @@ namespace flower{ namespace graphics{
 		// 在此处存储的所有顶点
 		vertex_raw_data raw_data = {};
 
-		void load_obj_mesh(vk_device* indevice,VkCommandPool inpool,std::string mesh_path,std::string mat_path,VkRenderPass renderpass,vk_swapchain* inswapchain);
+		void load_obj_mesh(
+			vk_device* indevice,
+			VkCommandPool inpool,
+			std::string mesh_path,
+			std::string mat_path,
+			VkRenderPass renderpass,
+			vk_swapchain* inswapchain,
+			material_type mat_type
+		);
 
 		void on_swapchain_recreate(vk_swapchain* inswapchain,VkRenderPass renderpass)
 		{
 			for(auto& submesh : sub_meshes)
 			{
-				submesh.material_using.recreate_swapchain(shader,device,inswapchain,renderpass);
+				submesh.mat->on_swapchain_recreate(device,inswapchain,renderpass);
 			}
 		}
 

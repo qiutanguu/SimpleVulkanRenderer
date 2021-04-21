@@ -26,16 +26,12 @@ namespace flower{ namespace graphics{
 		global_matrix_vp vp;
 
 		// view project matrix
-		std::vector<std::shared_ptr<vk_buffer>> ubo_vps;
+		std::shared_ptr<vk_buffer> ubo_vps;
 
 	private:
 		vk_swapchain* swaphchain;
 		vk_device* device;
 		VkCommandPool pool;
-
-		
-		
-
 	};
 
 	extern global_uniform_buffers g_uniform_buffers;

@@ -13,6 +13,11 @@ namespace flower{ namespace graphics{
 			"data/shader/compiler/spv/texture_frag.spv"
 		);
 
+		gbuffer_shader = vk_shader_mix::create(device,false,
+			"data/shader/compiler/spv/gbuffer_vert.spv",
+			"data/shader/compiler/spv/gbuffer_frag.spv"
+		);
+
 	}
 
 	void shader_manager::check_init()
