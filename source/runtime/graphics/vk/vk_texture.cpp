@@ -174,4 +174,43 @@ namespace flower { namespace graphics{
 
         return ret;
     }
+    std::shared_ptr<vk_texture> vk_texture::create_rt(
+		vk_device* in_device,
+		VkFormat format,
+        vk_swapchain* in_swapchain,
+		VkImageAspectFlags aspect,
+		VkImageUsageFlags usage
+        )
+    {
+		auto ret = std::make_shared<vk_texture>(in_device);
+
+		const auto& extent = in_swapchain->get_swapchain_extent();
+
+		ret->width = extent.width;
+		ret->height = extent.height;
+        ret->image_sampler = VK_NULL_HANDLE;
+
+		create_texture2D(
+            extent.width,
+            extent.height,
+            format,
+			VK_IMAGE_TILING_OPTIMAL,
+            usage,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			ret->image,
+			ret->image_memory,
+			*in_device);
+
+		ret->image_view = create_imageView(
+			&ret->image,
+            format,
+            aspect,
+			*in_device);
+
+
+        ret->descriptor_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        return ret;
+    }
 }}

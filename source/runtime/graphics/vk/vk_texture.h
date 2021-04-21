@@ -77,6 +77,14 @@ namespace flower { namespace graphics{
 			vk_device* in_device,
 			vk_swapchain* in_swapchain
 		);
+
+		static std::shared_ptr<vk_texture> create_rt(
+			vk_device* in_device,
+			VkFormat format,
+			vk_swapchain* in_swapchain,
+			VkImageAspectFlags aspect, 
+			VkImageUsageFlags usage
+		);
 	};
 
 } }

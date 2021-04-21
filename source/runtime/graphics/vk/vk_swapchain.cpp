@@ -36,7 +36,7 @@ namespace flower { namespace graphics{
 		// 至少加载一张图片.
 		uint32_t imageCount = swapchain_support.capabilities.minImageCount + 1; 
 
-		// 应确保不超过最大图像数，其中0为特殊值表示没有最大图像数：																	   
+		// 应确保不超过最大图像数，其中0为特殊值表示没有最大图像数：										
 		if (swapchain_support.capabilities.maxImageCount > 0 && imageCount > swapchain_support.capabilities.maxImageCount) 
 		{
 			imageCount = swapchain_support.capabilities.maxImageCount;

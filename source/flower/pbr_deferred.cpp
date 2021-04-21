@@ -44,7 +44,6 @@ namespace flower{ namespace graphics{
 
 		vk_renderpass_mix_data mixdata(&device,swapchain);
 		pass_deferred = deferred_pass::create(mixdata);
-
 		mesh_sponza->on_swapchain_recreate(&swapchain,pass_deferred->render_pass);
 
 		record_renderCommand();
@@ -71,8 +70,6 @@ namespace flower{ namespace graphics{
 			auto& cmd_buffer = graphics_command_buffers[i]->get_instance();
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			// renderPassInfo.renderPass = render_pass;
-			// renderPassInfo.framebuffer = swapchain_framebuffers[i];
 
 			renderPassInfo.renderPass = pass_deferred->render_pass;
 			renderPassInfo.framebuffer = pass_deferred->swapchain_framebuffers[i];

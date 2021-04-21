@@ -34,7 +34,6 @@ namespace flower{ namespace graphics{
 		void record_renderCommand();
 
 		std::shared_ptr<mesh> mesh_sponza;
-
 		std::shared_ptr<deferred_pass> pass_deferred;
 	};
 

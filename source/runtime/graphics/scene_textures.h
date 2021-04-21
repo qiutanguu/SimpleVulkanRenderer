@@ -27,26 +27,18 @@ namespace flower{ namespace graphics{
 
 		void release()
 		{
-			scenecolor.reset();
-			gbuffer_a.reset();
-			gbuffer_b.reset();
-			gbuffer_c.reset();
-			gbuffer_d.reset();
-			gbuffer_e.reset();
-			velocity_rt.reset();
+			position_worldspace.reset();
+			normal_worldspace.reset();
+			basecolor.reset();
+
 			scene_depth_stencil.reset();
 		}
 
 
 	public:
-		std::shared_ptr<vk_texture> scenecolor; // r16 g16 b16 a16
-
-		std::shared_ptr<vk_texture> gbuffer_a;
-		std::shared_ptr<vk_texture> gbuffer_b;
-		std::shared_ptr<vk_texture> gbuffer_c;
-		std::shared_ptr<vk_texture> gbuffer_d;
-		std::shared_ptr<vk_texture> gbuffer_e;
-		std::shared_ptr<vk_texture> velocity_rt;
+		std::vector<std::shared_ptr<vk_texture>> position_worldspace; // VK_FORMAT_R16G16B16A16_SFLOAT
+		std::vector<std::shared_ptr<vk_texture>> normal_worldspace; // VK_FORMAT_R16G16B16A16_SFLOAT
+		std::vector<std::shared_ptr<vk_texture>> basecolor; // VK_FORMAT_R8G8B8A8_UNORM
 
 		std::shared_ptr<vk_texture> scene_depth_stencil;
 

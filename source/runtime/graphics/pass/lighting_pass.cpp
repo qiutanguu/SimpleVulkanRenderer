@@ -1,4 +1,4 @@
-#include "present_pass.h"
+#include "lighting_pass.h"
 
 namespace flower { namespace graphics{
 
