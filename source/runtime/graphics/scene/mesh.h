@@ -7,13 +7,21 @@
 #include "../vk/vk_pipeline.h"
 #include "vertex.h"
 #include "material.h"
+#include "tinyobjloader/tiny_obj_loader.h"
+#include "../vk/vk_renderpass.h"
 
 namespace flower{ namespace graphics{
 
 	class sub_mesh
 	{
 	public:
-		sub_mesh(){ }
+		sub_mesh()
+		{
+			for (auto& val:has_registered)
+			{
+				val = false;
+			}
+		}
 		~sub_mesh(){ }
 
 		// sub_mesh的次序
@@ -25,10 +33,17 @@ namespace flower{ namespace graphics{
 		// 每个submesh的次序buffer
 		std::shared_ptr<vk_index_buffer> index_buf;
 		
-		// 使用中的材质
-		std::shared_ptr<material> mat;
+		// 使用中的obj材质
+		tinyobj::material_t mat_obj;
+
+		// 每种renderpass都应该注册对应的material
+		std::array<std::shared_ptr<material>,renderpass_type::max_index> size = { }; 
+		std::array<bool,renderpass_type::max_index> has_registered = { };
 
 		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index);
+
+		// should rebuild when swapchain change.
+		void register_renderpass(int32_t passtype);
 	};
 	
 	// 按材质划分Mesh
@@ -39,8 +54,7 @@ namespace flower{ namespace graphics{
 			VkCommandPool pool,
 			std::shared_ptr<vk_shader_mix> shader): 
 			device(indevice),
-			pool(pool),
-			shader(shader)
+			pool(pool)
 		{
 			
 		}
@@ -56,30 +70,41 @@ namespace flower{ namespace graphics{
 		vertex_raw_data raw_data = {};
 
 		void load_obj_mesh(
-			vk_device* indevice,
-			VkCommandPool inpool,
 			std::string mesh_path,
-			std::string mat_path,
-			VkRenderPass renderpass,
-			vk_swapchain* inswapchain,
-			material_type mat_type
+			std::string mat_path
 		);
-
-		void on_swapchain_recreate(vk_swapchain* inswapchain,VkRenderPass renderpass)
-		{
-			for(auto& submesh : sub_meshes)
-			{
-				submesh.mat->on_swapchain_recreate(device,inswapchain,renderpass);
-			}
-		}
 
 	private:
 		vk_device* device;
-		std::shared_ptr<vk_shader_mix> shader;
 		VkCommandPool pool;
-
 		void upload_buffer();
 	};
 
+
+	class meshes_manager
+	{
+	public:
+		meshes_manager() { };
+		~meshes_manager() { };
+
+		void initialize(vk_device* indevice,VkCommandPool inpool);
+
+		// 释放加载到内存中的
+		void release_cpu_mesh_data();
+		void release()
+		{
+			sponza_mesh.reset();
+		}
+
+	public:
+		std::shared_ptr<mesh> sponza_mesh;
+		
+
+	private:
+		vk_device* device;
+		VkCommandPool pool;
+	};
+
+	extern meshes_manager g_meshes_manager;
 } }
 

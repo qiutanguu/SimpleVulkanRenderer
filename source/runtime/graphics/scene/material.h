@@ -15,21 +15,21 @@ namespace flower{namespace graphics{
 		material(){ }
 		virtual ~material(){ }
 
-		virtual void on_swapchain_recreate(vk_device* indevice,vk_swapchain* swapchain,VkRenderPass in_renderpass) = 0;
-
-		virtual void on_create(vk_device* indevice,VkRenderPass in_renderpass) = 0;
-
 		std::shared_ptr<vk_buffer> model_ubo; // 模型矩阵
 		std::shared_ptr<vk_shader_mix> shader; // 使用的shader
 		std::shared_ptr<vk_pipeline> pipeline; // 管线
 		std::shared_ptr<vk_descriptor_set> descriptor_set; // 描述符集
 	};
 
-	enum class material_type
+	class material_texture: public material
 	{
-		gbuffer,
-		texture_map,
-		pbr_textures
+	public:
+		uint32_t map_texture;
+
+		material_texture(){  }
+		~material_texture(){ }
+
+
 	};
 
 	class material_gbuffer : public material

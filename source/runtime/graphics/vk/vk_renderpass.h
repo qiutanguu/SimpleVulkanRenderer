@@ -27,4 +27,17 @@ namespace flower { namespace graphics{
 		vk_swapchain& swapchain;
 	};
 
+	class vk_renderpass
+	{
+
+	};
+
+	namespace renderpass_type
+	{
+		constexpr auto texture_pass = 0;
+		constexpr auto gbuffer_pass = 1;
+
+		constexpr auto max_index = 2;
+	}
+
 } }

@@ -42,7 +42,11 @@ namespace flower{ namespace graphics{
 			auto index = static_cast<uint32_t>(in);
 			return pack_datas[index];
 		}
-
+		
+		void release_cpu_data()
+		{
+			pack_datas.clear();
+		}
 	private:
 		std::unordered_map<uint32_t,vertex_data_stream> pack_datas;
 		void pack_data_inner(std::vector<vertex_attribute> type_composite,std::vector<float>& inout);

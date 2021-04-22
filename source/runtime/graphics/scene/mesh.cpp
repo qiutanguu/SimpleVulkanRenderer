@@ -1,5 +1,4 @@
 #include "mesh.h"
-#include "tinyobjloader/tiny_obj_loader.h"
 #include "../texture_manager.h"
 
 // 标准顶点
@@ -38,6 +37,7 @@ namespace std
 }
 
 namespace flower{ namespace graphics{
+	meshes_manager g_meshes_manager = {};
 
 	void sub_mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index)
 	{
@@ -57,6 +57,23 @@ namespace flower{ namespace graphics{
 		index_buf->bind_and_draw(*cmd_buf);
 	}
 
+	// 对每种 renderpass 都应该注册对应的 shader material
+	void sub_mesh::register_renderpass(int32_t passtype)
+	{
+		ASSERT(passtype < renderpass_type::max_index,"render pass type越界。");
+
+		if(passtype == renderpass_type::texture_pass)
+		{
+			
+		}
+		else if(passtype == renderpass_type::gbuffer_pass)
+		{
+
+		}
+
+		has_registered[passtype] = true;
+	}
+
 	void mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index)
 	{
 		// 绑定所有的顶点缓冲
@@ -69,13 +86,8 @@ namespace flower{ namespace graphics{
 	}
 
 	void mesh::load_obj_mesh(
-		vk_device* indevice,
-		VkCommandPool inpool,
 		std::string path,
-		std::string mat_path,
-		VkRenderPass renderpass,
-		vk_swapchain* inswapchain,
-		material_type mat_type)
+		std::string mat_path)
 	{
 		std::string mtl_search_path;
 		size_t pos = path.find_last_of("/\\");
@@ -111,12 +123,9 @@ namespace flower{ namespace graphics{
 		std::vector<vertex_standard> vertices;
 
 		sub_meshes.resize(materials.size());
-		for(size_t i = 0; i<materials.size(); i++)
+		for(size_t i = 0; i < materials.size(); i++)
 		{
-			if(mat_type==material_type::pbr_textures)
-			{
-				sub_meshes[i].mat = std::make_shared<material_gbuffer>();
-			}
+			sub_meshes[i].mat_obj = materials[i];
 		}
 
 		// 遍历每个网格
@@ -252,12 +261,12 @@ namespace flower{ namespace graphics{
 				}
 				
 				// 空间距离
-				glm::vec3 deltaPos1 = v_pos[1]-v_pos[0];
-				glm::vec3 deltaPos2 = v_pos[2]-v_pos[0];
+				glm::vec3 deltaPos1 = v_pos[1] - v_pos[0];
+				glm::vec3 deltaPos2 = v_pos[2] - v_pos[0];
 
 				// uv 距离
-				glm::vec2 deltaUV1 = v_uv[1]-v_uv[0];
-				glm::vec2 deltaUV2 = v_uv[2]-v_uv[0];
+				glm::vec2 deltaUV1 = v_uv[1] - v_uv[0];
+				glm::vec2 deltaUV2 = v_uv[2] - v_uv[0];
 
 				float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
 				glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r;
@@ -361,6 +370,22 @@ namespace flower{ namespace graphics{
 			auto& indices = submesh.indices;
 			submesh.index_buf = vk_index_buffer::create(device,pool,indices);
 		}
+	}
+
+	void meshes_manager::initialize(vk_device* indevice,VkCommandPool inpool)
+	{
+		pool = inpool;
+		device = indevice;
+
+		// sponza 网格加载到内存中
+		sponza_mesh = std::make_shared<mesh>(&device,pool);
+		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","");
+	}
+
+	// 释放加载到cpu中的网格数据
+	void meshes_manager::release_cpu_mesh_data()
+	{
+		sponza_mesh->raw_data.release_cpu_data();
 	}
 
 } }
