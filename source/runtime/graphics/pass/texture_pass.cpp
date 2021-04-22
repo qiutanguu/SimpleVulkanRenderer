@@ -1,25 +1,26 @@
-#include "deferred_pass.h"
+#include "texture_pass.h"
+#include "../shader_manager.h"
 
 namespace flower{ namespace graphics{
 
-	std::shared_ptr<deferred_pass> deferred_pass::create(vk_renderpass_mix_data in_mixdata)
+	std::shared_ptr<texture_pass> texture_pass::create(vk_renderpass_mix_data in_mixdata)
 	{
-		auto ret = std::make_shared<deferred_pass>(in_mixdata);
+		auto ret = std::make_shared<texture_pass>(in_mixdata);
 		ret->create_renderpass();
 		ret->create_framebuffers();
 		return ret;
 	}
 
-	deferred_pass::~deferred_pass()
+	texture_pass::~texture_pass()
 	{
 		destroy_framebuffers();
 		destroy_renderpass();
 	}
 
-	void deferred_pass::create_framebuffers()
+	void texture_pass::create_framebuffers()
 	{
-		const auto& swap_num = mix_data.swapchain.get_imageViews().size();
-		const auto& extent = mix_data.swapchain.get_swapchain_extent();
+		const auto& swap_num = mix_data.swapchain->get_imageViews().size();
+		const auto& extent = mix_data.swapchain->get_swapchain_extent();
 
 		swapchain_framebuffers.resize(swap_num);
 
@@ -27,7 +28,7 @@ namespace flower{ namespace graphics{
 		{
 			std::array<VkImageView, 2> attachments = 
 			{
-				mix_data.swapchain.get_imageViews()[i],
+				mix_data.swapchain->get_imageViews()[i],
 				g_scene_textures.scene_depth_stencil->image_view
 			};
 
@@ -50,7 +51,7 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void deferred_pass::destroy_framebuffers()
+	void texture_pass::destroy_framebuffers()
 	{
 		for (auto& swapchain_framebuffer : swapchain_framebuffers) 
 		{
@@ -58,10 +59,10 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void deferred_pass::create_renderpass()
+	void texture_pass::create_renderpass()
 	{
 		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = mix_data.swapchain.get_swapchain_image_format();
+		colorAttachment.format = mix_data.swapchain->get_swapchain_image_format();
 
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -120,9 +121,64 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void deferred_pass::destroy_renderpass()
+	void texture_pass::destroy_renderpass()
 	{
 		vkDestroyRenderPass(*mix_data.device, render_pass, nullptr);
+	}
+
+	std::shared_ptr<material_texture> material_texture::create(
+		vk_device* indevice,
+		VkRenderPass in_renderpass,
+		VkCommandPool in_pool,
+		uint32_t map_colortex,
+		glm::mat4 model_mat
+	)
+	{
+		auto ret = std::make_shared<material_texture>();
+
+		auto& shader = g_shader_manager.texture_map_shader;
+
+		vk_pipeline_info pipe_info;
+
+		pipe_info.vert_shader_module = shader->vert_shader_module->handle;
+		pipe_info.frag_shader_module = shader->frag_shader_module->handle;
+
+		ret->pipeline = vk_pipeline::create_by_shader(
+			indevice,
+			VK_NULL_HANDLE,
+			pipe_info,
+			shader,
+			in_renderpass
+		);
+
+		VkDeviceSize bufferSize = sizeof(glm::mat4);
+		auto buffer = vk_buffer::create(
+			*indevice,
+			in_pool,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			bufferSize,
+			nullptr
+		);
+
+		buffer->map();
+		buffer->copy_to((void*)&model_mat,sizeof(model_mat));
+		buffer->unmap();
+
+		// ÉèÖÃmodel¾ØÕó
+		ret->model_ubo = buffer;
+
+		ret->descriptor_set = shader->allocate_descriptor_set();
+		ret->shader = g_shader_manager.texture_map_shader;
+
+		ret->descriptor_set->set_buffer("ub_vp",g_uniform_buffers.ubo_vps);
+		ret->descriptor_set->set_buffer("ub_m",ret->model_ubo);
+		ret->descriptor_set->set_image(
+			"base_color_texture",
+			g_texture_manager.get_texture_vk(map_colortex)
+		);
+
+		return ret;
 	}
 
 }}

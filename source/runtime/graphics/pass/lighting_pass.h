@@ -12,7 +12,7 @@
 
 namespace flower { namespace graphics{
 
-	class present_pass
+	class present_pass : public vk_renderpass
 	{
 	public:
 		operator VkRenderPass() { return render_pass; }
@@ -21,6 +21,15 @@ namespace flower { namespace graphics{
 			vk_renderpass_mix_data in_mixdata
 		): mix_data(in_mixdata)
 		{
+		}
+
+		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) override
+		{
+			destroy_framebuffers();
+			destroy_renderpass();
+			mix_data = in_mixdata;
+			create_renderpass();
+			create_framebuffers();
 		}
 
 		~present_pass();
@@ -38,7 +47,6 @@ namespace flower { namespace graphics{
 		vk_renderpass_mix_data mix_data;
 
 	public:
-		VkRenderPass render_pass = VK_NULL_HANDLE;
 		std::vector<VkFramebuffer> swapchain_framebuffers;
 		std::vector<std::shared_ptr<vk_texture>> attach_colors;
 	};

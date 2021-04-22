@@ -12,6 +12,15 @@
 
 namespace flower{ namespace graphics{
 
+	namespace texture_id_type
+	{
+		constexpr auto diffuse = 0;
+		constexpr auto mask = 1;
+		constexpr auto metallic = 2;
+		constexpr auto normal = 3;
+		constexpr auto roughness = 4;
+	}
+
 	class sub_mesh
 	{
 	public:
@@ -33,17 +42,18 @@ namespace flower{ namespace graphics{
 		// 每个submesh的次序buffer
 		std::shared_ptr<vk_index_buffer> index_buf;
 		
-		// 使用中的obj材质
-		tinyobj::material_t mat_obj;
+		// 纹理ids
+		std::vector<uint32_t> texture_ids = {};
 
 		// 每种renderpass都应该注册对应的material
-		std::array<std::shared_ptr<material>,renderpass_type::max_index> size = { }; 
+		std::array<std::shared_ptr<material>,renderpass_type::max_index> mat_map = { }; 
 		std::array<bool,renderpass_type::max_index> has_registered = { };
 
-		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index);
+		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t passtype);
 
-		// should rebuild when swapchain change.
-		void register_renderpass(int32_t passtype);
+		void register_renderpass(int32_t passtype,vk_device* indevice,
+			VkRenderPass in_renderpass,
+			VkCommandPool in_pool);
 	};
 	
 	// 按材质划分Mesh
@@ -51,8 +61,7 @@ namespace flower{ namespace graphics{
 	{
 	public:
 		mesh(vk_device* indevice,
-			VkCommandPool pool,
-			std::shared_ptr<vk_shader_mix> shader): 
+			VkCommandPool pool): 
 			device(indevice),
 			pool(pool)
 		{
@@ -61,23 +70,30 @@ namespace flower{ namespace graphics{
 
 		~mesh(){ }
 
-		std::shared_ptr<vk_vertex_buffer> vertex_buf;
+		std::array<std::shared_ptr<vk_vertex_buffer>,renderpass_type::max_index> vertex_bufs = { };
+		std::array<bool,renderpass_type::max_index> has_registered = { };
+
 		std::vector<sub_mesh> sub_meshes;
 
-		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index);
+		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t pass_type);
 
 		// 在此处存储的所有顶点
 		vertex_raw_data raw_data = {};
 
+		// 注册render pass 对应的 mesh
+		void register_renderpass(int32_t passtype,VkRenderPass renderpass,bool reload_vertex_buf = true);
+
+
+	private:
+		vk_device* device;
+		VkCommandPool pool;
+		
 		void load_obj_mesh(
 			std::string mesh_path,
 			std::string mat_path
 		);
 
-	private:
-		vk_device* device;
-		VkCommandPool pool;
-		void upload_buffer();
+		friend class meshes_manager;
 	};
 
 
@@ -89,8 +105,9 @@ namespace flower{ namespace graphics{
 
 		void initialize(vk_device* indevice,VkCommandPool inpool);
 
-		// 释放加载到内存中的
+		// 释放加载到内存中的网格数据
 		void release_cpu_mesh_data();
+
 		void release()
 		{
 			sponza_mesh.reset();
@@ -98,7 +115,6 @@ namespace flower{ namespace graphics{
 
 	public:
 		std::shared_ptr<mesh> sponza_mesh;
-		
 
 	private:
 		vk_device* device;

@@ -109,7 +109,7 @@
     <ClInclude Include="graphics\scene\material.h" />
     <ClInclude Include="graphics\scene\vertex.h" />
     <ClInclude Include="graphics\scene_textures.h" />
-    <ClInclude Include="graphics\pass\deferred_pass.h" />
+    <ClInclude Include="graphics\pass\texture_pass.h" />
     <ClInclude Include="graphics\pass\lighting_pass.h" />
     <ClInclude Include="graphics\shader_manager.h" />
     <ClInclude Include="graphics\texture_manager.h" />
@@ -136,10 +136,9 @@
     <ClCompile Include="core\timer.cpp" />
     <ClCompile Include="graphics\global_uniform_buffer.cpp" />
     <ClCompile Include="graphics\pass\gbuffer_pass.cpp" />
-    <ClCompile Include="graphics\scene\material.cpp" />
     <ClCompile Include="graphics\scene\vertex.cpp" />
     <ClCompile Include="graphics\scene_textures.cpp" />
-    <ClCompile Include="graphics\pass\deferred_pass.cpp" />
+    <ClCompile Include="graphics\pass\texture_pass.cpp" />
     <ClCompile Include="graphics\pass\lighting_pass.cpp" />
     <ClCompile Include="graphics\shader_manager.cpp" />
     <ClCompile Include="graphics\texture_manager.cpp" />

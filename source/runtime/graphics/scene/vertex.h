@@ -43,10 +43,12 @@ namespace flower{ namespace graphics{
 			return pack_datas[index];
 		}
 		
+		// 释放内存中的数据
 		void release_cpu_data()
 		{
 			pack_datas.clear();
 		}
+
 	private:
 		std::unordered_map<uint32_t,vertex_data_stream> pack_datas;
 		void pack_data_inner(std::vector<vertex_attribute> type_composite,std::vector<float>& inout);

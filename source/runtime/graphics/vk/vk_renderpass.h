@@ -10,7 +10,7 @@ namespace flower { namespace graphics{
 	{
 		vk_renderpass_mix_data(
 			vk_device* in_device,
-			vk_swapchain& in_swapchain
+			vk_swapchain* in_swapchain
 		):
 			device(in_device),
 			swapchain(in_swapchain)
@@ -24,12 +24,18 @@ namespace flower { namespace graphics{
 		}
 
 		vk_device* device;
-		vk_swapchain& swapchain;
+		vk_swapchain* swapchain;
 	};
 
 	class vk_renderpass
 	{
+	public:
+		vk_renderpass(){ }
+		virtual ~vk_renderpass(){ }
+		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) = 0;
 
+		VkRenderPass render_pass;
+		int32_t type;
 	};
 
 	namespace renderpass_type

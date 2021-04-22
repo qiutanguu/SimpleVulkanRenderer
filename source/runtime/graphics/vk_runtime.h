@@ -108,7 +108,6 @@ namespace flower { namespace graphics{
 		std::vector<VkFence> inFlight_fences;
 		std::vector<VkFence> images_inFlight;
 
-
 	protected:
 		bool framebuffer_resized = false;
 		int last_width;

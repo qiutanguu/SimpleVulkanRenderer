@@ -1,4 +1,5 @@
 #include "gbuffer_pass.h"
+#include "../shader_manager.h"
 
 namespace flower{namespace graphics{
 	
@@ -133,5 +134,10 @@ namespace flower{namespace graphics{
 		vkDestroyRenderPass(*mix_data.device, render_pass, nullptr);
 	}
 
+	std::shared_ptr<material_gbuffer> graphics::material_gbuffer::create(vk_device* indevice,VkRenderPass in_renderpass,VkCommandPool in_pool,const std::vector<uint32_t>& in_texlib,glm::mat4 model_mat)
+	{
 
+		// TODO:
+		return std::shared_ptr<material_gbuffer>();
+	}
 }}

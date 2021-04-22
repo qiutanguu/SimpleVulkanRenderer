@@ -23,37 +23,32 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::initialize_special()
 	{
-		vk_renderpass_mix_data mixdata(&device,swapchain);
-		pass_deferred = deferred_pass::create(mixdata);
+		vk_renderpass_mix_data mixdata(&device,&swapchain);
+		pass_texture = texture_pass::create(mixdata);
 		pass_gbuffer = gbuffer_pass::create(mixdata);
 
-		mesh_sponza = std::make_shared<mesh>(&device,graphics_command_pool,g_shader_manager.texture_map_shader);
-		mesh_sponza->load_obj_mesh(&device,graphics_command_pool,"data/model/sponza/sponza.obj","",pass_deferred->render_pass,&swapchain);
+		g_meshes_manager.sponza_mesh->register_renderpass(renderpass_type::texture_pass,pass_texture->render_pass);
 
-		mesh_sponza_gbuffer = std::make_shared<mesh>(&device,graphics_command_pool,g_shader_manager.gbuffer_shader);
-		mesh_sponza_gbuffer->load_obj_mesh(&device,graphics_command_pool,"data/model/sponza/sponza.obj","",pass_gbuffer->render_pass,&swapchain);
-		 
 		record_renderCommand();
 	}
 
 	void pbr_deferred::destroy_special()
 	{
-		pass_deferred.reset();
+		pass_texture.reset();
 		pass_gbuffer.reset();
-		mesh_sponza.reset();
-		mesh_sponza_gbuffer.reset();
 	}
 
 	void pbr_deferred::recreate_swapchain()
 	{
 		vk_runtime::recreate_swapchain_default();
 
-		vk_renderpass_mix_data mixdata(&device,swapchain);
-		pass_deferred = deferred_pass::create(mixdata);
-		pass_gbuffer = gbuffer_pass::create(mixdata);
+		vk_renderpass_mix_data mixdata(&device,&swapchain);
+		pass_texture->swapchain_change(mixdata);
+		pass_gbuffer->swapchain_change(mixdata);
 
-		mesh_sponza->on_swapchain_recreate(&swapchain,pass_deferred->render_pass);
-		mesh_sponza_gbuffer->on_swapchain_recreate(&swapchain,pass_gbuffer->render_pass);
+		// ÖØÐÂ×¢²árenderpass
+		g_meshes_manager.sponza_mesh->register_renderpass(renderpass_type::texture_pass,pass_texture->render_pass,false);
+
 		record_renderCommand();
 	}
 
@@ -79,8 +74,8 @@ namespace flower{ namespace graphics{
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 
-			renderPassInfo.renderPass = pass_deferred->render_pass;
-			renderPassInfo.framebuffer = pass_deferred->swapchain_framebuffers[i];
+			renderPassInfo.renderPass = pass_texture->render_pass;
+			renderPassInfo.framebuffer = pass_texture->swapchain_framebuffers[i];
 
 			renderPassInfo.renderArea.offset = {0, 0};
 			renderPassInfo.renderArea.extent = swapchain.get_swapchain_extent();
@@ -109,7 +104,7 @@ namespace flower{ namespace graphics{
 			vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
-			mesh_sponza->draw(graphics_command_buffers[i],i);
+			g_meshes_manager.sponza_mesh->draw(graphics_command_buffers[i],renderpass_type::texture_pass);
 
 			vkCmdEndRenderPass(cmd_buffer);
 			graphics_command_buffers[i]->end();

@@ -12,20 +12,32 @@
 
 namespace flower { namespace graphics{
 
-	class deferred_pass
+	class texture_pass : public vk_renderpass
 	{
 	public:
 		operator VkRenderPass() { return render_pass; }
 
-		deferred_pass(
+		texture_pass(
 			vk_renderpass_mix_data in_mixdata
 		): mix_data(in_mixdata)
 		{
+			type = renderpass_type::texture_pass;
 		}
 
-		~deferred_pass();
+		~texture_pass();
 
-		static std::shared_ptr<deferred_pass> create(vk_renderpass_mix_data in_mixdata);
+		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) override
+		{
+			destroy_framebuffers();
+			destroy_renderpass();
+
+			mix_data = in_mixdata;
+
+			create_renderpass();
+			create_framebuffers();
+		}
+
+		static std::shared_ptr<texture_pass> create(vk_renderpass_mix_data in_mixdata);
 
 	private:
 		void create_framebuffers();
@@ -38,8 +50,23 @@ namespace flower { namespace graphics{
 		vk_renderpass_mix_data mix_data;
 
 	public:
-		VkRenderPass render_pass = VK_NULL_HANDLE;
 		std::vector<VkFramebuffer> swapchain_framebuffers;
+	};
+
+	// 仅采样basecolor纹理并显示的材质
+	class material_texture: public material
+	{
+	public:
+		material_texture(){ };
+		~material_texture(){ }
+
+		static std::shared_ptr<material_texture> create(
+			vk_device* indevice,
+			VkRenderPass in_renderpass,
+			VkCommandPool in_pool,
+			uint32_t map_colortex,
+			glm::mat4 model_mat
+		);
 	};
 
 } }

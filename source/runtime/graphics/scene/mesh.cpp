@@ -1,5 +1,8 @@
 #include "mesh.h"
 #include "../texture_manager.h"
+#include <graphics/shader_manager.h>
+#include "../pass/texture_pass.h"
+#include "../pass/gbuffer_pass.h"
 
 // 标准顶点
 struct vertex_standard
@@ -39,17 +42,19 @@ namespace std
 namespace flower{ namespace graphics{
 	meshes_manager g_meshes_manager = {};
 
-	void sub_mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index)
+	void sub_mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t passtype)
 	{
-		mat->pipeline->bind(*cmd_buf);
+		ASSERT(passtype<renderpass_type::max_index,"render pass type越界。");
+
+		mat_map[passtype]->pipeline->bind(*cmd_buf);
 
 		vkCmdBindDescriptorSets(
 			*cmd_buf,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			mat->pipeline->layout,
+			mat_map[passtype]->pipeline->layout,
 			0,
 			1,
-			mat->descriptor_set->descriptor_sets.data(),
+			mat_map[passtype]->descriptor_set->descriptor_sets.data(),
 			0,
 			nullptr
 		);
@@ -58,30 +63,52 @@ namespace flower{ namespace graphics{
 	}
 
 	// 对每种 renderpass 都应该注册对应的 shader material
-	void sub_mesh::register_renderpass(int32_t passtype)
-	{
+	void sub_mesh::register_renderpass(
+		int32_t passtype,
+		vk_device* indevice,
+		VkRenderPass in_renderpass,
+		VkCommandPool in_pool
+	){
 		ASSERT(passtype < renderpass_type::max_index,"render pass type越界。");
 
+		// 所有的模型矩阵的暂时用默认模型矩阵
+		model = glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
+
+		// 对于每种renderpass，需要特殊设置它们的descriptor创建
 		if(passtype == renderpass_type::texture_pass)
 		{
-			
+			mat_map[passtype] = material_texture::create(
+				indevice,
+				in_renderpass,
+				in_pool,
+				texture_ids[texture_id_type::diffuse],
+				model
+			);
 		}
 		else if(passtype == renderpass_type::gbuffer_pass)
 		{
-
+			mat_map[passtype] = material_gbuffer::create(
+				indevice,
+				in_renderpass,
+				in_pool,
+				texture_ids,
+				model
+			);
 		}
 
 		has_registered[passtype] = true;
 	}
 
-	void mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t index)
+	void mesh::draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t pass_type)
 	{
+		ASSERT(pass_type < renderpass_type::max_index,"render pass type越界。");
+
 		// 绑定所有的顶点缓冲
-		vertex_buf->bind(*cmd_buf);
+		vertex_bufs[pass_type]->bind(*cmd_buf);
 
 		for (auto& submesh : sub_meshes)
 		{
-			submesh.draw(cmd_buf,index);
+			submesh.draw(cmd_buf,pass_type);
 		}
 	}
 
@@ -123,10 +150,6 @@ namespace flower{ namespace graphics{
 		std::vector<vertex_standard> vertices;
 
 		sub_meshes.resize(materials.size());
-		for(size_t i = 0; i < materials.size(); i++)
-		{
-			sub_meshes[i].mat_obj = materials[i];
-		}
 
 		// 遍历每个网格
 		for (size_t s = 0; s < shapes.size(); s++) 
@@ -137,83 +160,89 @@ namespace flower{ namespace graphics{
 			for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) 
 			{
 				auto sub_mesh_id = shapes[s].mesh.material_ids[f];
-				if(sub_meshes.size() > 0 && !sub_meshes[sub_mesh_id].mat.maps_set)
+
+				// 加载所有的纹理！
+				if(sub_meshes.size() > 0 && sub_meshes[sub_mesh_id].texture_ids.size() < 1)
 				{
-					auto& set_mat = sub_meshes[sub_mesh_id].material_using;
+					auto& set_mat = sub_meshes[sub_mesh_id].texture_ids;
 					auto& cat_mat = materials[sub_mesh_id];
 
-					// 加载每种材质需要的纹理
+					// 按texture_id_type加载每种类型纹理
+
+					// 0 是diffuse
 					if(cat_mat.diffuse_texname!="")
 					{
 						auto texpath = mtl_search_path + cat_mat.diffuse_texname;
-						set_mat.map_diffuse = g_texture_manager.load_texture_mipmap(
+						set_mat.push_back(g_texture_manager.load_texture_mipmap(
 							VK_FORMAT_R8G8B8A8_SRGB,
 							sampler_layout::linear_repeat(),
 							texpath
-						);
+						));
 					}
 					else
 					{
-						set_mat.map_diffuse = g_texture_manager.checkboard;
+						set_mat.push_back(g_texture_manager.checkboard);
 					}
 
+					// 1 是mask
 					if(cat_mat.alpha_texname!="")
 					{
 						auto texpath = mtl_search_path + cat_mat.alpha_texname;
-						set_mat.map_mask = g_texture_manager.load_texture_mipmap(
+						set_mat.push_back(g_texture_manager.load_texture_mipmap(
 							VK_FORMAT_R8G8B8A8_UNORM,
 							sampler_layout::linear_repeat(),
 							texpath
-						);
+						));
 					}
 					else
 					{
-						set_mat.map_mask = g_texture_manager.white_16x16;
+						set_mat.push_back(g_texture_manager.white_16x16);
 					}
 
+					// 2 是metalic
 					if(cat_mat.specular_texname!="")
 					{
 						auto texpath = mtl_search_path + cat_mat.specular_texname;
-						set_mat.map_metalic = g_texture_manager.load_texture_mipmap(
+						set_mat.push_back(g_texture_manager.load_texture_mipmap(
 							VK_FORMAT_R8G8B8A8_UNORM,
 							sampler_layout::linear_repeat(),
 							texpath
-						);
+						));
 					}
 					else
 					{
-						set_mat.map_metalic = g_texture_manager.black_16x16;
+						set_mat.push_back(g_texture_manager.black_16x16);
 					}
 
+					// 3 是normal map
 					if(cat_mat.bump_texname!="")
 					{
 						auto texpath = mtl_search_path+cat_mat.bump_texname;
-						set_mat.map_normal = g_texture_manager.load_texture_mipmap(
+						set_mat.push_back(g_texture_manager.load_texture_mipmap(
 							VK_FORMAT_R8G8B8A8_UNORM,
 							sampler_layout::linear_repeat(),
 							texpath
-						);
+						));
 					}
 					else
 					{
-						set_mat.map_normal = g_texture_manager.default_normal;
+						set_mat.push_back(g_texture_manager.default_normal);
 					}
 
+					// 4 是roughness map
 					if(cat_mat.specular_highlight_texname!="")
 					{
 						auto texpath = mtl_search_path+cat_mat.specular_highlight_texname;
-						set_mat.map_roughness = g_texture_manager.load_texture_mipmap(
+						set_mat.push_back(g_texture_manager.load_texture_mipmap(
 							VK_FORMAT_R8G8B8A8_UNORM,
 							sampler_layout::linear_repeat(),
 							texpath
-						);
+						));
 					}
 					else
 					{
-						set_mat.map_roughness = g_texture_manager.white_16x16;
+						set_mat.push_back(g_texture_manager.white_16x16);
 					}
-
-					sub_meshes[sub_mesh_id].material_using.maps_set = true;
 				}
 				
 				size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
@@ -320,56 +349,54 @@ namespace flower{ namespace graphics{
 					}
 				}
 
-
 				index_offset += fv;
 			}
 		}
 		
-		upload_buffer();
-
-		// 设置模型矩阵
-		VkDeviceSize bufferSize = sizeof(glm::mat4);
-		for(auto& submesh : sub_meshes)
-		{
-			auto buffer = vk_buffer::create(
-				*indevice,
-				inpool,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				bufferSize,
-				nullptr
-			);
-
-			glm::mat4 model_mat = glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
-
-			buffer->map();
-			buffer->copy_to((void*)&model_mat,sizeof(model_mat));
-			buffer->unmap();
-
-			// 设置model矩阵
-			submesh.mat->model_ubo = buffer;
-
-			// 创建材质pipeline
-			submesh.mat->on_create(device,renderpass);
-		}
-	}
-
-	void mesh::upload_buffer()
-	{
-		// 上传顶点缓冲
-		vertex_buf = vk_vertex_buffer::create(
-			device,
-			pool,
-			raw_data.pack_type_stream(shader->per_vertex_attributes),
-			shader->per_vertex_attributes
-		);
-
 		// 上传次序缓冲
-		for(auto& submesh : sub_meshes)
+		for(auto& submesh:sub_meshes)
 		{
 			auto& indices = submesh.indices;
 			submesh.index_buf = vk_index_buffer::create(device,pool,indices);
 		}
+	}
+
+	void mesh::register_renderpass(int32_t passtype,VkRenderPass renderpass,bool reload_vertex_buf)
+	{
+		ASSERT(passtype < renderpass_type::max_index,"render pass type越界。");
+
+		std::shared_ptr<vk_shader_mix> shader;
+
+		// 对于每种renderpass，需要特殊设置它们的mat创建
+		if(passtype==renderpass_type::texture_pass)
+		{
+			shader = g_shader_manager.texture_map_shader;
+			for (auto& submesh : sub_meshes)
+			{
+				submesh.register_renderpass(passtype,device,renderpass,pool);
+			}
+		}
+		else if(passtype==renderpass_type::gbuffer_pass)
+		{
+			shader = g_shader_manager.gbuffer_shader;
+			for(auto& submesh:sub_meshes)
+			{
+				submesh.register_renderpass(passtype,device,renderpass,pool);
+			}
+		}
+
+		if(reload_vertex_buf)
+		{
+			// 上传render pass对应的顶点buffer
+			vertex_bufs[passtype] = vk_vertex_buffer::create(
+				device,
+				pool,
+				raw_data.pack_type_stream(shader->per_vertex_attributes),
+				shader->per_vertex_attributes
+			);
+		}
+
+		has_registered[passtype] = true;
 	}
 
 	void meshes_manager::initialize(vk_device* indevice,VkCommandPool inpool)
@@ -378,7 +405,7 @@ namespace flower{ namespace graphics{
 		device = indevice;
 
 		// sponza 网格加载到内存中
-		sponza_mesh = std::make_shared<mesh>(&device,pool);
+		sponza_mesh = std::make_shared<mesh>(device,pool);
 		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","");
 	}
 
