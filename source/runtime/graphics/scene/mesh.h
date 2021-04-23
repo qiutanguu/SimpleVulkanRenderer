@@ -81,7 +81,7 @@ namespace flower{ namespace graphics{
 		vertex_raw_data raw_data = {};
 
 		// ×¢²árender pass ¶ÔÓ¦µÄ mesh
-		void register_renderpass(int32_t passtype,VkRenderPass renderpass,bool reload_vertex_buf = true);
+		void register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,bool reload_vertex_buf = true);
 
 
 	private:

@@ -2,11 +2,13 @@
 #include "shader_manager.h"
 #include "global_uniform_buffers.h"
 #include "scene/mesh.h"
+#include "../core/timer.h"
 
 namespace flower{ namespace graphics{
 
 	void vk_runtime::initialize()
 	{
+		global_timer::reset();
 		config_before_init();
 		instance.initialize(instance_exts,instance_layers,vk_version::vk_1_0);
 

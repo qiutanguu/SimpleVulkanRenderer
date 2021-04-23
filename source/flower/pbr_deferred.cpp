@@ -27,7 +27,7 @@ namespace flower{ namespace graphics{
 		pass_texture = texture_pass::create(mixdata);
 		pass_gbuffer = gbuffer_pass::create(mixdata);
 
-		g_meshes_manager.sponza_mesh->register_renderpass(renderpass_type::texture_pass,pass_texture->render_pass);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader);
 
 		record_renderCommand();
 	}
@@ -47,7 +47,7 @@ namespace flower{ namespace graphics{
 		pass_gbuffer->swapchain_change(mixdata);
 
 		// ÖØĞÂ×¢²árenderpass
-		g_meshes_manager.sponza_mesh->register_renderpass(renderpass_type::texture_pass,pass_texture->render_pass,false);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader,false);
 
 		record_renderCommand();
 	}

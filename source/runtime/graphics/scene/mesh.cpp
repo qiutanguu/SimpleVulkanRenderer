@@ -3,6 +3,7 @@
 #include <graphics/shader_manager.h>
 #include "../pass/texture_pass.h"
 #include "../pass/gbuffer_pass.h"
+#include "core/timer.h"
 
 // 标准顶点
 struct vertex_standard
@@ -116,12 +117,20 @@ namespace flower{ namespace graphics{
 		std::string path,
 		std::string mat_path)
 	{
+		double time_stamp = flower::global_timer::get_timer_second();
+		
+		LOG_IO_TRACE("开始加载{0}网格！",path);
+
 		std::string mtl_search_path;
 		size_t pos = path.find_last_of("/\\");
+		std::string mesh_name;
 		if(pos!=std::string::npos)
 		{
 			mtl_search_path = path.substr(0,pos);
+			mesh_name = path.substr(pos);
 		}
+
+
 
 		mtl_search_path += "/";
 
@@ -141,6 +150,10 @@ namespace flower{ namespace graphics{
 		{
 			LOG_IO_WARN("obj网格读取警告：{0}",reader.Warning());
 		}
+
+		time_stamp = flower::global_timer::get_timer_second() - time_stamp;
+		LOG_IO_INFO("加载{0}网格花费{1}秒！",path,time_stamp);
+		LOG_IO_TRACE("开始解析{0}网格！",mesh_name);
 
 		auto& attrib = reader.GetAttrib();
 		auto& shapes = reader.GetShapes();
@@ -352,6 +365,9 @@ namespace flower{ namespace graphics{
 				index_offset += fv;
 			}
 		}
+
+		time_stamp = flower::global_timer::get_timer_second()-time_stamp;
+		LOG_IO_INFO("解析{0}网格花费{1}秒！",mesh_name,time_stamp);
 		
 		// 上传次序缓冲
 		for(auto& submesh:sub_meshes)
@@ -361,34 +377,17 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void mesh::register_renderpass(int32_t passtype,VkRenderPass renderpass,bool reload_vertex_buf)
+	void mesh::register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,bool reload_vertex_buf)
 	{
-		ASSERT(passtype < renderpass_type::max_index,"render pass type越界。");
-
-		std::shared_ptr<vk_shader_mix> shader;
-
-		// 对于每种renderpass，需要特殊设置它们的mat创建
-		if(passtype==renderpass_type::texture_pass)
+		for(auto& submesh:sub_meshes)
 		{
-			shader = g_shader_manager.texture_map_shader;
-			for (auto& submesh : sub_meshes)
-			{
-				submesh.register_renderpass(passtype,device,renderpass,pool);
-			}
-		}
-		else if(passtype==renderpass_type::gbuffer_pass)
-		{
-			shader = g_shader_manager.gbuffer_shader;
-			for(auto& submesh:sub_meshes)
-			{
-				submesh.register_renderpass(passtype,device,renderpass,pool);
-			}
+			submesh.register_renderpass(pass->type,device,pass->render_pass,pool);
 		}
 
 		if(reload_vertex_buf)
 		{
 			// 上传render pass对应的顶点buffer
-			vertex_bufs[passtype] = vk_vertex_buffer::create(
+			vertex_bufs[pass->type] = vk_vertex_buffer::create(
 				device,
 				pool,
 				raw_data.pack_type_stream(shader->per_vertex_attributes),
@@ -396,7 +395,7 @@ namespace flower{ namespace graphics{
 			);
 		}
 
-		has_registered[passtype] = true;
+		has_registered[pass->type] = true;
 	}
 
 	void meshes_manager::initialize(vk_device* indevice,VkCommandPool inpool)
