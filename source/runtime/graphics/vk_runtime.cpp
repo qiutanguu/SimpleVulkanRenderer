@@ -148,13 +148,13 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void vk_runtime::submit(std::shared_ptr<vk_command_buffer> buffer_commit)
+	void vk_runtime::submit(std::shared_ptr<vk_command_buffer> buffer_commit,const std::vector<VkSemaphore>& wait_signals)
 	{
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
 		// 等待交换链图片可用。
-		std::vector<VkSemaphore> wait_semaphores = { semaphores_image_available[current_frame] };
+		std::vector<VkSemaphore> wait_semaphores = wait_signals;
 		std::vector<VkPipelineStageFlags> wait_stages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = (uint32_t)wait_semaphores.size();
 		submitInfo.pWaitSemaphores = wait_semaphores.data();

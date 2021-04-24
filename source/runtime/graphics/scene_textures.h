@@ -36,6 +36,8 @@ namespace flower{ namespace graphics{
 
 
 	public:
+		std::shared_ptr<vk_texture> scene_color; // VK_FORMAT_R16G16B16A16_SFLOAT
+
 		std::shared_ptr<vk_texture> position_worldspace; // VK_FORMAT_R16G16B16A16_SFLOAT
 		std::shared_ptr<vk_texture> normal_worldspace; // VK_FORMAT_R16G16B16A16_SFLOAT
 		std::shared_ptr<vk_texture> basecolor; // VK_FORMAT_R8G8B8A8_UNORM

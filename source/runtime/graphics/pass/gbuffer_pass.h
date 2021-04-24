@@ -34,14 +34,14 @@ namespace flower { namespace graphics{
 			destroy_renderpass();
 
 			mix_data = in_mixdata;
-
+			cmd_buf = vk_command_buffer::create(*in_mixdata.device,pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 			create_renderpass();
 			create_framebuffers();
 		}
 
 		~gbuffer_pass();
 
-		static std::shared_ptr<gbuffer_pass> create(vk_renderpass_mix_data in_mixdata);
+		static std::shared_ptr<gbuffer_pass> create(vk_renderpass_mix_data in_mixdata,VkCommandPool pool);
 
 	private:
 		void create_framebuffers();
@@ -52,9 +52,12 @@ namespace flower { namespace graphics{
 
 	private:
 		vk_renderpass_mix_data mix_data;
-		std::shared_ptr<vk_command_buffer> cmd_buf = nullptr;
+		
 	public:
 		VkFramebuffer framebuffer;
+		std::shared_ptr<vk_command_buffer> cmd_buf = nullptr;
+		VkSemaphore gbuffer_semaphore = VK_NULL_HANDLE;
+		VkCommandPool pool;
 	};
 
 	// gbuffer pbr ²ÄÖÊ
@@ -63,7 +66,9 @@ namespace flower { namespace graphics{
 	public:
 		material_gbuffer()
 		{
+
 		};
+
 		~material_gbuffer()
 		{
 		}

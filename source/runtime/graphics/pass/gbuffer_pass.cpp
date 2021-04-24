@@ -3,11 +3,20 @@
 
 namespace flower{namespace graphics{
 	
-	std::shared_ptr<gbuffer_pass> gbuffer_pass::create(vk_renderpass_mix_data in_mixdata)
+	std::shared_ptr<gbuffer_pass> gbuffer_pass::create(vk_renderpass_mix_data in_mixdata
+		,VkCommandPool pool
+	)
 	{
 		auto ret = std::make_shared<gbuffer_pass>(in_mixdata);
 		ret->create_renderpass();
 		ret->create_framebuffers();
+
+		ret->cmd_buf = vk_command_buffer::create(*in_mixdata.device,pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+		ret->pool = pool;
+		VkSemaphoreCreateInfo semaphore_create_info {};
+		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		vk_check(vkCreateSemaphore(*in_mixdata.device, &semaphore_create_info, nullptr, &ret->gbuffer_semaphore));
+
 		return ret;
 	}
 
@@ -15,6 +24,7 @@ namespace flower{namespace graphics{
 	{
 		destroy_framebuffers();
 		destroy_renderpass();
+		vkDestroySemaphore(*mix_data.device, gbuffer_semaphore, nullptr);
 	}
 
 	void gbuffer_pass::create_framebuffers()
@@ -134,10 +144,62 @@ namespace flower{namespace graphics{
 		vkDestroyRenderPass(*mix_data.device, render_pass, nullptr);
 	}
 
-	std::shared_ptr<material_gbuffer> graphics::material_gbuffer::create(vk_device* indevice,VkRenderPass in_renderpass,VkCommandPool in_pool,const std::vector<uint32_t>& in_texlib,glm::mat4 model_mat)
+	std::shared_ptr<material_gbuffer> graphics::material_gbuffer::create(
+		vk_device* indevice,
+		VkRenderPass in_renderpass,
+		VkCommandPool in_pool,
+		const std::vector<uint32_t>& in_texlib,
+		glm::mat4 model_mat)
 	{
+		auto ret = std::make_shared<material_gbuffer>();
 
-		// TODO:
-		return std::shared_ptr<material_gbuffer>();
+		auto& shader = g_shader_manager.gbuffer_shader;
+
+		vk_pipeline_info pipe_info;	
+
+		pipe_info.vert_shader_module = shader->vert_shader_module->handle;
+		pipe_info.frag_shader_module = shader->frag_shader_module->handle;
+		pipe_info.color_attachment_count = 3;
+
+		ret->pipeline = vk_pipeline::create_by_shader(
+			indevice,
+			VK_NULL_HANDLE,
+			pipe_info,
+			shader,
+			in_renderpass
+		);
+
+		VkDeviceSize bufferSize = sizeof(glm::mat4);
+		auto buffer = vk_buffer::create(
+			*indevice,
+			in_pool,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			bufferSize,
+			nullptr
+		);
+
+		buffer->map();
+		buffer->copy_to((void*)&model_mat,sizeof(model_mat));
+		buffer->unmap();
+
+		// ÉèÖÃmodel¾ØÕó
+		ret->model_ubo = buffer;
+
+		ret->descriptor_set = shader->allocate_descriptor_set();
+		ret->shader = shader;
+
+		ret->descriptor_set->set_buffer("ub_vp",g_uniform_buffers.ubo_vps);
+		ret->descriptor_set->set_buffer("ub_m",ret->model_ubo);
+		ret->descriptor_set->set_image(
+			"basecolor_tex",
+			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::diffuse])
+		);
+		ret->descriptor_set->set_image(
+			"normal_tex",
+			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::normal])
+		);
+
+		return ret;
 	}
 }}

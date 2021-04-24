@@ -17,7 +17,36 @@ namespace flower{ namespace graphics{
 		uint32_t back_buffer_index = vk_runtime::acquire_next_present_image();
 
 		update_before_commit(back_buffer_index);
-		vk_runtime::submit(graphics_command_buffers[back_buffer_index]);
+
+		vkResetFences(device,1,&inFlight_fences[current_frame]);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		std::vector<VkPipelineStageFlags> wait_stages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		submitInfo.pWaitDstStageMask = wait_stages.data();
+
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &semaphores_image_available[current_frame];
+
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &pass_gbuffer->gbuffer_semaphore;
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &pass_gbuffer->cmd_buf->get_instance();
+
+		vk_check(vkQueueSubmit(pass_gbuffer->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
+
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &pass_gbuffer->gbuffer_semaphore;
+
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &semaphores_render_finished[current_frame];
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &graphics_command_buffers[back_buffer_index]->get_instance();
+
+		vk_check(vkQueueSubmit(graphics_command_buffers[back_buffer_index]->get_queue(),1,&submitInfo,inFlight_fences[current_frame]));
+
 		vk_runtime::present();
 	}
 
@@ -25,9 +54,10 @@ namespace flower{ namespace graphics{
 	{
 		vk_renderpass_mix_data mixdata(&device,&swapchain);
 		pass_texture = texture_pass::create(mixdata);
-		pass_gbuffer = gbuffer_pass::create(mixdata);
+		pass_gbuffer = gbuffer_pass::create(mixdata,graphics_command_pool);
 
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
 
 		record_renderCommand();
 	}
@@ -48,6 +78,7 @@ namespace flower{ namespace graphics{
 
 		// ÷ÿ–¬◊¢≤·renderpass
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader,false);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader,false);
 
 		record_renderCommand();
 	}
@@ -65,25 +96,60 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::record_renderCommand()
 	{
+		pass_gbuffer->cmd_buf->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+		{
+			std::array<VkClearValue,4> clearValues;
+			clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+			clearValues[1].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+			clearValues[2].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+			clearValues[3].depthStencil = { 1.0f, 0 };
+
+			VkRenderPassBeginInfo renderPassBeginInfo{};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.renderPass =  pass_gbuffer->render_pass;
+			renderPassBeginInfo.framebuffer = pass_gbuffer->framebuffer;
+			renderPassBeginInfo.renderArea.offset = {0,0};
+			renderPassBeginInfo.renderArea.extent = swapchain.get_swapchain_extent();
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
+			vkCmdBeginRenderPass(*pass_gbuffer->cmd_buf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float) swapchain.get_swapchain_extent().width;
+			viewport.height = (float) swapchain.get_swapchain_extent().height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor{};
+			scissor.offset = {0, 0};
+			scissor.extent = swapchain.get_swapchain_extent();
+			vkCmdSetViewport(*pass_gbuffer->cmd_buf, 0, 1, &viewport);
+			vkCmdSetScissor(*pass_gbuffer->cmd_buf, 0, 1, &scissor);
+
+			g_meshes_manager.sponza_mesh->draw(pass_gbuffer->cmd_buf,renderpass_type::gbuffer_pass);
+
+			vkCmdEndRenderPass(*pass_gbuffer->cmd_buf);
+		}
+		pass_gbuffer->cmd_buf->end();
+		
+
 		// ªÊ÷∆√¸¡Ó
 		for (size_t i = 0; i < graphics_command_buffers.size(); i++) 
 		{
 			graphics_command_buffers[i]->begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
-
 			auto& cmd_buffer = graphics_command_buffers[i]->get_instance();
+
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-
 			renderPassInfo.renderPass = pass_texture->render_pass;
 			renderPassInfo.framebuffer = pass_texture->swapchain_framebuffers[i];
-
 			renderPassInfo.renderArea.offset = {0, 0};
 			renderPassInfo.renderArea.extent = swapchain.get_swapchain_extent();
 
 			std::array<VkClearValue, 2> clearValues{};
 			clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
 			clearValues[1].depthStencil = {1.0f, 0};
-
 			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassInfo.pClearValues = clearValues.data();
 

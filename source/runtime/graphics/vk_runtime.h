@@ -73,9 +73,10 @@ namespace flower { namespace graphics{
 		void cleanup_swapchain_default();
 		
 
-		void submit(std::shared_ptr<vk_command_buffer> buffer_commit);
+		void submit(std::shared_ptr<vk_command_buffer> buffer_commit,const std::vector<VkSemaphore>& wait_signals);
 		void present();
 		uint32_t acquire_next_present_image();
+
 	private:
 		void create_command_buffers();
 		void destroy_command_buffers();

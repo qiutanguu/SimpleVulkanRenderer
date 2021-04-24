@@ -13,17 +13,28 @@ layout (location = 0) out vec4 out_position;
 layout (location = 1) out vec4 out_normal;
 layout (location = 2) out vec4 out_basecolor;
 
+vec3 get_normal_from_map()
+{
+    vec3 normal_tangent_space = normalize(texture(normal_tex, vary_uv0).xyz * 2.0 - vec3(1.0));
+
+    vec3 Q1  = dFdx(vary_worldpos);
+    vec3 Q2  = dFdy(vary_worldpos);
+    vec2 st1 = dFdx(vary_uv0);
+    vec2 st2 = dFdy(vary_uv0);
+
+    vec3 N  = normalize(vary_normal);
+    vec3 T  = normalize(Q1 * st2.t - Q2 * st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * normal_tangent_space);
+}
+
 void main() 
 {
-	out_position = vec4(vary_worldpos, 1.0);
-
+	vec3 world_space_normal = get_normal_from_map();
 	
-	vec3 N = normalize(vary_normal);
-	vec3 T = normalize(vary_tangent.xyz);
-	vec3 B = normalize(cross(N, T) * vary_tangent.w);
-	mat3 TBN = mat3(T, B, N);
-
-	vec3 tnorm = TBN * normalize(texture(normal_tex, vary_uv0).xyz * 2.0 - vec3(1.0));
-	out_normal = vec4(tnorm, 1.0);
+	out_position = vec4(vary_worldpos, 1.0);
+	out_normal = vec4(normalize(vary_normal), 1.0);
 	out_basecolor = texture(basecolor_tex, vary_uv0);
 }

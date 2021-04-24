@@ -6,6 +6,30 @@
 
 namespace flower{ namespace graphics{
 
+	inline VkPipelineColorBlendAttachmentState vk_pipeline_color_blend_attachment_state
+	(
+		VkColorComponentFlags colorWriteMask,
+		VkBool32 blendEnable
+	)
+	{
+		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState {};
+		pipelineColorBlendAttachmentState.colorWriteMask = colorWriteMask;
+		pipelineColorBlendAttachmentState.blendEnable = blendEnable;
+		return pipelineColorBlendAttachmentState;
+	}
+
+	inline VkPipelineColorBlendStateCreateInfo vk_pipeline_color_blend_state_create_info(
+		uint32_t attachmentCount,
+		const VkPipelineColorBlendAttachmentState* pAttachments)
+	{
+		VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo {};
+		pipelineColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		pipelineColorBlendStateCreateInfo.attachmentCount = attachmentCount;
+		pipelineColorBlendStateCreateInfo.pAttachments = pAttachments;
+		return pipelineColorBlendStateCreateInfo;
+	}
+
+
 	struct vk_pipeline_info
 	{
 		VkPipelineInputAssemblyStateCreateInfo input_assembly_state;

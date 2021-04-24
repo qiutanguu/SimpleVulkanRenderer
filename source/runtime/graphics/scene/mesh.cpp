@@ -130,8 +130,6 @@ namespace flower{ namespace graphics{
 			mesh_name = path.substr(pos);
 		}
 
-
-
 		mtl_search_path += "/";
 
 		tinyobj::ObjReaderConfig reader_config;
@@ -297,7 +295,7 @@ namespace flower{ namespace graphics{
 
 						v_uv[v] = {
 							tx,
-							1.0f - ty
+							1- ty
 						};
 					}
 				}
@@ -324,14 +322,11 @@ namespace flower{ namespace graphics{
 					one_vertex.normal = glm::normalize(v_normal[v]);
 					one_vertex.uv0 = v_uv[v];
 
-					auto cal_bitangent = glm::normalize(glm::cross(one_vertex.normal,tangent));
-					auto cal_normal = glm::normalize(glm::cross(tangent,bitangent));
-
 					one_vertex.tangent = glm::vec4(
 						tangent.x,
 						tangent.y,
 						tangent.z,
-						glm::sign(glm::dot(cal_bitangent,bitangent))
+						1
 					);
 
 					// obj no vertex color.
@@ -353,6 +348,15 @@ namespace flower{ namespace graphics{
 
 						raw_data.get_stream(vertex_attribute::uv0).data.push_back(one_vertex.uv0.x);
 						raw_data.get_stream(vertex_attribute::uv0).data.push_back(one_vertex.uv0.y);
+
+						raw_data.get_stream(vertex_attribute::normal).data.push_back(one_vertex.normal.x);
+						raw_data.get_stream(vertex_attribute::normal).data.push_back(one_vertex.normal.y);
+						raw_data.get_stream(vertex_attribute::normal).data.push_back(one_vertex.normal.z);
+
+						raw_data.get_stream(vertex_attribute::tangent).data.push_back(one_vertex.tangent.x);
+						raw_data.get_stream(vertex_attribute::tangent).data.push_back(one_vertex.tangent.y);
+						raw_data.get_stream(vertex_attribute::tangent).data.push_back(one_vertex.tangent.z);
+						raw_data.get_stream(vertex_attribute::tangent).data.push_back(one_vertex.tangent.w);
 					}
 
 					if( sub_meshes.size() > 0 )

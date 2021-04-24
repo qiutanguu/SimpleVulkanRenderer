@@ -13,6 +13,15 @@ namespace flower { namespace graphics{
 			sampler_layout::nearset_clamp()
 		);
 
+		scene_color = vk_texture::create_color_attachment(
+			device,
+			VK_FORMAT_R16G16B16A16_SFLOAT,
+			swapchain
+		);
+		scene_color->update_sampler(
+			sampler_layout::nearset_clamp()
+		);
+
 		normal_worldspace = vk_texture::create_color_attachment(
 			device,
 			VK_FORMAT_R16G16B16A16_SFLOAT,
