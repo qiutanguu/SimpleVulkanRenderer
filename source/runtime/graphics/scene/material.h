@@ -19,5 +19,5 @@ namespace flower{namespace graphics{
 		std::shared_ptr<vk_shader_mix> shader; // 使用的shader
 		std::shared_ptr<vk_pipeline> pipeline; // 管线
 		std::shared_ptr<vk_descriptor_set> descriptor_set; // 描述符集
-	};
+	};	
 }}

@@ -30,7 +30,7 @@ namespace flower{ namespace graphics{
 			position_worldspace.reset();
 			normal_worldspace.reset();
 			basecolor.reset();
-
+			scene_color.reset();
 			scene_depth_stencil.reset();
 		}
 

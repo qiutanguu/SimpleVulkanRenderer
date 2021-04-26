@@ -3,16 +3,15 @@
 
 namespace flower{namespace graphics{
 	
-	std::shared_ptr<gbuffer_pass> gbuffer_pass::create(vk_renderpass_mix_data in_mixdata
-		,VkCommandPool pool
+	std::shared_ptr<gbuffer_pass> gbuffer_pass::create(
+		vk_renderpass_mix_data in_mixdata
 	)
 	{
 		auto ret = std::make_shared<gbuffer_pass>(in_mixdata);
 		ret->create_renderpass();
 		ret->create_framebuffers();
 
-		ret->cmd_buf = vk_command_buffer::create(*in_mixdata.device,pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-		ret->pool = pool;
+		ret->cmd_buf = vk_command_buffer::create(*in_mixdata.device,in_mixdata.pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 		VkSemaphoreCreateInfo semaphore_create_info {};
 		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		vk_check(vkCreateSemaphore(*in_mixdata.device, &semaphore_create_info, nullptr, &ret->gbuffer_semaphore));

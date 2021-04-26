@@ -4,19 +4,17 @@
 namespace flower{namespace graphics{
 
 	std::shared_ptr<lighting_pass> lighting_pass::create(
-		vk_renderpass_mix_data in_mixdata,
-		VkCommandPool pool
+		vk_renderpass_mix_data in_mixdata
 	)
 	{
 		auto ret = std::make_shared<lighting_pass>(in_mixdata);
 		ret->create_renderpass();
 		ret->create_framebuffers();
 
-		ret->cmd_buf = vk_command_buffer::create(*in_mixdata.device,pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-		ret->pool = pool;
+		ret->cmd_buf = vk_command_buffer::create(*in_mixdata.device,in_mixdata.pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 		VkSemaphoreCreateInfo semaphore_create_info {};
 		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		vk_check(vkCreateSemaphore(*in_mixdata.device, &semaphore_create_info, nullptr, &ret->gbuffer_semaphore));
+		vk_check(vkCreateSemaphore(*in_mixdata.device, &semaphore_create_info, nullptr, &ret->lighting_pass_semaphore));
 
 		return ret;
 	}
@@ -25,19 +23,15 @@ namespace flower{namespace graphics{
 	{
 		destroy_framebuffers();
 		destroy_renderpass();
-		vkDestroySemaphore(*mix_data.device, gbuffer_semaphore, nullptr);
+		vkDestroySemaphore(*mix_data.device, lighting_pass_semaphore, nullptr);
 	}
 
 	void lighting_pass::create_framebuffers()
 	{
-		auto& position_ref = g_scene_textures.position_worldspace;
-		auto& normal_ref = g_scene_textures.normal_worldspace;
-		auto& basecolor_ref = g_scene_textures.basecolor;
-
 		auto& scenecolor_ref = g_scene_textures.scene_color;
 
-		const auto& width = basecolor_ref->width;
-		const auto& height = basecolor_ref->height;
+		const auto& width = scenecolor_ref->width;
+		const auto& height = scenecolor_ref->height;
 
 		std::array<VkImageView,1> attachments;
 		attachments[0] = scenecolor_ref->image_view;
@@ -71,7 +65,6 @@ namespace flower{namespace graphics{
 		attachmentDescs[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachmentDescs[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		attachmentDescs[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
 		attachmentDescs[0].format = g_scene_textures.scene_color->format;
 
 		std::vector<VkAttachmentReference> colorReferences;
@@ -128,18 +121,16 @@ namespace flower{namespace graphics{
 		vk_device* indevice,
 		VkRenderPass in_renderpass,
 		VkCommandPool in_pool,
-		const std::vector<uint32_t>& in_texlib,
 		glm::mat4 model_mat)
 	{
 		auto ret = std::make_shared<material_lighting>();
 
-		auto& shader = g_shader_manager.gbuffer_shader;
+		auto& shader = g_shader_manager.lighting_shader;
 
 		vk_pipeline_info pipe_info;	
-
 		pipe_info.vert_shader_module = shader->vert_shader_module->handle;
 		pipe_info.frag_shader_module = shader->frag_shader_module->handle;
-		pipe_info.color_attachment_count = 3;
+		pipe_info.color_attachment_count = 1;
 
 		ret->pipeline = vk_pipeline::create_by_shader(
 			indevice,
@@ -165,19 +156,22 @@ namespace flower{namespace graphics{
 
 		// ÉèÖÃmodel¾ØÕó
 		ret->model_ubo = buffer;
-
 		ret->descriptor_set = shader->allocate_descriptor_set();
 		ret->shader = shader;
 
-		ret->descriptor_set->set_buffer("ub_vp",g_uniform_buffers.ubo_vps);
-		ret->descriptor_set->set_buffer("ub_m",ret->model_ubo);
 		ret->descriptor_set->set_image(
-			"basecolor_tex",
-			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::diffuse])
+			"gbuffer_position_worldspace",
+			g_scene_textures.position_worldspace
 		);
+
 		ret->descriptor_set->set_image(
-			"normal_tex",
-			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::normal])
+			"gbuffer_normal_worldspace",
+			g_scene_textures.normal_worldspace
+		);
+
+		ret->descriptor_set->set_image(
+			"gbuffer_basecolor",
+			g_scene_textures.basecolor
 		);
 
 		return ret;

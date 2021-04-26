@@ -1,2 +1,2 @@
-glslc.exe ../gbuffer.vert -o vert.spv
-glslc.exe ../gbuffer.frag -o frag.spv
+glslc.exe ../source/lighting.vert -o lighting_vert.spv
+glslc.exe ../source/lighting.frag -o lighting_frag.spv

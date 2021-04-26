@@ -5,6 +5,7 @@
 #include "core/core.h"
 #include "graphics/shader_manager.h"
 
+
 namespace flower{ namespace graphics{
 
 	void pbr_deferred::config_before_init()
@@ -52,12 +53,15 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::initialize_special()
 	{
-		vk_renderpass_mix_data mixdata(&device,&swapchain);
+		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
 		pass_texture = texture_pass::create(mixdata);
-		pass_gbuffer = gbuffer_pass::create(mixdata,graphics_command_pool);
+		pass_gbuffer = gbuffer_pass::create(mixdata);
 
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
+
+		light.color = glm::vec4(1.0f);
+		light.direction = glm::normalize(glm::vec4(1.0f,1.0f,1.0f,0.0f));
 
 		record_renderCommand();
 	}
@@ -72,7 +76,7 @@ namespace flower{ namespace graphics{
 	{
 		vk_runtime::recreate_swapchain_default();
 
-		vk_renderpass_mix_data mixdata(&device,&swapchain);
+		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
 		pass_texture->swapchain_change(mixdata);
 		pass_gbuffer->swapchain_change(mixdata);
 

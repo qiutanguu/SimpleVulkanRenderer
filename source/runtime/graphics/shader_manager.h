@@ -28,6 +28,7 @@ namespace flower{ namespace graphics{
 	public:
 		std::shared_ptr<vk_shader_mix> texture_map_shader;
 		std::shared_ptr<vk_shader_mix> gbuffer_shader;
+		std::shared_ptr<vk_shader_mix> lighting_shader;
 
 	private:
 		bool has_init = false;

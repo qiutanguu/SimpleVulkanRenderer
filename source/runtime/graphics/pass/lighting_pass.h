@@ -25,7 +25,7 @@ namespace flower { namespace graphics{
 			vk_renderpass_mix_data in_mixdata
 		): mix_data(in_mixdata)
 		{
-			type = renderpass_type::gbuffer_pass;
+			type = renderpass_type::lighting_pass;
 		}
 
 		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) override
@@ -34,14 +34,14 @@ namespace flower { namespace graphics{
 			destroy_renderpass();
 
 			mix_data = in_mixdata;
-			cmd_buf = vk_command_buffer::create(*in_mixdata.device,pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+			cmd_buf = vk_command_buffer::create(*in_mixdata.device,in_mixdata.pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 			create_renderpass();
 			create_framebuffers();
 		}
 
 		~lighting_pass();
 
-		static std::shared_ptr<lighting_pass> create(vk_renderpass_mix_data in_mixdata,VkCommandPool pool);
+		static std::shared_ptr<lighting_pass> create(vk_renderpass_mix_data in_mixdata);
 
 	private:
 		void create_framebuffers();
@@ -56,8 +56,7 @@ namespace flower { namespace graphics{
 	public:
 		VkFramebuffer framebuffer;
 		std::shared_ptr<vk_command_buffer> cmd_buf = nullptr;
-		VkSemaphore gbuffer_semaphore = VK_NULL_HANDLE;
-		VkCommandPool pool;
+		VkSemaphore lighting_pass_semaphore = VK_NULL_HANDLE;
 	};
 
 	// lighting ²ÄÖÊ
@@ -78,7 +77,6 @@ namespace flower { namespace graphics{
 			vk_device* indevice,
 			VkRenderPass in_renderpass,
 			VkCommandPool in_pool,
-			const std::vector<uint32_t>& in_texlib,
 			glm::mat4 model_mat
 		);
 	};

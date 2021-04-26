@@ -10,10 +10,12 @@ namespace flower { namespace graphics{
 	{
 		vk_renderpass_mix_data(
 			vk_device* in_device,
-			vk_swapchain* in_swapchain
+			vk_swapchain* in_swapchain,
+			VkCommandPool in_pool
 		):
 			device(in_device),
-			swapchain(in_swapchain)
+			swapchain(in_swapchain),
+			pool(in_pool)
 		{
 
 		}
@@ -25,6 +27,7 @@ namespace flower { namespace graphics{
 
 		vk_device* device;
 		vk_swapchain* swapchain;
+		VkCommandPool pool;
 	};
 
 	class vk_renderpass
@@ -42,8 +45,9 @@ namespace flower { namespace graphics{
 	{
 		constexpr auto texture_pass = 0;
 		constexpr auto gbuffer_pass = 1;
+		constexpr auto lighting_pass = 2;
 
-		constexpr auto max_index = 2;
+		constexpr auto max_index = 3;
 	}
 
 } }

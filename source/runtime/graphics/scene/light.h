@@ -1,20 +1,12 @@
 #pragma once
+#include "../vk/vk_common.h"
 
 namespace flower{ namespace graphics{
 
-	struct light
+	struct directional_light
 	{
-		light(){ }
-		virtual ~light(){ }
-	};
-
-
-	class directional_light: public light
-	{
-	public:
-		
-	private:
-		
+		glm::vec4 direction;
+		glm::vec4 color;
 	};
 
 } }

@@ -9,6 +9,7 @@
 #include "graphics/vk/vk_shader.h"
 #include "graphics/pass/gbuffer_pass.h"
 #include "graphics/pass/texture_pass.h"
+#include "graphics/scene/light.h"
 
 namespace flower{ namespace graphics{
 
@@ -36,6 +37,7 @@ namespace flower{ namespace graphics{
 		std::shared_ptr<gbuffer_pass> pass_gbuffer;
 		std::shared_ptr<texture_pass> pass_texture;
 
+		directional_light light;
 	};
 
 } }
