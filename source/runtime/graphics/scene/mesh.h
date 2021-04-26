@@ -75,7 +75,7 @@ namespace flower{ namespace graphics{
 
 		std::vector<sub_mesh> sub_meshes;
 
-		void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t pass_type);
+		virtual void draw(std::shared_ptr<vk_command_buffer> cmd_buf,int32_t pass_type);
 
 		// 在此处存储的所有顶点
 		vertex_raw_data raw_data = {};
@@ -84,7 +84,7 @@ namespace flower{ namespace graphics{
 		void register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,bool reload_vertex_buf = true);
 
 
-	private:
+	protected:
 		vk_device* device;
 		VkCommandPool pool;
 		
@@ -122,5 +122,26 @@ namespace flower{ namespace graphics{
 	};
 
 	extern meshes_manager g_meshes_manager;
+
+	inline void virtual_full_screen_triangle_draw(
+		std::shared_ptr<vk_command_buffer> cmd_buf,
+		std::shared_ptr<material> full_screen_mat)
+	{
+		full_screen_mat->pipeline->bind(*cmd_buf);
+
+		vkCmdBindDescriptorSets(
+			*cmd_buf,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			full_screen_mat->pipeline->layout,
+			0,
+			1,
+			full_screen_mat->descriptor_set->descriptor_sets.data(),
+			0,
+			nullptr
+		);
+
+		vkCmdDraw(*cmd_buf, 3, 1, 0, 0);
+	}
+
 } }
 

@@ -173,7 +173,7 @@ namespace flower { namespace graphics{
             *in_device);
 
         ret->descriptor_info.sampler = ret->image_sampler;
-
+        ret->descriptor_info.imageView = ret->image_view;
         return ret;
     }
 
@@ -210,6 +210,7 @@ namespace flower { namespace graphics{
 
         ret->format = format;
         ret->descriptor_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ret->descriptor_info.imageView = ret->image_view;
         ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         ret->descriptor_info.sampler = ret->image_sampler;
         return ret;

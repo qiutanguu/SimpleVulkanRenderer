@@ -13,6 +13,7 @@ namespace flower{ namespace graphics{
 		{
 			texture_map_shader.reset();
 			gbuffer_shader.reset();
+			lighting_shader.reset();
 		}
 
 		void initialize(vk_device* in_device) 

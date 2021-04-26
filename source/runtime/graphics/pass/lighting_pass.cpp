@@ -16,6 +16,8 @@ namespace flower{namespace graphics{
 		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		vk_check(vkCreateSemaphore(*in_mixdata.device, &semaphore_create_info, nullptr, &ret->lighting_pass_semaphore));
 
+		ret->lighting_material = material_lighting::create(in_mixdata.device,ret->render_pass,in_mixdata.pool);
+
 		return ret;
 	}
 
@@ -71,8 +73,8 @@ namespace flower{namespace graphics{
 		colorReferences.push_back({ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 
 		VkAttachmentReference depthReference = {};
-		depthReference.attachment = 0;
-		depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthReference.attachment = VK_ATTACHMENT_UNUSED;
+		depthReference.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 		VkSubpassDescription subpass = {};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -120,17 +122,21 @@ namespace flower{namespace graphics{
 	std::shared_ptr<material_lighting> graphics::material_lighting::create(
 		vk_device* indevice,
 		VkRenderPass in_renderpass,
-		VkCommandPool in_pool,
-		glm::mat4 model_mat)
+		VkCommandPool in_pool)
 	{
 		auto ret = std::make_shared<material_lighting>();
 
 		auto& shader = g_shader_manager.lighting_shader;
 
-		vk_pipeline_info pipe_info;	
+		vk_pipeline_info pipe_info{};	
 		pipe_info.vert_shader_module = shader->vert_shader_module->handle;
 		pipe_info.frag_shader_module = shader->frag_shader_module->handle;
 		pipe_info.color_attachment_count = 1;
+
+		pipe_info.rasterization_state.cullMode = VK_CULL_MODE_FRONT_BIT;
+		pipe_info.rasterization_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		pipe_info.depth_stencil_state.depthWriteEnable = VK_FALSE;
+		pipe_info.depth_stencil_state.depthTestEnable = VK_FALSE;
 
 		ret->pipeline = vk_pipeline::create_by_shader(
 			indevice,
@@ -140,24 +146,11 @@ namespace flower{namespace graphics{
 			in_renderpass
 		);
 
-		VkDeviceSize bufferSize = sizeof(glm::mat4);
-		auto buffer = vk_buffer::create(
-			*indevice,
-			in_pool,
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			bufferSize,
-			nullptr
-		);
-
-		buffer->map();
-		buffer->copy_to((void*)&model_mat,sizeof(model_mat));
-		buffer->unmap();
-
 		// ÉèÖÃmodel¾ØÕó
-		ret->model_ubo = buffer;
 		ret->descriptor_set = shader->allocate_descriptor_set();
 		ret->shader = shader;
+
+		ret->descriptor_set->set_buffer("ub_directional_light",g_uniform_buffers.ubo_directional_light);
 
 		ret->descriptor_set->set_image(
 			"gbuffer_position_worldspace",

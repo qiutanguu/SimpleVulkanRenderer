@@ -20,6 +20,10 @@ namespace flower{ namespace graphics{
 		ubo_vps->map();
 		ubo_vps->copy_to((void*)&ubo_vp,sizeof(ubo_vp));
 		ubo_vps->unmap();
+
+		ubo_directional_light->map();
+		ubo_directional_light->copy_to((void*)&direct_light,sizeof(ubo_vp));
+		ubo_directional_light->unmap();
 	}
 
 	void global_uniform_buffers::initialize(vk_device* in_device,vk_swapchain* in_swapchain,VkCommandPool in_pool)
@@ -38,11 +42,22 @@ namespace flower{ namespace graphics{
 			bufferSize,
 			nullptr
 		);
+
+		bufferSize = sizeof(directional_light);
+		ubo_directional_light = vk_buffer::create(
+			*device,
+			pool,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			bufferSize,
+			nullptr
+		);
 	}
 
 	void global_uniform_buffers::release()
 	{
 		ubo_vps.reset();
+		ubo_directional_light.reset();
 	}
 
 }}

@@ -10,6 +10,7 @@
 #include "graphics/pass/gbuffer_pass.h"
 #include "graphics/pass/texture_pass.h"
 #include "graphics/scene/light.h"
+#include "graphics/pass/lighting_pass.h"
 
 namespace flower{ namespace graphics{
 
@@ -36,8 +37,9 @@ namespace flower{ namespace graphics{
 
 		std::shared_ptr<gbuffer_pass> pass_gbuffer;
 		std::shared_ptr<texture_pass> pass_texture;
+		std::shared_ptr<lighting_pass> pass_lighting;
 
-		directional_light light;
+		
 	};
 
 } }

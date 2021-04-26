@@ -19,33 +19,32 @@ namespace flower{ namespace graphics{
 
 		update_before_commit(back_buffer_index);
 
-		vkResetFences(device,1,&inFlight_fences[current_frame]);
-
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		std::vector<VkPipelineStageFlags> wait_stages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.pWaitDstStageMask = wait_stages.data();
 
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &semaphores_image_available[current_frame];
-
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &pass_gbuffer->gbuffer_semaphore;
-
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &pass_gbuffer->cmd_buf->get_instance();
 
+		// 1. gbuffer pass
+		submitInfo.pWaitSemaphores = &semaphores_image_available[current_frame];
+		submitInfo.pSignalSemaphores = &pass_gbuffer->gbuffer_semaphore;
+		submitInfo.pCommandBuffers = &pass_gbuffer->cmd_buf->get_instance();
 		vk_check(vkQueueSubmit(pass_gbuffer->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
 
-		submitInfo.waitSemaphoreCount = 1;
+		// 2. lighting pass
 		submitInfo.pWaitSemaphores = &pass_gbuffer->gbuffer_semaphore;
+		submitInfo.pSignalSemaphores = &pass_lighting->lighting_pass_semaphore;
+		submitInfo.pCommandBuffers = &pass_lighting->cmd_buf->get_instance();
+		vk_check(vkQueueSubmit(pass_lighting->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
 
-		submitInfo.signalSemaphoreCount = 1;
+		// 3. present pass
+		submitInfo.pWaitSemaphores = &pass_lighting->lighting_pass_semaphore;
 		submitInfo.pSignalSemaphores = &semaphores_render_finished[current_frame];
-
-		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &graphics_command_buffers[back_buffer_index]->get_instance();
-
+		vkResetFences(device,1,&inFlight_fences[current_frame]);
 		vk_check(vkQueueSubmit(graphics_command_buffers[back_buffer_index]->get_queue(),1,&submitInfo,inFlight_fences[current_frame]));
 
 		vk_runtime::present();
@@ -56,12 +55,12 @@ namespace flower{ namespace graphics{
 		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
 		pass_texture = texture_pass::create(mixdata);
 		pass_gbuffer = gbuffer_pass::create(mixdata);
+		pass_lighting = lighting_pass::create(mixdata);
 
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
 
-		light.color = glm::vec4(1.0f);
-		light.direction = glm::normalize(glm::vec4(1.0f,1.0f,1.0f,0.0f));
+		
 
 		record_renderCommand();
 	}
@@ -70,6 +69,7 @@ namespace flower{ namespace graphics{
 	{
 		pass_texture.reset();
 		pass_gbuffer.reset();
+		pass_lighting.reset();
 	}
 
 	void pbr_deferred::recreate_swapchain()
@@ -79,6 +79,7 @@ namespace flower{ namespace graphics{
 		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
 		pass_texture->swapchain_change(mixdata);
 		pass_gbuffer->swapchain_change(mixdata);
+		pass_lighting->swapchain_change(mixdata);
 
 		// ÷ÿ–¬◊¢≤·renderpass
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader,false);
@@ -137,6 +138,40 @@ namespace flower{ namespace graphics{
 		}
 		pass_gbuffer->cmd_buf->end();
 		
+
+		pass_lighting->cmd_buf->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+		{
+			std::array<VkClearValue,1> clearValues;
+			clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+
+			VkRenderPassBeginInfo renderPassBeginInfo{};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.renderPass =  pass_lighting->render_pass;
+			renderPassBeginInfo.framebuffer = pass_lighting->framebuffer;
+			renderPassBeginInfo.renderArea.offset = {0,0};
+			renderPassBeginInfo.renderArea.extent = swapchain.get_swapchain_extent();
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
+			vkCmdBeginRenderPass(*pass_lighting->cmd_buf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float) swapchain.get_swapchain_extent().width;
+			viewport.height = (float) swapchain.get_swapchain_extent().height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor{};
+			scissor.offset = {0, 0};
+			scissor.extent = swapchain.get_swapchain_extent();
+			vkCmdSetViewport(*pass_lighting->cmd_buf, 0, 1, &viewport);
+			vkCmdSetScissor(*pass_lighting->cmd_buf, 0, 1, &scissor);
+
+			virtual_full_screen_triangle_draw(pass_lighting->cmd_buf,pass_lighting->lighting_material);
+
+			vkCmdEndRenderPass(*pass_lighting->cmd_buf);
+		}
+		pass_lighting->cmd_buf->end();
 
 		// ªÊ÷∆√¸¡Ó
 		for (size_t i = 0; i < graphics_command_buffers.size(); i++) 

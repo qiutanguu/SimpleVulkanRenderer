@@ -34,7 +34,6 @@
     <ClInclude Include="graphics\pass\lighting_pass.h" />
     <ClInclude Include="graphics\scene\light.h" />
     <ClInclude Include="graphics\pass\tone_mapper_pass.h" />
-    <ClInclude Include="graphics\mesh\quad.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />

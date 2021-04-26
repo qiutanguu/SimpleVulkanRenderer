@@ -13,6 +13,27 @@
 
 namespace flower { namespace graphics{
 
+	// lighting ²ÄÖÊ
+	class material_lighting: public material
+	{
+	public:
+		material_lighting()
+		{
+
+		};
+
+		~material_lighting()
+		{
+
+		}
+
+		static std::shared_ptr<material_lighting> create(
+			vk_device* indevice,
+			VkRenderPass in_renderpass,
+			VkCommandPool in_pool
+		);
+	};
+
 	class lighting_pass : public vk_renderpass
 	{
 	public:
@@ -37,7 +58,12 @@ namespace flower { namespace graphics{
 			cmd_buf = vk_command_buffer::create(*in_mixdata.device,in_mixdata.pool,VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 			create_renderpass();
 			create_framebuffers();
+
+			lighting_material.reset();
+			lighting_material = material_lighting::create(in_mixdata.device,render_pass,in_mixdata.pool);
 		}
+
+		std::shared_ptr<material_lighting> lighting_material; 
 
 		~lighting_pass();
 
@@ -59,26 +85,6 @@ namespace flower { namespace graphics{
 		VkSemaphore lighting_pass_semaphore = VK_NULL_HANDLE;
 	};
 
-	// lighting ²ÄÖÊ
-	class material_lighting: public material
-	{
-	public:
-		material_lighting()
-		{
-
-		};
-
-		~material_lighting()
-		{
-			
-		}
-
-		static std::shared_ptr<material_lighting> create(
-			vk_device* indevice,
-			VkRenderPass in_renderpass,
-			VkCommandPool in_pool,
-			glm::mat4 model_mat
-		);
-	};
+	
 
 }}
