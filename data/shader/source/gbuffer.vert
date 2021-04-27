@@ -27,13 +27,11 @@ layout (location = 4) out vec3 vary_worldpos;
 void main() 
 {
     gl_Position = ub_vp.proj * ub_vp.view * ub_m.model * vec4(in_pos, 1.0);
+    mat3 normal_mat = transpose(inverse(mat3(ub_m.model)));
 
     vary_uv0 = in_uv0;
     vary_color = in_color;
-    
     vary_worldpos = vec3(ub_m.model * vec4(in_pos, 1.0));
-
-    mat3 normal_mat = transpose(inverse(mat3(ub_m.model)));
     vary_normal  = normal_mat * normalize(in_normal);	
     vary_tangent.xyz = normal_mat * normalize(in_tangent.xyz);
     vary_tangent.w = in_tangent.w;

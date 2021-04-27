@@ -190,13 +190,30 @@ namespace flower{namespace graphics{
 
 		ret->descriptor_set->set_buffer("ub_vp",g_uniform_buffers.ubo_vps);
 		ret->descriptor_set->set_buffer("ub_m",ret->model_ubo);
+
 		ret->descriptor_set->set_image(
 			"basecolor_tex",
 			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::diffuse])
 		);
+
 		ret->descriptor_set->set_image(
 			"normal_tex",
 			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::normal])
+		);
+
+		ret->descriptor_set->set_image(
+			"metalic_tex",
+			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::metallic])
+		);
+
+		ret->descriptor_set->set_image(
+			"roughness_tex",
+			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::roughness])
+		);
+
+		ret->descriptor_set->set_image(
+			"mask_tex",
+			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::mask])
 		);
 
 		return ret;

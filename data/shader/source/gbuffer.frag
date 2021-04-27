@@ -2,6 +2,9 @@
 
 layout (binding = 2) uniform sampler2D basecolor_tex;
 layout (binding = 3) uniform sampler2D normal_tex;
+layout (binding = 4) uniform sampler2D metalic_tex;
+layout (binding = 5) uniform sampler2D roughness_tex;
+layout (binding = 6) uniform sampler2D mask_tex;
 
 layout (location = 0) in vec3 vary_normal;
 layout (location = 1) in vec2 vary_uv0;
@@ -32,9 +35,18 @@ vec3 get_normal_from_map()
 
 void main() 
 {
+    float mask = texture(mask_tex,vary_uv0).r;
+    if(mask < 0.1f)
+    {
+        discard;
+    }
+
+    float roughness = texture(roughness_tex,vary_uv0).r;
+    float metalic = texture(metalic_tex,vary_uv0).r;
+
 	vec3 world_space_normal = get_normal_from_map();
 	
-	out_position = vec4(vary_worldpos, 1.0);
-	out_normal = vec4(normalize(vary_normal), 1.0);
+	out_position = vec4(vary_worldpos, roughness);
+	out_normal = vec4(normalize(vary_normal), metalic);
 	out_basecolor = texture(basecolor_tex, vary_uv0);
 }

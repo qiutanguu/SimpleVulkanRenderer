@@ -40,7 +40,7 @@ namespace flower{ namespace graphics{
 		submitInfo.pCommandBuffers = &pass_lighting->cmd_buf->get_instance();
 		vk_check(vkQueueSubmit(pass_lighting->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
 
-		// 3. present pass
+		// 3. tonemapper(present) pass
 		submitInfo.pWaitSemaphores = &pass_lighting->lighting_pass_semaphore;
 		submitInfo.pSignalSemaphores = &semaphores_render_finished[current_frame];
 		submitInfo.pCommandBuffers = &graphics_command_buffers[back_buffer_index]->get_instance();
@@ -53,11 +53,11 @@ namespace flower{ namespace graphics{
 	void pbr_deferred::initialize_special()
 	{
 		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
-		pass_texture = texture_pass::create(mixdata);
+
 		pass_gbuffer = gbuffer_pass::create(mixdata);
 		pass_lighting = lighting_pass::create(mixdata);
+		pass_tonemapper = tonemapper_pass::create(mixdata);
 
-		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
 
 		
@@ -67,9 +67,9 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::destroy_special()
 	{
-		pass_texture.reset();
 		pass_gbuffer.reset();
 		pass_lighting.reset();
+		pass_tonemapper.reset();
 	}
 
 	void pbr_deferred::recreate_swapchain()
@@ -77,12 +77,11 @@ namespace flower{ namespace graphics{
 		vk_runtime::recreate_swapchain_default();
 
 		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
-		pass_texture->swapchain_change(mixdata);
 		pass_gbuffer->swapchain_change(mixdata);
 		pass_lighting->swapchain_change(mixdata);
+		pass_tonemapper->swapchain_change(mixdata);
 
 		// ÖØÐÂ×¢²árenderpass
-		g_meshes_manager.sponza_mesh->register_renderpass(pass_texture,g_shader_manager.texture_map_shader,false);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader,false);
 
 		record_renderCommand();
@@ -181,14 +180,12 @@ namespace flower{ namespace graphics{
 
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = pass_texture->render_pass;
-			renderPassInfo.framebuffer = pass_texture->swapchain_framebuffers[i];
+			renderPassInfo.renderPass = pass_tonemapper->render_pass;
+			renderPassInfo.framebuffer = pass_tonemapper->swapchain_framebuffers[i];
 			renderPassInfo.renderArea.offset = {0, 0};
 			renderPassInfo.renderArea.extent = swapchain.get_swapchain_extent();
-
-			std::array<VkClearValue, 2> clearValues{};
+			std::array<VkClearValue, 1> clearValues{};
 			clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
-			clearValues[1].depthStencil = {1.0f, 0};
 			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassInfo.pClearValues = clearValues.data();
 
@@ -209,7 +206,7 @@ namespace flower{ namespace graphics{
 			vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
 			vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
-			g_meshes_manager.sponza_mesh->draw(graphics_command_buffers[i],renderpass_type::texture_pass);
+			virtual_full_screen_triangle_draw(graphics_command_buffers[i],pass_tonemapper->tonemapper_material);
 
 			vkCmdEndRenderPass(cmd_buffer);
 			graphics_command_buffers[i]->end();

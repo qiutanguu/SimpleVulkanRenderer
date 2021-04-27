@@ -23,6 +23,10 @@ namespace flower{ namespace graphics{
 			"data/shader/compiler/spv/lighting_frag.spv"
 		);
 
+		tonemapper_shader = vk_shader_mix::create(device,false,
+			"data/shader/compiler/spv/lighting_vert.spv",
+			"data/shader/compiler/spv/tonemapper_frag.spv"
+		);
 	}
 
 	void shader_manager::check_init()

@@ -34,6 +34,7 @@
     <ClInclude Include="graphics\pass\lighting_pass.h" />
     <ClInclude Include="graphics\scene\light.h" />
     <ClInclude Include="graphics\pass\tone_mapper_pass.h" />
+    <ClInclude Include="graphics\pass\shadowdepth_pass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -63,5 +64,6 @@
     <ClCompile Include="graphics\pass\gbuffer_pass.cpp" />
     <ClCompile Include="graphics\pass\lighting_pass.cpp" />
     <ClCompile Include="graphics\pass\tone_mapper_pass.cpp" />
+    <ClCompile Include="graphics\pass\shadowdepth_pass.cpp" />
   </ItemGroup>
 </Project>
