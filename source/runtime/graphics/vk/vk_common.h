@@ -158,6 +158,18 @@ namespace flower { namespace graphics {
 		);
 	}
 
+	// 寻找仅深度格式（用于shadowmap）
+	inline VkFormat find_depthonly_format(VkPhysicalDevice physical_device) 
+	{
+		return find_supported_format
+		(
+			physical_device,
+			{ VK_FORMAT_D32_SFLOAT },
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+		);
+	}
+
 	// 单个命令记录开始 见：end_single_time_commands copyBufferToImage
 	inline VkCommandBuffer begin_single_time_commands(VkCommandPool pool,VkDevice device) 
 	{

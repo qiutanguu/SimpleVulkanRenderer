@@ -45,6 +45,7 @@ namespace flower{ namespace graphics{
 		// 纹理ids
 		std::vector<uint32_t> texture_ids = {};
 
+
 		// 每种renderpass都应该注册对应的material
 		std::array<std::shared_ptr<material>,renderpass_type::max_index> mat_map = { }; 
 		std::array<bool,renderpass_type::max_index> has_registered = { };

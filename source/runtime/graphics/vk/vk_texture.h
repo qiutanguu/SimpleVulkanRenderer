@@ -72,6 +72,8 @@ namespace flower { namespace graphics{
 
 		bool is_cube_map = false;
 
+		VkExtent2D get_extent_2d(){ VkExtent2D ret{}; ret.width = width;ret.height = height; return ret; }
+
 		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 
 		vk_texture(vk_device* in_device): device(in_device){ }
@@ -90,6 +92,13 @@ namespace flower { namespace graphics{
 		static std::shared_ptr<vk_texture> create_depth_no_msaa(
 			vk_device* in_device,
 			vk_swapchain* in_swapchain
+		);
+
+		static std::shared_ptr<vk_texture> create_depthonly_no_msaa(
+			vk_device* in_device,
+			vk_swapchain* in_swapchain,
+			int32_t width = -1,
+			int32_t height = -1
 		);
 
 		static std::shared_ptr<vk_texture> create_color_attachment(

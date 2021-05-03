@@ -12,6 +12,7 @@
 #include "graphics/scene/light.h"
 #include "graphics/pass/lighting_pass.h"
 #include "graphics/pass/tone_mapper_pass.h"
+#include "graphics/pass/shadowdepth_pass.h"
 
 namespace flower{ namespace graphics{
 
@@ -39,6 +40,7 @@ namespace flower{ namespace graphics{
 		std::shared_ptr<gbuffer_pass> pass_gbuffer;
 		std::shared_ptr<lighting_pass> pass_lighting;
 		std::shared_ptr<tonemapper_pass> pass_tonemapper;
+		std::shared_ptr<shadowdepth_pass> pass_shadowdepth;
 		
 	};
 

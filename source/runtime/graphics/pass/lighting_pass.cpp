@@ -167,6 +167,13 @@ namespace flower{namespace graphics{
 			g_scene_textures.basecolor
 		);
 
+		ret->descriptor_set->set_buffer("ub_directional_light_vp",g_uniform_buffers.ubo_directlight_vps);
+
+		ret->descriptor_set->set_image(
+			"directional_light_shadowdepth",
+			g_scene_textures.scene_shadowdepth
+		);
+		
 		return ret;
 	}
 }}

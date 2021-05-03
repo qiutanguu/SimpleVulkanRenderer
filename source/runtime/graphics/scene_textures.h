@@ -32,20 +32,26 @@ namespace flower{ namespace graphics{
 			basecolor.reset();
 			scene_color.reset();
 			scene_depth_stencil.reset();
+			scene_shadowdepth.reset();
 		}
 
 
 	public:
-		std::shared_ptr<vk_texture> scene_color; // VK_FORMAT_R16G16B16A16_SFLOAT
+		// VK_FORMAT_R16G16B16A16_SFLOAT
+		std::shared_ptr<vk_texture> scene_color; 
 
 		// roughness in w
-		std::shared_ptr<vk_texture> position_worldspace; // VK_FORMAT_R16G16B16A16_SFLOAT
+		// VK_FORMAT_R16G16B16A16_SFLOAT
+		std::shared_ptr<vk_texture> position_worldspace; 
 
 		// metallic in w
-		std::shared_ptr<vk_texture> normal_worldspace; // VK_FORMAT_R16G16B16A16_SFLOAT
+		// VK_FORMAT_R16G16B16A16_SFLOAT
+		std::shared_ptr<vk_texture> normal_worldspace; 
 
+		// VK_FORMAT_R8G8B8A8_UNORM
+		std::shared_ptr<vk_texture> basecolor; 
 
-		std::shared_ptr<vk_texture> basecolor; // VK_FORMAT_R8G8B8A8_UNORM
+		std::shared_ptr<vk_texture> scene_shadowdepth;
 		std::shared_ptr<vk_texture> scene_depth_stencil;
 
 	private:

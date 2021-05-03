@@ -7,7 +7,7 @@ namespace flower
 	{
 		const float yaw_default = -90.0f;
 		const float pitch_default = 0.0f;
-		const float speed_default = 100.0f;
+		const float speed_default = 500.0f;
 		const float sensitivity_default = 0.1f;
 		const float zoom_default = 45.0f;
 

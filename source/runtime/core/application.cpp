@@ -1,5 +1,6 @@
 #include "core.h"
 #include "application.h"
+#include "graphics/global_uniform_buffers.h"
 
 namespace flower
 {
@@ -134,5 +135,10 @@ namespace flower
 			g_cam.ProcessKeyboard(camera_utils::move_type::left, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 			g_cam.ProcessKeyboard(camera_utils::move_type::right, delta_time);
+
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+			graphics::g_uniform_buffers.io_process(delta_time);
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+			graphics::g_uniform_buffers.io_process(-delta_time);
 	}
 }

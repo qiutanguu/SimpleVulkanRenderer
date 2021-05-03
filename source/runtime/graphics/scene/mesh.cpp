@@ -4,6 +4,7 @@
 #include "../pass/texture_pass.h"
 #include "../pass/gbuffer_pass.h"
 #include "core/timer.h"
+#include "../pass/shadowdepth_pass.h"
 
 // 标准顶点
 struct vertex_standard
@@ -72,6 +73,7 @@ namespace flower{ namespace graphics{
 	){
 		ASSERT(passtype < renderpass_type::max_index,"render pass type越界。");
 
+		// TODO: ShadowDepth Pass的灯光也用这个Model来算AABB
 		// 所有的模型矩阵的暂时用默认模型矩阵
 		model = glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
 
@@ -95,6 +97,20 @@ namespace flower{ namespace graphics{
 				texture_ids,
 				model
 			);
+		}
+		else if(passtype == renderpass_type::shadowdepth_pass)
+		{
+			mat_map[passtype] = material_shadowdepth::create(
+				indevice,
+				in_renderpass,
+				in_pool,
+				texture_ids,
+				model
+			);
+		}
+		else
+		{
+			LOG_VULKAN_FATAL("未处理的pass类型{0}！",passtype);
 		}
 
 		has_registered[passtype] = true;

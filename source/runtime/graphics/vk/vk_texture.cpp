@@ -174,6 +174,58 @@ namespace flower { namespace graphics{
 
         ret->descriptor_info.sampler = ret->image_sampler;
         ret->descriptor_info.imageView = ret->image_view;
+        ret->descriptor_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        return ret;
+    }
+
+    std::shared_ptr<vk_texture> vk_texture::create_depthonly_no_msaa(
+        vk_device* in_device,
+        vk_swapchain* in_swapchain,
+        int32_t width,
+        int32_t height)
+    {
+        auto ret = std::make_shared<vk_texture>(in_device);
+
+        VkFormat depthFormat = find_depthonly_format(in_device->physical_device);
+        const auto& extent = in_swapchain->get_swapchain_extent();
+
+        if(width>0&&height>0)
+        {
+            ret->width = width;
+            ret->height = height;
+        }
+        else
+        {
+            ret->width = extent.width;
+            ret->height = extent.height;
+        }
+       
+        ret->format = depthFormat;
+        ret->image_sampler = VK_NULL_HANDLE;
+
+        create_texture2D(
+            ret->width, 
+            ret->height, 
+            depthFormat, 
+            VK_IMAGE_TILING_OPTIMAL, 
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            ret->image, 
+            ret->image_memory,
+            *in_device);
+
+        ret->image_view = create_imageView(
+            &ret->image, 
+            depthFormat,
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            *in_device);
+
+        ret->descriptor_info.sampler = ret->image_sampler;
+        ret->descriptor_info.imageView = ret->image_view;
+        ret->descriptor_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ret->image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
         return ret;
     }
 

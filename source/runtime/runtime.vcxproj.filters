@@ -35,6 +35,7 @@
     <ClInclude Include="graphics\scene\light.h" />
     <ClInclude Include="graphics\pass\tone_mapper_pass.h" />
     <ClInclude Include="graphics\pass\shadowdepth_pass.h" />
+    <ClInclude Include="graphics\poisson_disk.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />

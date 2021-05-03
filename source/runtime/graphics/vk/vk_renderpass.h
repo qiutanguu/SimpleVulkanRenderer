@@ -46,8 +46,9 @@ namespace flower { namespace graphics{
 		constexpr auto texture_pass = 0;
 		constexpr auto gbuffer_pass = 1;
 		constexpr auto lighting_pass = 2;
+		constexpr auto shadowdepth_pass = 3;
 
-		constexpr auto max_index = 3;
+		constexpr auto max_index = 4;
 	}
 
 } }

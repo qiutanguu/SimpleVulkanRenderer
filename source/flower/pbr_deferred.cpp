@@ -13,6 +13,13 @@ namespace flower{ namespace graphics{
 		features.samplerAnisotropy = true;
 	}
 
+
+
+
+
+
+
+
 	void pbr_deferred::tick(float time, float delta_time)
 	{
 		uint32_t back_buffer_index = vk_runtime::acquire_next_present_image();
@@ -28,8 +35,15 @@ namespace flower{ namespace graphics{
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.commandBufferCount = 1;
 
-		// 1. gbuffer pass
+
+		// 0. shadow depth pass
 		submitInfo.pWaitSemaphores = &semaphores_image_available[current_frame];
+		submitInfo.pSignalSemaphores = &pass_shadowdepth->shadowdepth_semaphore;
+		submitInfo.pCommandBuffers = &pass_shadowdepth->cmd_buf->get_instance();
+		vk_check(vkQueueSubmit(pass_shadowdepth->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
+
+		// 1. gbuffer pass
+		submitInfo.pWaitSemaphores = &pass_shadowdepth->shadowdepth_semaphore;
 		submitInfo.pSignalSemaphores = &pass_gbuffer->gbuffer_semaphore;
 		submitInfo.pCommandBuffers = &pass_gbuffer->cmd_buf->get_instance();
 		vk_check(vkQueueSubmit(pass_gbuffer->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
@@ -54,19 +68,20 @@ namespace flower{ namespace graphics{
 	{
 		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
 
+		pass_shadowdepth = shadowdepth_pass::create(mixdata);
 		pass_gbuffer = gbuffer_pass::create(mixdata);
 		pass_lighting = lighting_pass::create(mixdata);
 		pass_tonemapper = tonemapper_pass::create(mixdata);
 
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
-
-		
 
 		record_renderCommand();
 	}
 
 	void pbr_deferred::destroy_special()
 	{
+		pass_shadowdepth.reset();
 		pass_gbuffer.reset();
 		pass_lighting.reset();
 		pass_tonemapper.reset();
@@ -77,11 +92,13 @@ namespace flower{ namespace graphics{
 		vk_runtime::recreate_swapchain_default();
 
 		vk_renderpass_mix_data mixdata(&device,&swapchain,graphics_command_pool);
+		pass_shadowdepth->swapchain_change(mixdata);
 		pass_gbuffer->swapchain_change(mixdata);
 		pass_lighting->swapchain_change(mixdata);
 		pass_tonemapper->swapchain_change(mixdata);
 
 		// ÖØÐÂ×¢²árenderpass
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader,false);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader,false);
 
 		record_renderCommand();
@@ -100,6 +117,42 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::record_renderCommand()
 	{
+		pass_shadowdepth->cmd_buf->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+		{
+			std::array<VkClearValue,1> clearValues;
+			clearValues[0].depthStencil = { 1.0f, 0 };
+
+			VkRenderPassBeginInfo renderPassBeginInfo{};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.renderPass =  pass_shadowdepth->render_pass;
+			renderPassBeginInfo.framebuffer = pass_shadowdepth->framebuffer;
+			renderPassBeginInfo.renderArea.offset = {0,0};
+			renderPassBeginInfo.renderArea.extent = g_scene_textures.scene_shadowdepth->get_extent_2d();
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
+			vkCmdBeginRenderPass(*pass_shadowdepth->cmd_buf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float) g_scene_textures.scene_shadowdepth->width;
+			viewport.height = (float) g_scene_textures.scene_shadowdepth->height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor{};
+			scissor.offset = {0, 0};
+			scissor.extent = g_scene_textures.scene_shadowdepth->get_extent_2d();
+			vkCmdSetViewport(*pass_shadowdepth->cmd_buf, 0, 1, &viewport);
+			vkCmdSetScissor(*pass_shadowdepth->cmd_buf, 0, 1, &scissor);
+
+			g_meshes_manager.sponza_mesh->draw(pass_shadowdepth->cmd_buf,renderpass_type::shadowdepth_pass);
+			vkCmdEndRenderPass(*pass_shadowdepth->cmd_buf);
+		}
+
+
+
+		pass_shadowdepth->cmd_buf->end();
+
 		pass_gbuffer->cmd_buf->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 		{
 			std::array<VkClearValue,4> clearValues;
