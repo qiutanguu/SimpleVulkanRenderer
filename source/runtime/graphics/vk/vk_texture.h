@@ -14,6 +14,9 @@ namespace flower { namespace graphics{
 		VkSamplerAddressMode address_mode_U; 
 		VkSamplerAddressMode address_mode_V; 
 		VkSamplerAddressMode address_mode_W;
+		VkCompareOp compare_op;
+		VkBool32 compareEnable;
+		VkBorderColor bordercolor;
 
 		static sampler_layout linear_repeat()
 		{
@@ -27,6 +30,10 @@ namespace flower { namespace graphics{
 			ret.address_mode_V = VK_SAMPLER_ADDRESS_MODE_REPEAT; 
 			ret.address_mode_W = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
+			ret.compare_op = VK_COMPARE_OP_ALWAYS;
+			ret.compareEnable = VK_FALSE;
+
+			ret.bordercolor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
 			return ret;
 		}
 
@@ -41,6 +48,29 @@ namespace flower { namespace graphics{
 			ret.address_mode_V = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
 			ret.address_mode_W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 
+			ret.bordercolor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+
+			ret.compare_op = VK_COMPARE_OP_ALWAYS;
+			ret.compareEnable = VK_FALSE;
+			return ret;
+		}
+
+		static sampler_layout shadow_depth_pcf()
+		{
+			sampler_layout ret {};
+
+			ret.mag_filter = VK_FILTER_LINEAR;
+			ret.min_filter = VK_FILTER_LINEAR;
+			ret.mipmap_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+			ret.address_mode_U = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER; 
+			ret.address_mode_V = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER; 
+			ret.address_mode_W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+			ret.bordercolor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+
+			ret.compare_op = VK_COMPARE_OP_LESS;
+			ret.compareEnable = VK_TRUE;
 			return ret;
 		}
 	};
@@ -88,6 +118,8 @@ namespace flower { namespace graphics{
 			VkFormat format,
 			const std::string& image_path
 		); 
+
+
 
 		static std::shared_ptr<vk_texture> create_depth_no_msaa(
 			vk_device* in_device,

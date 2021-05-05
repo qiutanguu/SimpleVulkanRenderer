@@ -136,13 +136,27 @@ namespace flower{namespace graphics{
 		pipe_info.vert_shader_module = shader->vert_shader_module->handle;
 		pipe_info.frag_shader_module = shader->frag_shader_module->handle;
 		pipe_info.color_attachment_count = 0;
+		
+		// ShadowMapÉî¶ÈÆ«ÒÆ¿ªÆô
+		pipe_info.rasterization_state.depthBiasEnable = VK_TRUE;
+
+		// ShadowMap Cull Front
+		pipe_info.rasterization_state.cullMode = VK_CULL_MODE_FRONT_BIT;
+		pipe_info.depth_stencil_state.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+		std::vector<VkDynamicState> dynamicStateEnables = {
+			VK_DYNAMIC_STATE_VIEWPORT,
+			VK_DYNAMIC_STATE_SCISSOR,
+			VK_DYNAMIC_STATE_DEPTH_BIAS
+		};
 
 		ret->pipeline = vk_pipeline::create_by_shader(
 			indevice,
 			VK_NULL_HANDLE,
 			pipe_info,
 			shader,
-			in_renderpass
+			in_renderpass,
+			dynamicStateEnables
 		);
 
 		VkDeviceSize bufferSize = sizeof(glm::mat4);

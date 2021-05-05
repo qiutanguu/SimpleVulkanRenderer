@@ -53,6 +53,7 @@ namespace flower { namespace graphics{
 	public:
 		VkPhysicalDevice physical_device;
 		VkDevice device;
+		VkPhysicalDeviceProperties device_properties;
 
 		VkQueue graphics_queue; // 图形队列
 		VkQueue present_queue;  // 显示队列

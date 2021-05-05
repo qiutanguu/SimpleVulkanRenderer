@@ -7,6 +7,7 @@ namespace flower{ namespace graphics{
 	{
 		glm::vec4 direction;
 		glm::vec4 color;
+		glm::vec4 shadow_mix;
 	};
 
 } }

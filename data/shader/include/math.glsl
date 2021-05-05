@@ -1,0 +1,9 @@
+#ifndef MATH_GLSL
+#define MATH_GLSL
+
+#define PI   3.141592653589793
+#define PI_2 6.283185307179586
+#define PI_H 1.5707963267948966
+#define PI_Q 0.7853981633974483
+
+#endif

@@ -45,10 +45,10 @@ namespace flower { namespace graphics{
         sampler_info.addressModeU = in.address_mode_U;
         sampler_info.addressModeV = in.address_mode_V;
         sampler_info.addressModeW = in.address_mode_W;
-        sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+        sampler_info.compareOp = in.compare_op;
         sampler_info.unnormalizedCoordinates = VK_FALSE;
-        sampler_info.compareEnable = VK_FALSE;
-        sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        sampler_info.compareEnable = in.compareEnable;
+        sampler_info.borderColor = in.bordercolor;
         sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
         sampler_info.anisotropyEnable = VK_FALSE;
 
@@ -110,7 +110,6 @@ namespace flower { namespace graphics{
 
         transition_image_layout(
             ret->image, 
-            format, 
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             in_pool,

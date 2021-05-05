@@ -100,6 +100,7 @@ namespace flower
 			LOG_IO_FATAL("文件{0}打开失败",filename);
 		}
 
+
 		size_t fileSize = (size_t)file.tellg();
 		std::vector<char> buffer(fileSize);
 		file.seekg(0);

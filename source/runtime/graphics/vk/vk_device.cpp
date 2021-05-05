@@ -99,6 +99,7 @@ namespace flower{ namespace graphics{
 				if (is_physical_device_suitable(device_request_extens)) 
 				{
 					LOG_VULKAN_INFO("—°‘Ò∂¿¡¢œ‘ø®: {0}",vulkan_to_string(deviceProperties.deviceName));
+					device_properties = deviceProperties;
 					return;
 				}
 			}

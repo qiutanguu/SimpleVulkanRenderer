@@ -38,10 +38,19 @@ namespace flower{ namespace graphics{
 		void record_renderCommand();
 
 		std::shared_ptr<gbuffer_pass> pass_gbuffer;
+		void gbuffer_record_command();
+
 		std::shared_ptr<lighting_pass> pass_lighting;
-		std::shared_ptr<tonemapper_pass> pass_tonemapper;
+		void lighting_record_command();
+
 		std::shared_ptr<shadowdepth_pass> pass_shadowdepth;
-		
+		void shadowdepth_record_command();
+
+		std::shared_ptr<tonemapper_pass> pass_tonemapper;
+		std::shared_ptr<ui_overlay> ui_context;
+		void tonemapper_ui_record_command();
+		void ui_overlay_update();
+		void ui_layout();
 	};
 
 } }

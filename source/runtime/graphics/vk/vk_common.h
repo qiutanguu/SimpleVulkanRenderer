@@ -334,10 +334,8 @@ namespace flower { namespace graphics {
 		end_single_time_commands(commandBuffer,in_graphics_queue,commandpool,device);
 	}
 
-	// 图片布局转化
 	inline void transition_image_layout(
 		VkImage image,
-		VkFormat format,
 		VkImageLayout oldLayout,
 		VkImageLayout newLayout,
 		VkCommandPool commandpool,

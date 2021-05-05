@@ -1,6 +1,7 @@
 #include "core.h"
 #include "application.h"
 #include "graphics/global_uniform_buffers.h"
+#include "input.h"
 
 namespace flower
 {
@@ -22,15 +23,20 @@ namespace flower
 		}
 		else
 		{
+			// NOTE：暂时最大化显示。
+			const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+			width = mode->width;
+			height = mode->height;
+			glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 			window = glfwCreateWindow(width,height,title,nullptr,nullptr);
+			// window = glfwCreateWindow(width,height,title,nullptr,nullptr);
 		}
 
 		glfwSetWindowUserPointer(window,this);
 		glfwSetFramebufferSizeCallback(window,framebuffer_resize_callback);
+		glfwSetMouseButtonCallback(window, mouse_button_callback);
 		glfwSetCursorPosCallback(window, mouse_callback);
 		glfwSetScrollCallback(window, scroll_callback);
-
-		// 禁用鼠标图标
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		this->width = width;
@@ -82,6 +88,7 @@ namespace flower
 			}
 
 			glfwPollEvents();
+
 		}
 
 		for(auto& runtime_module : modules)
@@ -114,6 +121,8 @@ namespace flower
 		g_cam.lastY = (float)ypos;
 
 		g_cam.ProcessMouseMovement(xoffset, yoffset);
+
+		input::current_mouse_pos = glm::vec2(float(xpos),float(ypos));
 	}
 
 	void application::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -122,8 +131,62 @@ namespace flower
 		g_cam.ProcessMouseScroll((float)yoffset);
 	}
 
+	void application::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+	{
+		if(button==GLFW_MOUSE_BUTTON_RIGHT && action==GLFW_PRESS)
+		{
+			input::right_mouse_button_down = true;
+		}
+		else if(button==GLFW_MOUSE_BUTTON_RIGHT && action==GLFW_RELEASE)
+		{
+			input::right_mouse_button_down = false;
+		}
+		else if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_RELEASE)
+		{
+			input::left_mouse_button_down = false;
+		}
+		else if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_PRESS)
+		{
+			input::left_mouse_button_down = true;
+		}
+	}
+
 	void application::processInput(GLFWwindow *window)
 	{
+		if(glfwGetKey(window,GLFW_KEY_GRAVE_ACCENT)==GLFW_PRESS)
+		{
+			if(!input::key_grave_accent_down)
+			{
+				if(input::disable_cursor)// 第一次按下
+				{
+					// 启用鼠标图标
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+					input::disable_cursor = false;
+				}
+				else// 第二次按下
+				{
+					// 禁用鼠标图标
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					input::disable_cursor = true;
+				}
+			}
+
+			input::key_grave_accent_down = true;
+		}
+		else if(glfwGetKey(window,GLFW_KEY_GRAVE_ACCENT)==GLFW_RELEASE)
+		{
+			input::key_grave_accent_down = false;
+		}
+
+		if(glfwGetKey(window,GLFW_KEY_TAB)==GLFW_PRESS)
+		{
+			input::key_tab = true;
+		}
+		else if(glfwGetKey(window,GLFW_KEY_TAB)==GLFW_RELEASE)
+		{
+			input::key_tab = false;
+		}
+
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 
@@ -140,5 +203,7 @@ namespace flower
 			graphics::g_uniform_buffers.io_process(delta_time);
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 			graphics::g_uniform_buffers.io_process(-delta_time);
+
+
 	}
 }

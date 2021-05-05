@@ -22,6 +22,7 @@ namespace flower{ namespace graphics{
 		{
 			direct_light.color = glm::vec4(1.0f);
 			direct_light.direction = glm::normalize(glm::vec4(-2.0f, 4.0f, -1.0f,0.0f));
+			direct_light.shadow_mix = glm::vec4(8.0f,2.0f,1.0f,0);
 		}
 
 		void update(uint32_t back_buffer_index);
@@ -29,7 +30,7 @@ namespace flower{ namespace graphics{
 		void release();
 
 		directional_light direct_light;
-		
+
 
 		// view project matrix
 		std::shared_ptr<vk_buffer> ubo_vps;

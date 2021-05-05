@@ -9,28 +9,38 @@ namespace flower{ namespace graphics{
 		check_init();
 
 		texture_map_shader = vk_shader_mix::create(device,false,
-			"data/shader/compiler/spv/texture_vert.spv",
-			"data/shader/compiler/spv/texture_frag.spv"
+			"data/shader/spir-v/texture_vert.spv",
+			"data/shader/spir-v/texture_frag.spv"
 		);
 
 		gbuffer_shader = vk_shader_mix::create(device,false,
-			"data/shader/compiler/spv/gbuffer_vert.spv",
-			"data/shader/compiler/spv/gbuffer_frag.spv"
+			"data/shader/spir-v/gbuffer_vert.spv",
+			"data/shader/spir-v/gbuffer_frag.spv"
 		);
 
 		lighting_shader = vk_shader_mix::create(device,false,
-			"data/shader/compiler/spv/lighting_vert.spv",
-			"data/shader/compiler/spv/lighting_frag.spv"
+			"data/shader/spir-v/lighting_vert.spv",
+			"data/shader/spir-v/lighting_frag.spv"
 		);
 
 		tonemapper_shader = vk_shader_mix::create(device,false,
-			"data/shader/compiler/spv/lighting_vert.spv",
-			"data/shader/compiler/spv/tonemapper_frag.spv"
+			"data/shader/spir-v/lighting_vert.spv",
+			"data/shader/spir-v/tonemapper_frag.spv"
 		);
 
 		shadowdepth_shader = vk_shader_mix::create(device,false,
-			"data/shader/compiler/spv/shadowdepth_vert.spv",
-			"data/shader/compiler/spv/shadowdepth_frag.spv"
+			"data/shader/spir-v/shadowdepth_vert.spv",
+			"data/shader/spir-v/shadowdepth_frag.spv"
+		);
+
+		ui_vertex_shader = vk_shader_module::create(device,
+			"data/shader/spir-v/uioverlay_vert.spv", 
+			VK_SHADER_STAGE_VERTEX_BIT
+		);
+
+		ui_fragment_shader = vk_shader_module::create(device,
+			"data/shader/spir-v/uioverlay_frag.spv", 
+			VK_SHADER_STAGE_FRAGMENT_BIT
 		);
 	}
 

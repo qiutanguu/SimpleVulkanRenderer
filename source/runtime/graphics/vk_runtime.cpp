@@ -79,7 +79,6 @@ namespace flower{ namespace graphics{
 		// 重新申请所有的rt
 		g_scene_textures.release();
 		g_scene_textures.initialize(&device,&swapchain);
-
 		g_uniform_buffers.release();
 		g_uniform_buffers.initialize(&device,&swapchain,graphics_command_pool);
 
@@ -254,7 +253,9 @@ namespace flower{ namespace graphics{
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphics_family;
-		poolInfo.flags = 0;
+
+		// 我懒得划分多个command pool了
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		if (vkCreateCommandPool(device, &poolInfo, nullptr, &graphics_command_pool) != VK_SUCCESS) 
 		{

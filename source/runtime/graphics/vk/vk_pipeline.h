@@ -77,7 +77,8 @@ namespace flower{ namespace graphics{
 			const std::vector<VkVertexInputBindingDescription>& inputBindings, 
 			const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,
 			VkPipelineLayout pipelineLayout,
-			VkRenderPass renderPass
+			VkRenderPass renderPass,
+			std::vector<VkDynamicState> dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT,VK_DYNAMIC_STATE_SCISSOR}
 		);
 
 		static std::shared_ptr<vk_pipeline> create_single_binding(
@@ -87,7 +88,8 @@ namespace flower{ namespace graphics{
 			VkVertexInputBindingDescription& inputBindings,
 			const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,
 			VkPipelineLayout pipelineLayout,
-			VkRenderPass renderPass
+			VkRenderPass renderPass,
+			std::vector<VkDynamicState> dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT,VK_DYNAMIC_STATE_SCISSOR}
 		);
 
 		static std::shared_ptr<vk_pipeline> create_by_shader(
@@ -95,7 +97,8 @@ namespace flower{ namespace graphics{
 			VkPipelineCache pipelineCache,
 			vk_pipeline_info& pipelineInfo,
 			std::shared_ptr<vk_shader_mix> shaders,
-			VkRenderPass renderPass
+			VkRenderPass renderPass,
+			std::vector<VkDynamicState> dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT,VK_DYNAMIC_STATE_SCISSOR}
 		);
 		
 	private:

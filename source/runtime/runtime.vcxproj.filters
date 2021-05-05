@@ -36,6 +36,15 @@
     <ClInclude Include="graphics\pass\tone_mapper_pass.h" />
     <ClInclude Include="graphics\pass\shadowdepth_pass.h" />
     <ClInclude Include="graphics\poisson_disk.h" />
+    <ClInclude Include="graphics\ui\imgui\imconfig.h" />
+    <ClInclude Include="graphics\ui\imgui\imgui.h" />
+    <ClInclude Include="graphics\ui\imgui\imgui_internal.h" />
+    <ClInclude Include="graphics\ui\imgui\imstb_rectpack.h" />
+    <ClInclude Include="graphics\ui\imgui\imstb_textedit.h" />
+    <ClInclude Include="graphics\ui\imgui\imstb_truetype.h" />
+    <ClInclude Include="graphics\ui\ui_overlay.h" />
+    <ClInclude Include="core\input.h" />
+    <ClInclude Include="graphics\ui\ui_style.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -66,5 +75,12 @@
     <ClCompile Include="graphics\pass\lighting_pass.cpp" />
     <ClCompile Include="graphics\pass\tone_mapper_pass.cpp" />
     <ClCompile Include="graphics\pass\shadowdepth_pass.cpp" />
+    <ClCompile Include="graphics\ui\imgui\imgui.cpp" />
+    <ClCompile Include="graphics\ui\imgui\imgui_demo.cpp" />
+    <ClCompile Include="graphics\ui\imgui\imgui_draw.cpp" />
+    <ClCompile Include="graphics\ui\imgui\imgui_tables.cpp" />
+    <ClCompile Include="graphics\ui\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="graphics\ui\ui_overlay.cpp" />
+    <ClCompile Include="core\input.cpp" />
   </ItemGroup>
 </Project>

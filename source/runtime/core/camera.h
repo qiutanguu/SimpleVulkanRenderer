@@ -1,5 +1,6 @@
 #pragma once
 #include "core/core.h"
+#include "input.h"
 
 namespace flower
 {
@@ -77,6 +78,11 @@ namespace flower
         // 处理鼠标移动
         void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true)
         {
+            if(!input::disable_cursor)
+            {
+                return;
+            }
+
             xoffset *= MouseSensitivity;
             yoffset *= MouseSensitivity;
 
@@ -98,6 +104,11 @@ namespace flower
         // 处理滚轮事件
         void ProcessMouseScroll(float yoffset)
         {
+            if(!input::disable_cursor)
+            {
+                return;
+            }
+
             Zoom -= (float)yoffset;
             if (Zoom < 1.0f)
                 Zoom = 1.0f;

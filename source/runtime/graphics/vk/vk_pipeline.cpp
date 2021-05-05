@@ -131,7 +131,8 @@ namespace flower { namespace graphics{
 		const std::vector<VkVertexInputBindingDescription>& input_bindings,
 		const std::vector<VkVertexInputAttributeDescription>& vertex_input_attributs,
 		VkPipelineLayout in_pipeline_layout,
-		VkRenderPass renderPass)
+		VkRenderPass renderPass,
+		std::vector<VkDynamicState> dynamicStateEnables)
 	{
 		auto ret = std::make_shared<vk_pipeline>(in_device,in_pipeline_layout);
 		
@@ -152,13 +153,9 @@ namespace flower { namespace graphics{
 		viewportState.viewportCount = 1;
 		viewportState.scissorCount  = 1;
 
-		std::vector<VkDynamicState> dynamicStateEnables;
-		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
-
 		VkPipelineDynamicStateCreateInfo dynamicState{ };
 		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		dynamicState.dynamicStateCount = 2;
+		dynamicState.dynamicStateCount = dynamicStateEnables.size();
 		dynamicState.pDynamicStates = dynamicStateEnables.data();
 
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -199,7 +196,8 @@ namespace flower { namespace graphics{
 		VkPipelineCache pipelineCache,
 		vk_pipeline_info& pipelineInfo,
 		std::shared_ptr<vk_shader_mix> shaders,
-		VkRenderPass renderPass)
+		VkRenderPass renderPass,
+		std::vector<VkDynamicState> dynamicStateEnables)
 	{
 		return create_multi_binding(
 			in_device,
@@ -208,13 +206,14 @@ namespace flower { namespace graphics{
 			shaders->input_bindings,
 			shaders->input_attributes,
 			shaders->pipeline_layout,
-			renderPass
+			renderPass,
+			dynamicStateEnables
 		);
 	}
 
-	std::shared_ptr<vk_pipeline> vk_pipeline::create_single_binding(vk_device* in_device,VkPipelineCache pipelineCache,vk_pipeline_info& pipelineInfo,VkVertexInputBindingDescription& inputBindings,const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,VkPipelineLayout pipelineLayout,VkRenderPass renderPass)
+	std::shared_ptr<vk_pipeline> vk_pipeline::create_single_binding(vk_device* in_device,VkPipelineCache pipelineCache,vk_pipeline_info& pipelineInfo,VkVertexInputBindingDescription& inputBindings,const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributes,VkPipelineLayout pipelineLayout,VkRenderPass renderPass,std::vector<VkDynamicState> dynamicStateEnables)
 	{
-		return create_multi_binding	(in_device,pipelineCache,pipelineInfo,{inputBindings},vertexInputAttributes,pipelineLayout,renderPass);
+		return create_multi_binding	(in_device,pipelineCache,pipelineInfo,{inputBindings},vertexInputAttributes,pipelineLayout,renderPass,dynamicStateEnables);
 	}
 
 	void vk_pipeline::bind(VkCommandBuffer cmd_buf,VkPipelineBindPoint bind_point)

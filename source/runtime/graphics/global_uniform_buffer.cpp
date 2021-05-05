@@ -31,7 +31,7 @@ namespace flower{ namespace graphics{
 		direct_light.direction.w = 0.0f;
 
 		direct_light.direction = normalize(direct_light.direction);
-		
+
 		// TODO: 
 		// sponza bounds
 		std::array<glm::vec3,8> bound_points = {

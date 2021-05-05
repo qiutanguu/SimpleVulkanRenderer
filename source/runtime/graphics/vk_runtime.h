@@ -11,6 +11,7 @@
 #include "vk/vk_command_buffer.h"
 #include "scene_textures.h"
 #include "texture_manager.h"
+#include "ui/ui_overlay.h"
 
 namespace flower { namespace graphics{
 
