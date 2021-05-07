@@ -31,7 +31,6 @@ namespace flower{ namespace graphics{
 
 		directional_light direct_light;
 
-
 		// view project matrix
 		std::shared_ptr<vk_buffer> ubo_vps;
 		std::shared_ptr<vk_buffer> ubo_directlight_vps;
@@ -39,6 +38,7 @@ namespace flower{ namespace graphics{
 		
 		float directional_light_theta = 89.0f;
 		float directional_light_rotate_speed = 10.0f;
+
 		void io_process(float dt)
 		{
 			directional_light_theta += dt * directional_light_rotate_speed;

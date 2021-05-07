@@ -253,19 +253,24 @@ namespace flower{ namespace graphics{
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphics_family;
-
-		// 我懒得划分多个command pool了
 		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		if (vkCreateCommandPool(device, &poolInfo, nullptr, &graphics_command_pool) != VK_SUCCESS) 
 		{
 			LOG_VULKAN_FATAL("创建图形CommandPool失败！");
 		}
+
+		poolInfo.queueFamilyIndex =  queueFamilyIndices.compute_faimly;
+		if(vkCreateCommandPool(device,&poolInfo,nullptr,&compute_command_pool)!=VK_SUCCESS)
+		{
+			LOG_VULKAN_FATAL("创建计算CommandPool失败！");
+		}
 	}
 
 	void vk_runtime::destroy_command_pool()
 	{
 		vkDestroyCommandPool(device, graphics_command_pool, nullptr);
+		vkDestroyCommandPool(device, compute_command_pool, nullptr);
 	}
 
 }}

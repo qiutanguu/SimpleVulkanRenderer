@@ -10,6 +10,8 @@ namespace flower
 		const float pitch_default = 0.0f;
 		const float speed_default = 500.0f;
 		const float sensitivity_default = 0.1f;
+
+        // 过大的fov容易导致3d眩晕
 		const float zoom_default = 45.0f;
 
 		enum class move_type
@@ -102,8 +104,12 @@ namespace flower
         }
 
         // 处理滚轮事件
+        // 在deferred cluster渲染中需要根据fovy预计算一套aabb
+        // 不希望频繁的更新fov导致aabb一直重建。
         void ProcessMouseScroll(float yoffset)
         {
+            return;
+
             if(!input::disable_cursor)
             {
                 return;

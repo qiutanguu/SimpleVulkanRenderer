@@ -98,6 +98,7 @@ namespace flower { namespace graphics{
 
 		// 图形管线的Command Pool
 		VkCommandPool graphics_command_pool;
+		VkCommandPool compute_command_pool;
 
 		// 命令缓冲
 		std::vector<std::shared_ptr<vk_command_buffer>> graphics_command_buffers;

@@ -13,7 +13,7 @@ namespace flower { namespace graphics{
 			sampler_layout::nearset_clamp()
 		);
 
-		scene_shadowdepth = vk_texture::create_depthonly_no_msaa(device,swapchain,2048,2048);
+		scene_shadowdepth = vk_texture::create_depthonly_no_msaa(device,swapchain,4096,4096);
 		scene_shadowdepth->update_sampler(
 			sampler_layout::shadow_depth_pcf()
 		);
