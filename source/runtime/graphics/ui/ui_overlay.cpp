@@ -10,13 +10,9 @@ namespace flower{ namespace graphics{
 		ImGui::CreateContext();
 
 		// —’…´≈‰÷√
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     				
+		ImGuiIO& io = ImGui::GetIO(); (void)io;			
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       
-
-		
-
 
 		SetupImGuiStyle(false,0.5f);
 		ImGuiStyle& style = ImGui::GetStyle();

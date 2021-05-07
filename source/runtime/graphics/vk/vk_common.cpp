@@ -28,6 +28,8 @@ namespace flower{ namespace graphics{
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageInfo.usage = usage | VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+		// 总是使用EXCLUSIVE。
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		if (vkCreateImage(in_device, &imageInfo, nullptr, &image) != VK_SUCCESS) 

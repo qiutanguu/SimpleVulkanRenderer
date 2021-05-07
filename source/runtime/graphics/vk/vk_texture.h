@@ -119,7 +119,13 @@ namespace flower { namespace graphics{
 			const std::string& image_path
 		); 
 
-
+		static std::shared_ptr<vk_texture> create_storage_image_2d(
+			vk_device* in_device,
+			VkCommandPool in_pool,
+			VkFormat format,
+			int32_t width,
+			int32_t height
+		);
 
 		static std::shared_ptr<vk_texture> create_depth_no_msaa(
 			vk_device* in_device,

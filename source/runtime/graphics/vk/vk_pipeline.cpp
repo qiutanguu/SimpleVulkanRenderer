@@ -155,7 +155,7 @@ namespace flower { namespace graphics{
 
 		VkPipelineDynamicStateCreateInfo dynamicState{ };
 		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		dynamicState.dynamicStateCount = dynamicStateEnables.size();
+		dynamicState.dynamicStateCount = uint32_t(dynamicStateEnables.size());
 		dynamicState.pDynamicStates = dynamicStateEnables.data();
 
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;

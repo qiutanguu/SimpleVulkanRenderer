@@ -26,6 +26,7 @@ namespace flower{ namespace graphics{
 		create_sync_objects();
 
 		g_texture_manager.initialize(&device,graphics_command_pool);
+		g_sampler_manager.initialize(&device);
 		g_scene_textures.initialize(&device,&swapchain);
 		g_shader_manager.initialize(&device);
 		g_uniform_buffers.initialize(&device,&swapchain,graphics_command_pool);
@@ -44,7 +45,7 @@ namespace flower{ namespace graphics{
 		g_shader_manager.release();
 		g_uniform_buffers.release();
 		g_meshes_manager.release();
-
+		g_sampler_manager.release();
 		destroy_command_buffers();
 		destroy_sync_objects();
 		destroy_command_pool();

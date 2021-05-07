@@ -15,6 +15,7 @@ namespace flower{ namespace graphics{
 
 		~scene_textures()
 		{
+			
 		}
 
 		void initialize(vk_device* in_device,vk_swapchain* in_swapchain)

@@ -140,6 +140,61 @@ namespace flower { namespace graphics{
         return ret;
     }
 
+    std::shared_ptr<vk_texture> vk_texture::create_storage_image_2d(
+        vk_device* in_device,
+        VkCommandPool in_pool,
+        VkFormat format,
+        int32_t width,
+        int32_t height)
+    {
+		auto ret = std::make_shared<vk_texture>(in_device);
+
+        VkFormatProperties format_properties;
+        vkGetPhysicalDeviceFormatProperties(in_device->physical_device, format, &format_properties);
+        ASSERT(format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT,"gpu不支持VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT!");
+
+        ret->width = width;
+        ret->height = height;
+        ret->image_sampler = VK_NULL_HANDLE;
+
+		create_texture2D(
+            ret->width,
+            ret->height,
+			format,
+			VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_STORAGE_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			ret->image,
+			ret->image_memory,
+			*in_device
+        );
+
+		ret->image_view = create_imageView(
+			&ret->image,
+			format,
+			VK_IMAGE_ASPECT_COLOR_BIT,
+			*in_device
+        );
+        
+		transition_image_layout(
+			ret->image,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+            // compute shader 使用
+			VK_IMAGE_LAYOUT_GENERAL,
+			in_pool,
+			*in_device,
+			in_device->compute_queue
+		);
+
+		ret->image_layout = VK_IMAGE_LAYOUT_GENERAL;
+		ret->format = format;
+		ret->descriptor_info.sampler = ret->image_sampler;
+		ret->descriptor_info.imageLayout = ret->image_layout;
+		ret->descriptor_info.imageView = ret->image_view;
+
+        return ret;
+    }
+
     std::shared_ptr<vk_texture> vk_texture::create_depth_no_msaa(
         vk_device* in_device,
         vk_swapchain* in_swapchain)

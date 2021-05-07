@@ -6,6 +6,38 @@
 
 namespace flower { namespace graphics{
 
+	class sampler_manager
+	{
+	
+	public:
+		sampler_manager(){ }
+		~sampler_manager(){ }
+
+		void release()
+		{
+			vkDestroySampler(*device, linear_repeat_no_mip, nullptr);
+			vkDestroySampler(*device, nearest_clamp_no_mip, nullptr);
+			vkDestroySampler(*device, shadow_depth_pcf_no_mip, nullptr);
+		}
+
+		void initialize(vk_device* in_device)
+		{
+			device = in_device;
+			inner_init();
+		}
+
+		VkSampler linear_repeat_no_mip;
+		VkSampler nearest_clamp_no_mip;
+		VkSampler shadow_depth_pcf_no_mip;
+
+
+	private:
+		void inner_init();
+		vk_device* device;
+	};
+
+	extern sampler_manager g_sampler_manager;
+
 	// 全局的纹理资源管理器
 	class texture_manager
 	{

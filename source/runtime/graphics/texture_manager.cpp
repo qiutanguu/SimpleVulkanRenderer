@@ -3,6 +3,7 @@
 namespace flower { namespace graphics{
 
 	texture_manager g_texture_manager = {};
+	sampler_manager g_sampler_manager = {};
 
 	uint32_t texture_manager::load_texture_mipmap(
 		VkFormat texture_format,
@@ -63,4 +64,41 @@ namespace flower { namespace graphics{
 		);
 	}
 
-} }
+	void fill_sampler_create_info(VkSamplerCreateInfo& sampler_info,const sampler_layout& in,vk_device* device)
+	{
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(device->physical_device,&properties);
+
+		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_info.magFilter = in.mag_filter;
+		sampler_info.minFilter = in.min_filter;
+		sampler_info.mipmapMode = in.mipmap_mode;
+		sampler_info.addressModeU = in.address_mode_U;
+		sampler_info.addressModeV = in.address_mode_V;
+		sampler_info.addressModeW = in.address_mode_W;
+		sampler_info.compareOp = in.compare_op;
+		sampler_info.unnormalizedCoordinates = VK_FALSE;
+		sampler_info.compareEnable = in.compareEnable;
+		sampler_info.borderColor = in.bordercolor;
+		sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		sampler_info.anisotropyEnable = VK_FALSE;
+
+		sampler_info.minLod = 0.0f;
+		sampler_info.maxLod = 0.0f;
+		sampler_info.mipLodBias = 0.0f;
+	}
+
+	void sampler_manager::inner_init()
+	{
+		VkSamplerCreateInfo sampler_info{ };
+
+		fill_sampler_create_info(sampler_info,sampler_layout::nearset_clamp(),device);
+		vk_check(vkCreateSampler(*device,&sampler_info,nullptr,&nearest_clamp_no_mip));
+
+		fill_sampler_create_info(sampler_info,sampler_layout::linear_repeat(),device);
+		vk_check(vkCreateSampler(*device,&sampler_info,nullptr,&linear_repeat_no_mip));
+
+		fill_sampler_create_info(sampler_info,sampler_layout::shadow_depth_pcf(),device);
+		vk_check(vkCreateSampler(*device,&sampler_info,nullptr,&shadow_depth_pcf_no_mip));
+	}
+}}

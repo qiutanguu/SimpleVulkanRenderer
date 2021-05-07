@@ -174,16 +174,14 @@ namespace flower{namespace graphics{
 			g_scene_textures.scene_shadowdepth
 		);
 
-		g_scene_textures.scene_shadowdepth->update_sampler(
-			sampler_layout::nearset_clamp()
-		);
+		
+		auto tmp = g_scene_textures.scene_shadowdepth->descriptor_info.sampler;
+		g_scene_textures.scene_shadowdepth->descriptor_info.sampler = g_sampler_manager.nearest_clamp_no_mip;
 		ret->descriptor_set->set_image(
 			"directional_light_shadowdepth_tex",
 			g_scene_textures.scene_shadowdepth
 		);
-		g_scene_textures.scene_shadowdepth->update_sampler(
-			sampler_layout::shadow_depth_pcf()
-		);
+		g_scene_textures.scene_shadowdepth->descriptor_info.sampler = tmp;
 		
 		return ret;
 	}
