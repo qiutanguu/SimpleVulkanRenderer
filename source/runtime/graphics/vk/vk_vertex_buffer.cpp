@@ -2,7 +2,7 @@
 
 namespace flower { namespace graphics{
 	
-	std::shared_ptr<vk_index_buffer> vk_index_buffer::create(vk_device* in_device,VkCommandPool pool,std::vector<uint32_t> indices)
+	std::shared_ptr<vk_index_buffer> vk_index_buffer::create(vk_device* in_device,VkCommandPool pool,const std::vector<uint32_t>& indices)
 	{
 		std::shared_ptr<vk_index_buffer> ret = std::make_shared<vk_index_buffer>(in_device);
 
@@ -33,7 +33,7 @@ namespace flower { namespace graphics{
 		return ret;
 	}
 
-	std::shared_ptr<vk_index_buffer> vk_index_buffer::create(vk_device* in_device,VkCommandPool pool,std::vector<uint16_t> indices)
+	std::shared_ptr<vk_index_buffer> vk_index_buffer::create(vk_device* in_device,VkCommandPool pool,const std::vector<uint16_t>& indices)
 	{
 		std::shared_ptr<vk_index_buffer> ret = std::make_shared<vk_index_buffer>(in_device);
 		ret->index_count = (int32_t)indices.size();
@@ -97,7 +97,7 @@ namespace flower { namespace graphics{
 		return vertexInputAttributs;
 	}
 
-	std::shared_ptr<vk_vertex_buffer> vk_vertex_buffer::create(vk_device* in_device,VkCommandPool pool,std::vector<float> vertices,const std::vector<vertex_attribute>& attributes)
+	std::shared_ptr<vk_vertex_buffer> vk_vertex_buffer::create(vk_device* in_device,VkCommandPool pool,const std::vector<float>& vertices,const std::vector<vertex_attribute>& attributes)
 	{
 		auto ret = std::make_shared<vk_vertex_buffer>(in_device);
 		ret->attributes = attributes;

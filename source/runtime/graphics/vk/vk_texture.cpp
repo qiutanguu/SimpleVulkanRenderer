@@ -302,7 +302,7 @@ namespace flower { namespace graphics{
             extent.height,
             format,
 			VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT ,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			ret->image,
 			ret->image_memory,

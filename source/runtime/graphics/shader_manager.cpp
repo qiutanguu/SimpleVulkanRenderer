@@ -8,6 +8,7 @@ namespace flower{ namespace graphics{
 	{
 		check_init();
 
+	/// graphics shader
 		texture_map_shader = vk_shader_mix::create(device,false,
 			"data/shader/spir-v/texture_vert.spv",
 			"data/shader/spir-v/texture_frag.spv"
@@ -33,6 +34,8 @@ namespace flower{ namespace graphics{
 			"data/shader/spir-v/shadowdepth_frag.spv"
 		);
 
+
+	/// ui shader
 		ui_vertex_shader = vk_shader_module::create(device,
 			"data/shader/spir-v/uioverlay_vert.spv", 
 			VK_SHADER_STAGE_VERTEX_BIT
@@ -42,6 +45,10 @@ namespace flower{ namespace graphics{
 			"data/shader/spir-v/uioverlay_frag.spv", 
 			VK_SHADER_STAGE_FRAGMENT_BIT
 		);
+
+	/// compute shader
+		comp_edge_detect = vk_shader_mix::create(device,false,nullptr,nullptr,nullptr,
+			"data/shader/spir-v/edge_detect_comp.spv",nullptr,nullptr);
 	}
 
 	void shader_manager::check_init()

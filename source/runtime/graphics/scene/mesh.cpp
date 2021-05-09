@@ -434,4 +434,14 @@ namespace flower{ namespace graphics{
 		sponza_mesh->raw_data.release_cpu_data();
 	}
 
-} }
+	void quad_mesh::initialize(vk_device* in_device,VkCommandPool in_pool)
+	{
+		vertex_buffer.reset();
+		vertex_buffer = vk_vertex_buffer::create(in_device,in_pool,vertices,{vertex_attribute::pos,vertex_attribute::uv0});
+		
+		index_buffer.reset();
+		index_buffer = vk_index_buffer::create(in_device,in_pool,indices);
+
+	}
+
+}}

@@ -41,8 +41,13 @@ namespace flower{ namespace graphics{
 		submitInfo.pCommandBuffers = &pass_gbuffer->cmd_buf->get_instance();
 		vk_check(vkQueueSubmit(pass_gbuffer->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
 
-		// 2. lighting pass
 		submitInfo.pWaitSemaphores = &pass_gbuffer->gbuffer_semaphore;
+		submitInfo.pSignalSemaphores = &compute_edge_detect_pass->semaphore;
+		submitInfo.pCommandBuffers = &compute_edge_detect_pass->cmd_buf->get_instance();
+		vk_check(vkQueueSubmit(compute_edge_detect_pass->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
+
+		// 2. lighting pass
+		submitInfo.pWaitSemaphores = &compute_edge_detect_pass->semaphore;
 		submitInfo.pSignalSemaphores = &pass_lighting->lighting_pass_semaphore;
 		submitInfo.pCommandBuffers = &pass_lighting->cmd_buf->get_instance();
 		vk_check(vkQueueSubmit(pass_lighting->cmd_buf->get_queue(),1,&submitInfo,VK_NULL_HANDLE));
@@ -70,6 +75,7 @@ namespace flower{ namespace graphics{
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader);
 		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
 
+		compute_edge_detect_pass = compute_edge_detect::create(&device,compute_command_pool);
 
 		// ui注册在最后一个renderpass中
 		ui_context = ui_overlay::create(&device,graphics_command_pool,pass_tonemapper->render_pass);
@@ -83,6 +89,7 @@ namespace flower{ namespace graphics{
 		pass_lighting.reset();
 		pass_tonemapper.reset();
 		ui_context.reset();
+		compute_edge_detect_pass.reset();
 	}
 
 	void pbr_deferred::recreate_swapchain()
@@ -122,6 +129,8 @@ namespace flower{ namespace graphics{
 		lighting_record_command();
 		shadowdepth_record_command();
 		tonemapper_ui_record_command();
+
+		compute_edge_detect_pass->build_command_buffer();
 	}
 
 	void pbr_deferred::gbuffer_record_command()
@@ -234,7 +243,6 @@ namespace flower{ namespace graphics{
 			static const float depthBiasConstant = 1.25f;
 			static const float depthBiasSlope = 1.75f;
 
-
 			vkCmdSetDepthBias(
 				*pass_shadowdepth->cmd_buf,
 				depthBiasConstant,
@@ -318,6 +326,12 @@ namespace flower{ namespace graphics{
 		io.MouseDown[0] = input::left_mouse_button_down;
 		io.MouseDown[1] = input::right_mouse_button_down;
 
+		// No better but simple
+		for (size_t i = 0; i < graphics_command_buffers.size(); i++) 
+		{
+			vkWaitForFences(device,1,&inFlight_fences[i],VK_TRUE,UINT64_MAX);
+		}
+
 		// 更新ui
 		ImGui::NewFrame();
 		{
@@ -327,10 +341,6 @@ namespace flower{ namespace graphics{
 
 		if (ui_context->need_update() || ui_context->updated) 
 		{
-			for (size_t i = 0; i < graphics_command_buffers.size(); i++) 
-			{
-				vkWaitForFences(device,1,&inFlight_fences[i],VK_TRUE,UINT64_MAX);
-			}
 			ui_context->update();
 			tonemapper_ui_record_command();
 
@@ -342,8 +352,9 @@ namespace flower{ namespace graphics{
 
 	void pbr_deferred::ui_layout()
 	{
-		bool show_demo_window = true;
-		bool show_another_window = true;
+		static bool show_base_color = true;
+		static bool first_open = true;
+
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -357,11 +368,32 @@ namespace flower{ namespace graphics{
 				ImGui::SliderFloat("pcss dilation", &g_uniform_buffers.direct_light.shadow_mix.x, 0.0f, 100.0f); 
 				ImGui::SliderFloat("pcf  dilation", &g_uniform_buffers.direct_light.shadow_mix.y, 0.0f, 100.0f); 
 				ImGui::SliderFloat("switch       ", &g_uniform_buffers.direct_light.shadow_mix.z, -100.0f, 100.0f); 
+				ImGui::Checkbox("show base color",&show_base_color);
 
+				if(!first_open)
+				{
+					if(show_base_color)
+					{
+						pass_tonemapper->tonemapper_material->descriptor_set->set_image(
+							"scenecolor_tex",
+							compute_edge_detect_pass->edge_detect_compute_target
+						);
+					}
+					else
+					{
+						pass_tonemapper->tonemapper_material->descriptor_set->set_image(
+							"scenecolor_tex",
+							g_scene_textures.scene_color
+						);
+					}
+				}
+				
 			}
 			ImGui::PopItemWidth();
 		}
 		ImGui::End();
+
+		first_open = false;
 	}
 
 } }

@@ -12,6 +12,35 @@
 
 namespace flower{ namespace graphics{
 
+	class quad_mesh
+	{
+	public:
+		quad_mesh(){ }
+		~quad_mesh(){ }
+
+		struct quad_vertex {
+			float pos[3];
+			float uv[2];
+		};
+
+		std::vector<float> vertices =
+		{
+			// pos[3]             uv[2]
+			 1.0f,  1.0f, 0.0f ,  1.0f, 1.0f ,
+			-1.0f,  1.0f, 0.0f ,  0.0f, 1.0f ,
+			-1.0f, -1.0f, 0.0f ,  0.0f, 0.0f ,
+			 1.0f, -1.0f, 0.0f ,  1.0f, 0.0f 
+		};
+
+		std::vector<uint32_t> indices = { 0,1,2, 2,3,0 };
+
+		std::shared_ptr<vk_vertex_buffer> vertex_buffer;
+		std::shared_ptr<vk_index_buffer> index_buffer;
+
+		void initialize(vk_device* in_device,VkCommandPool in_pool);
+		void release() { vertex_buffer.reset();index_buffer.reset(); }
+	};
+
 	namespace texture_id_type
 	{
 		constexpr auto diffuse = 0;

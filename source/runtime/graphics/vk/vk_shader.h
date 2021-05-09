@@ -30,6 +30,8 @@ namespace flower { namespace graphics{
         VkShaderStageFlagBits stage;
         VkShaderModule handle;
         std::vector<char> shader_code;
+
+        VkPipelineShaderStageCreateInfo stage_create_info;
 	};
 
 	class vk_shader_mix

@@ -100,5 +100,9 @@ namespace flower { namespace graphics{
 
 		fill_sampler_create_info(sampler_info,sampler_layout::shadow_depth_pcf(),device);
 		vk_check(vkCreateSampler(*device,&sampler_info,nullptr,&shadow_depth_pcf_no_mip));
+
+		fill_sampler_create_info(sampler_info,sampler_layout::linear_clamp(),device);
+		vk_check(vkCreateSampler(*device,&sampler_info,nullptr,&linear_clamp_no_mip));
+
 	}
 }}

@@ -13,6 +13,7 @@
 #include "graphics/pass/lighting_pass.h"
 #include "graphics/pass/tone_mapper_pass.h"
 #include "graphics/pass/shadowdepth_pass.h"
+#include "graphics/compute/edge_detect.h"
 
 namespace flower{ namespace graphics{
 
@@ -45,6 +46,8 @@ namespace flower{ namespace graphics{
 
 		std::shared_ptr<shadowdepth_pass> pass_shadowdepth;
 		void shadowdepth_record_command();
+
+		std::shared_ptr<compute_edge_detect> compute_edge_detect_pass;
 
 		std::shared_ptr<tonemapper_pass> pass_tonemapper;
 		std::shared_ptr<ui_overlay> ui_context;

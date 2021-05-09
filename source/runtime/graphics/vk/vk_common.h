@@ -395,6 +395,10 @@ namespace flower { namespace graphics {
 
 		switch(newLayout)
 		{
+		case VK_IMAGE_LAYOUT_GENERAL:
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+			break;
+
 		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			break;

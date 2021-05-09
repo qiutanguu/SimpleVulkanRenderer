@@ -18,6 +18,7 @@ namespace flower { namespace graphics{
 			vkDestroySampler(*device, linear_repeat_no_mip, nullptr);
 			vkDestroySampler(*device, nearest_clamp_no_mip, nullptr);
 			vkDestroySampler(*device, shadow_depth_pcf_no_mip, nullptr);
+			vkDestroySampler(*device,linear_clamp_no_mip,nullptr);
 		}
 
 		void initialize(vk_device* in_device)
@@ -27,9 +28,10 @@ namespace flower { namespace graphics{
 		}
 
 		VkSampler linear_repeat_no_mip;
+		VkSampler linear_clamp_no_mip;
 		VkSampler nearest_clamp_no_mip;
 		VkSampler shadow_depth_pcf_no_mip;
-
+		
 
 	private:
 		void inner_init();

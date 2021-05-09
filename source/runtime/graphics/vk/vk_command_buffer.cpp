@@ -58,7 +58,6 @@ namespace flower { namespace graphics{
 		submitInfo.pCommandBuffers = &command_buffer;
 
 		vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-
 		vkQueueWaitIdle(queue);
 	}
 

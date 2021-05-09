@@ -50,6 +50,13 @@ namespace flower { namespace graphics{
 		}
 
 		ret->stage = stage;
+
+		ret->stage_create_info = {};
+		ret->stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		ret->stage_create_info.stage = stage;
+		ret->stage_create_info.module = ret->handle;
+		ret->stage_create_info.pName = "main";
+
         return ret;
 	}
 

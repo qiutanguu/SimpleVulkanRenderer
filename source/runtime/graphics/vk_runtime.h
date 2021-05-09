@@ -12,6 +12,7 @@
 #include "scene_textures.h"
 #include "texture_manager.h"
 #include "ui/ui_overlay.h"
+#include "scene/mesh.h"
 
 namespace flower { namespace graphics{
 
@@ -116,5 +117,9 @@ namespace flower { namespace graphics{
 		int last_width;
 		int last_height;
 		friend class application;
+
+	protected: // 通用工具
+		quad_mesh quad = {};
+
 	};
 }}

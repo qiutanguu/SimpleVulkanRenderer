@@ -12,7 +12,6 @@ namespace flower { namespace graphics{
 		vk_index_buffer(vk_device* in_device) : device(in_device) {  }
 		~vk_index_buffer() {  }
 
-
 		inline void bind(VkCommandBuffer cmd_buf)
 		{
 			vkCmdBindIndexBuffer(cmd_buf, *buffer, 0, index_type);
@@ -24,9 +23,9 @@ namespace flower { namespace graphics{
 			vkCmdDrawIndexed(cmd_buf, index_count, 1, 0, 0, 0);
 		}
 
-		static std::shared_ptr<vk_index_buffer> create(vk_device* vulkanDevice,VkCommandPool pool,std::vector<uint16_t> indices);
+		static std::shared_ptr<vk_index_buffer> create(vk_device* vulkanDevice,VkCommandPool pool,const std::vector<uint16_t>& indices);
 
-		static std::shared_ptr<vk_index_buffer> create(vk_device* vulkanDevice,VkCommandPool pool,std::vector<uint32_t> indices);
+		static std::shared_ptr<vk_index_buffer> create(vk_device* vulkanDevice,VkCommandPool pool,const std::vector<uint32_t>& indices);
 
 	private:
 		vk_device* device;
@@ -183,7 +182,7 @@ namespace flower { namespace graphics{
 
 		std::vector<VkVertexInputAttributeDescription> get_input_attribute(const std::vector<vertex_attribute>& shader_inputs);
 
-		static std::shared_ptr<vk_vertex_buffer> create(vk_device* in_device,VkCommandPool pool,std::vector<float> vertices,const std::vector<vertex_attribute>& attributes);
+		static std::shared_ptr<vk_vertex_buffer> create(vk_device* in_device,VkCommandPool pool,const std::vector<float>& vertices,const std::vector<vertex_attribute>& attributes);
 
 		std::shared_ptr<vk_buffer> buffer;
 		VkDeviceSize offset = 0;

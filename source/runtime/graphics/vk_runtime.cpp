@@ -31,6 +31,8 @@ namespace flower{ namespace graphics{
 		g_shader_manager.initialize(&device);
 		g_uniform_buffers.initialize(&device,&swapchain,graphics_command_pool);
 		g_meshes_manager.initialize(&device,graphics_command_pool);
+
+		quad.initialize(&device,graphics_command_pool);
 		
 		initialize_special();
 		glfwGetWindowSize(window, &last_width, &last_height);
@@ -49,6 +51,8 @@ namespace flower{ namespace graphics{
 		destroy_command_buffers();
 		destroy_sync_objects();
 		destroy_command_pool();
+
+		quad.release();
 
 		swapchain.destroy();
 		device.destroy();

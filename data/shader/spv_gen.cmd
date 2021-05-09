@@ -10,4 +10,6 @@ glslc.exe ./source/shadowdepth.frag -o ./spir-v/shadowdepth_frag.spv
 glslc.exe ./source/uioverlay.vert -o ./spir-v/uioverlay_vert.spv
 glslc.exe ./source/uioverlay.frag -o ./spir-v/uioverlay_frag.spv
 
+glslc.exe ./source/edge_detect.comp -o ./spir-v/edge_detect_comp.spv
+
 cmd /k

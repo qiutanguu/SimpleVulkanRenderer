@@ -37,6 +37,21 @@ namespace flower { namespace graphics{
 			return ret;
 		}
 
+		static sampler_layout linear_clamp()
+		{
+			sampler_layout ret {};
+			ret.mag_filter = VK_FILTER_LINEAR;
+			ret.min_filter = VK_FILTER_LINEAR;
+			ret.mipmap_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			ret.address_mode_U = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
+			ret.address_mode_V = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
+			ret.address_mode_W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			ret.bordercolor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+			ret.compare_op = VK_COMPARE_OP_ALWAYS;
+			ret.compareEnable = VK_FALSE;
+			return ret;
+		}
+
 		static sampler_layout nearset_clamp()
 		{
 			sampler_layout ret {};
