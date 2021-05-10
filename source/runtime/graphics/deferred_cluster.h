@@ -7,7 +7,7 @@ namespace flower { namespace graphics{
 
 	struct cluster_dim
 	{
-		// 相机fov_y
+		// 相机fov_y的一半
 		float fov_y;
 
 		// 相机znear和zfar
@@ -25,7 +25,7 @@ namespace flower { namespace graphics{
 		// cluster_dim_x * cluster_dim_y * cluster_dim_z
 		int32_t cluster_dim_xyz;
 
-		// 当相机fovy改变或窗口大小改变时重建
+		// 当相机fovy改变或窗口大小改变时需要重建
 		static cluster_dim build(const camera& cam,int32_t block_size)
 		{
 			cluster_dim ret{};
@@ -43,9 +43,7 @@ namespace flower { namespace graphics{
 			ret.log_depth = log(ret.z_far / ret.z_near);
 			ret.cluster_dim_z = int32_t(glm::floor(ret.log_depth * ret.log_dim_y));
 
-
 			ret.cluster_dim_xyz = ret.cluster_dim_x * ret.cluster_dim_y * ret.cluster_dim_z;
-			
 			return ret;
 		}
 	};

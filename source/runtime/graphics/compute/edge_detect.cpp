@@ -112,5 +112,3 @@ namespace flower { namespace graphics{
 	}
 
 } }
-
-
