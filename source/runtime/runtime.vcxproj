@@ -68,8 +68,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-cored.lib;spirv-cross-hlsld.lib;spirv-cross-glsld.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-cored.lib;spirv-cross-hlsld.lib;spirv-cross-glsld.lib;lz4d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\debug\;$(SolutionDir)external\lz4\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -91,11 +91,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core.lib;spirv-cross-hlsl.lib;spirv-cross-glsl.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;spirv-cross-core.lib;spirv-cross-hlsl.lib;spirv-cross-glsl.lib;lz4.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\glfw\;$(SolutionDir)external\vulkan\;$(SolutionDir)external\spirv_cross\release\;$(SolutionDir)external\lz4\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="asset_system\asset_pmx.h" />
+    <ClInclude Include="asset_system\asset_system.h" />
+    <ClInclude Include="asset_system\asset_texture.h" />
     <ClInclude Include="core\application.h" />
     <ClInclude Include="core\camera.h" />
     <ClInclude Include="core\core.h" />
@@ -105,8 +108,9 @@
     <ClInclude Include="core\log.h" />
     <ClInclude Include="core\ring_buffer.h" />
     <ClInclude Include="core\timer.h" />
+    <ClInclude Include="core\unicode.hpp" />
+    <ClInclude Include="graphics\compute\deferred_cluster.h" />
     <ClInclude Include="graphics\compute\edge_detect.h" />
-    <ClInclude Include="graphics\deferred_cluster.h" />
     <ClInclude Include="graphics\global_uniform_buffers.h" />
     <ClInclude Include="graphics\pass\gbuffer_pass.h" />
     <ClInclude Include="graphics\pass\shadowdepth_pass.h" />
@@ -144,14 +148,17 @@
     <ClInclude Include="graphics\vk\vk_swapchain.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="asset_system\asset_pmx.cpp" />
+    <ClCompile Include="asset_system\asset_system.cpp" />
+    <ClCompile Include="asset_system\asset_texture.cpp" />
     <ClCompile Include="core\application.cpp" />
     <ClCompile Include="core\core.cpp" />
     <ClCompile Include="core\input.cpp" />
     <ClCompile Include="core\job_system.cpp" />
     <ClCompile Include="core\log.cpp" />
     <ClCompile Include="core\timer.cpp" />
+    <ClCompile Include="graphics\compute\deferred_cluster.cpp" />
     <ClCompile Include="graphics\compute\edge_detect.cpp" />
-    <ClCompile Include="graphics\deferred_cluster.cpp" />
     <ClCompile Include="graphics\global_uniform_buffer.cpp" />
     <ClCompile Include="graphics\pass\gbuffer_pass.cpp" />
     <ClCompile Include="graphics\pass\shadowdepth_pass.cpp" />

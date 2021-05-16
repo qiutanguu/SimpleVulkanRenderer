@@ -25,7 +25,7 @@ namespace flower { namespace graphics{
 			vk_renderpass_mix_data in_mixdata
 		): mix_data(in_mixdata)
 		{
-			type = renderpass_type::gbuffer_pass;
+			
 		}
 
 		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) override
@@ -73,6 +73,28 @@ namespace flower { namespace graphics{
 		}
 
 		static std::shared_ptr<material_gbuffer> create(
+			vk_device* indevice,
+			VkRenderPass in_renderpass,
+			VkCommandPool in_pool,
+			const std::vector<uint32_t>& in_texlib,
+			glm::mat4 model_mat
+		);
+	};
+
+	// gbuffer character ²ÄÖÊ
+	class material_gbuffer_character: public material
+	{
+	public:
+		material_gbuffer_character()
+		{
+
+		};
+
+		~material_gbuffer_character()
+		{
+		}
+
+		static std::shared_ptr<material_gbuffer_character> create(
 			vk_device* indevice,
 			VkRenderPass in_renderpass,
 			VkCommandPool in_pool,

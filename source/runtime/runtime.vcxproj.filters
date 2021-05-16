@@ -45,8 +45,12 @@
     <ClInclude Include="graphics\ui\ui_overlay.h" />
     <ClInclude Include="core\input.h" />
     <ClInclude Include="graphics\ui\ui_style.h" />
-    <ClInclude Include="graphics\deferred_cluster.h" />
     <ClInclude Include="graphics\compute\edge_detect.h" />
+    <ClInclude Include="asset_system\asset_system.h" />
+    <ClInclude Include="asset_system\asset_texture.h" />
+    <ClInclude Include="graphics\compute\deferred_cluster.h" />
+    <ClInclude Include="asset_system\asset_pmx.h" />
+    <ClInclude Include="core\unicode.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -84,7 +88,10 @@
     <ClCompile Include="graphics\ui\imgui\imgui_widgets.cpp" />
     <ClCompile Include="graphics\ui\ui_overlay.cpp" />
     <ClCompile Include="core\input.cpp" />
-    <ClCompile Include="graphics\deferred_cluster.cpp" />
     <ClCompile Include="graphics\compute\edge_detect.cpp" />
+    <ClCompile Include="asset_system\asset_system.cpp" />
+    <ClCompile Include="asset_system\asset_texture.cpp" />
+    <ClCompile Include="graphics\compute\deferred_cluster.cpp" />
+    <ClCompile Include="asset_system\asset_pmx.cpp" />
   </ItemGroup>
 </Project>

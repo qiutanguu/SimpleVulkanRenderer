@@ -6,7 +6,7 @@ namespace flower { namespace asset{
 	struct asset_file
 	{
 		char type[4];
-		int version;
+		uint32_t version;
 		std::string json;
 		std::vector<char> bin_blob;
 	};

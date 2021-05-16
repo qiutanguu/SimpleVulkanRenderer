@@ -72,8 +72,11 @@ namespace flower{ namespace graphics{
 		pass_lighting = lighting_pass::create(mixdata);
 		pass_tonemapper = tonemapper_pass::create(mixdata);
 
-		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader);
-		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader,renderpass_type::shadowdepth_pass);
+		g_meshes_manager.miku_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader,renderpass_type::shadowdepth_pass);
+
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader,renderpass_type::gbuffer_pass);
+		g_meshes_manager.miku_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_character_shader,renderpass_type::gbuffer_character_pass);
 
 		compute_edge_detect_pass = compute_edge_detect::create(&device,compute_command_pool);
 
@@ -104,9 +107,11 @@ namespace flower{ namespace graphics{
 		ui_context->on_swapchain_change(pass_tonemapper->render_pass);
 
 		// ÖØÐÂ×¢²árenderpass
-		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader,false);
-		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader,false);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader,renderpass_type::shadowdepth_pass,false);
+		g_meshes_manager.miku_mesh->register_renderpass(pass_shadowdepth,g_shader_manager.shadowdepth_shader,renderpass_type::shadowdepth_pass,false);
 
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_shader,renderpass_type::gbuffer_pass,false);
+		g_meshes_manager.sponza_mesh->register_renderpass(pass_gbuffer,g_shader_manager.gbuffer_character_shader,renderpass_type::gbuffer_character_pass,false);
 		record_renderCommand();
 
 		ui_context->updated = true;
@@ -167,6 +172,7 @@ namespace flower{ namespace graphics{
 			vkCmdSetScissor(*pass_gbuffer->cmd_buf, 0, 1, &scissor);
 
 			g_meshes_manager.sponza_mesh->draw(pass_gbuffer->cmd_buf,renderpass_type::gbuffer_pass);
+			g_meshes_manager.miku_mesh->draw(pass_gbuffer->cmd_buf,renderpass_type::gbuffer_character_pass);
 
 			vkCmdEndRenderPass(*pass_gbuffer->cmd_buf);
 		} 
@@ -251,6 +257,7 @@ namespace flower{ namespace graphics{
 			);
 
 			g_meshes_manager.sponza_mesh->draw(pass_shadowdepth->cmd_buf,renderpass_type::shadowdepth_pass);
+			g_meshes_manager.miku_mesh->draw(pass_shadowdepth->cmd_buf,renderpass_type::shadowdepth_pass);
 			vkCmdEndRenderPass(*pass_shadowdepth->cmd_buf);
 		}
 
@@ -376,7 +383,7 @@ namespace flower{ namespace graphics{
 					{
 						pass_tonemapper->tonemapper_material->descriptor_set->set_image(
 							"scenecolor_tex",
-							compute_edge_detect_pass->edge_detect_compute_target
+							g_scene_textures.normal_worldspace
 						);
 					}
 					else

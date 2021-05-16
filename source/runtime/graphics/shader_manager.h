@@ -19,6 +19,7 @@ namespace flower{ namespace graphics{
 			ui_fragment_shader.reset();
 			ui_vertex_shader.reset();
 			comp_edge_detect.reset();
+			gbuffer_character_shader.reset();
 		}
 
 		void initialize(vk_device* in_device) 
@@ -35,6 +36,7 @@ namespace flower{ namespace graphics{
 		// graphics
 		std::shared_ptr<vk_shader_mix> texture_map_shader;
 		std::shared_ptr<vk_shader_mix> gbuffer_shader;
+		std::shared_ptr<vk_shader_mix> gbuffer_character_shader;
 		std::shared_ptr<vk_shader_mix> lighting_shader;
 		std::shared_ptr<vk_shader_mix> tonemapper_shader;
 		std::shared_ptr<vk_shader_mix> shadowdepth_shader;

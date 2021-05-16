@@ -19,6 +19,11 @@ namespace flower{ namespace graphics{
 			"data/shader/spir-v/gbuffer_frag.spv"
 		);
 
+		gbuffer_character_shader = vk_shader_mix::create(device,false,
+			"data/shader/spir-v/gbuffer_character_vert.spv",
+			"data/shader/spir-v/gbuffer_character_frag.spv"
+		);
+
 		lighting_shader = vk_shader_mix::create(device,false,
 			"data/shader/spir-v/lighting_vert.spv",
 			"data/shader/spir-v/lighting_frag.spv"

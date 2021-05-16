@@ -38,17 +38,17 @@ namespace flower { namespace graphics{
 		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) = 0;
 
 		VkRenderPass render_pass;
-		int32_t type;
 	};
 
 	namespace renderpass_type
 	{
 		constexpr auto texture_pass = 0;
 		constexpr auto gbuffer_pass = 1;
-		constexpr auto lighting_pass = 2;
-		constexpr auto shadowdepth_pass = 3;
+		constexpr auto gbuffer_character_pass = 2;
+		constexpr auto lighting_pass = 3;
+		constexpr auto shadowdepth_pass = 4;
 
-		constexpr auto max_index = 4;
+		constexpr auto max_index = 5;
 	}
 
 } }

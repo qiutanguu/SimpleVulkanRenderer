@@ -5,6 +5,7 @@
 #include "../pass/gbuffer_pass.h"
 #include "core/timer.h"
 #include "../pass/shadowdepth_pass.h"
+#include "asset_system/asset_pmx.h"
 
 // 标准顶点
 struct vertex_standard
@@ -72,11 +73,7 @@ namespace flower{ namespace graphics{
 		VkCommandPool in_pool
 	){
 		ASSERT(passtype < renderpass_type::max_index,"render pass type越界。");
-
-		// TODO: ShadowDepth Pass的灯光也用这个Model来算AABB
-		// 所有的模型矩阵的暂时用默认模型矩阵
-		model = glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
-
+		
 		// 对于每种renderpass，需要特殊设置它们的descriptor创建
 		if(passtype == renderpass_type::texture_pass)
 		{
@@ -108,6 +105,16 @@ namespace flower{ namespace graphics{
 				model
 			);
 		}
+		else if(passtype==renderpass_type::gbuffer_character_pass)
+		{
+			mat_map[passtype] = material_gbuffer_character::create(
+				indevice,
+				in_renderpass,
+				in_pool,
+				texture_ids,
+				model
+			);
+		}
 		else
 		{
 			LOG_VULKAN_FATAL("未处理的pass类型{0}！",passtype);
@@ -129,9 +136,145 @@ namespace flower{ namespace graphics{
 		}
 	}
 
+	void mesh::load_pmx_mesh(std::string path,const glm::mat4& model)
+	{
+		flower::asset::PMXFile file{};
+		flower::asset::ReadPMXFile(&file,path.c_str());
+
+		// 同样一个材质分配一个submesh
+		sub_meshes.resize(file.m_materials.size());
+		for(auto& it : sub_meshes)
+		{
+			it.model = model;
+		}
+
+		auto end_pos = path.find_last_of("/\\");
+
+		std::string pmx_folder_path;
+		if(end_pos!=std::string::npos)
+		{
+			pmx_folder_path = path.substr(0,end_pos);
+		}
+
+		pmx_folder_path += "/";
+
+		// 填充raw data
+		auto& pos_data = raw_data.get_stream(vertex_attribute::pos).data;
+		auto& normal_data = raw_data.get_stream(vertex_attribute::normal).data;
+		auto& uv0_data = raw_data.get_stream(vertex_attribute::uv0).data;
+
+		pos_data.resize(file.m_vertices.size() * 3);
+		normal_data.resize(file.m_vertices.size() * 3);
+		uv0_data.resize(file.m_vertices.size() * 2);
+
+		// 填充raw data顶点
+		for(auto i_v = 0; i_v < file.m_vertices.size(); i_v ++)
+		{
+			auto pos_index = 3 * i_v;
+			auto normal_index = 3 * i_v;
+			auto uv0_index = 2 * i_v;
+
+			pos_data[pos_index] = file.m_vertices[i_v].m_position.x;
+			pos_data[pos_index + 1] = file.m_vertices[i_v].m_position.y;
+			pos_data[pos_index + 2] = file.m_vertices[i_v].m_position.z;
+
+			normal_data[normal_index] = file.m_vertices[i_v].m_normal.x;
+			normal_data[normal_index + 1] = file.m_vertices[i_v].m_normal.y;
+			normal_data[normal_index + 2] = file.m_vertices[i_v].m_normal.z;
+
+			uv0_data[uv0_index] = file.m_vertices[i_v].m_uv.x;
+			uv0_data[uv0_index + 1] = file.m_vertices[i_v].m_uv.y;
+		}
+
+		// 加载所有的纹理
+		// pmx 所有纹理都是 srgb 233
+		for(auto mat_i = 0; mat_i<file.m_materials.size(); mat_i++)
+		{
+			auto& set_mat = sub_meshes[mat_i].texture_ids;
+			auto& process_mat = file.m_materials[mat_i];
+
+			// 使用绝对路径作为标记
+			if(process_mat.m_textureIndex>=0)
+			{
+				auto base_color_path = pmx_folder_path + file.m_textures[process_mat.m_textureIndex].m_textureName;
+				set_mat.push_back(g_texture_manager.load_texture_mipmap(
+					VK_FORMAT_R8G8B8A8_SRGB,
+					sampler_layout::linear_repeat(),
+					base_color_path
+				));
+			}
+			else
+			{
+				set_mat.push_back(g_texture_manager.checkboard);
+			}
+			
+			if(process_mat.m_toonTextureIndex>=0)
+			{
+				auto toon_tex_path = pmx_folder_path + file.m_textures[process_mat.m_toonTextureIndex].m_textureName;
+				set_mat.push_back(g_texture_manager.load_texture_mipmap(
+					VK_FORMAT_R8G8B8A8_SRGB,
+					sampler_layout::linear_repeat(),
+					toon_tex_path
+				));
+			}
+			else
+			{
+				set_mat.push_back(g_texture_manager.checkboard);
+			}
+
+			if(process_mat.m_sphereTextureIndex >= 0)
+			{
+				auto sphere_tex_path = pmx_folder_path + file.m_textures[process_mat.m_sphereTextureIndex].m_textureName;
+				set_mat.push_back(g_texture_manager.load_texture_mipmap(
+					VK_FORMAT_R8G8B8A8_SRGB,
+					sampler_layout::linear_repeat(),
+					sphere_tex_path
+				));
+			}
+			else
+			{
+				set_mat.push_back(g_texture_manager.checkboard);
+			}
+		}
+
+		
+
+		// 分别处理每一个材质
+		int32_t start_face_point = 0;
+		int32_t idex = 0;
+
+		for(auto& mat : file.m_materials)
+		{
+			auto& processing_submesh = sub_meshes[idex];
+			idex ++;
+			auto face_num = mat.m_numFaceVertices / 3;
+			processing_submesh.indices.resize(mat.m_numFaceVertices);
+
+			int32_t vertex_stamp = 0;
+			int32_t end_face_point = start_face_point + face_num;
+			for(auto face_id = start_face_point;face_id < end_face_point; face_id++)
+			{
+				auto& face = file.m_faces[face_id];
+				for(auto vertex : face.m_vertices)
+				{
+					processing_submesh.indices[vertex_stamp] = vertex;
+					vertex_stamp ++;
+				}
+			}
+			start_face_point = end_face_point;
+		}
+
+		// 上传次序缓冲
+		for(auto& submesh : sub_meshes)
+		{
+			auto& indices = submesh.indices;
+			submesh.index_buf = vk_index_buffer::create(device,pool,indices);
+		}
+	}
+
 	void mesh::load_obj_mesh(
 		std::string path,
-		std::string mat_path)
+		std::string mat_path,const glm::mat4& model)
 	{
 		double time_stamp = flower::global_timer::get_timer_second();
 		
@@ -177,6 +320,11 @@ namespace flower{ namespace graphics{
 		std::vector<vertex_standard> vertices;
 
 		sub_meshes.resize(materials.size());
+
+		for(auto& it : sub_meshes)
+		{
+			it.model = model;
+		}
 
 		// 遍历每个网格
 		for (size_t s = 0; s < shapes.size(); s++) 
@@ -397,17 +545,17 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void mesh::register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,bool reload_vertex_buf)
+	void mesh::register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,uint32_t pass_type,bool reload_vertex_buf)
 	{
 		for(auto& submesh:sub_meshes)
 		{
-			submesh.register_renderpass(pass->type,device,pass->render_pass,pool);
+			submesh.register_renderpass(pass_type ,device,pass->render_pass,pool);
 		}
 
 		if(reload_vertex_buf)
 		{
 			// 上传render pass对应的顶点buffer
-			vertex_bufs[pass->type] = vk_vertex_buffer::create(
+			vertex_bufs[pass_type] = vk_vertex_buffer::create(
 				device,
 				pool,
 				raw_data.pack_type_stream(shader->per_vertex_attributes),
@@ -415,7 +563,7 @@ namespace flower{ namespace graphics{
 			);
 		}
 
-		has_registered[pass->type] = true;
+		has_registered[pass_type] = true;
 	}
 
 	void meshes_manager::initialize(vk_device* indevice,VkCommandPool inpool)
@@ -424,14 +572,21 @@ namespace flower{ namespace graphics{
 		device = indevice;
 
 		// sponza 网格加载到内存中
+		auto native = get_mesh_transform(glm::vec3(1.0f),glm::vec3(0.0f),glm::vec3(0.0f));
+
 		sponza_mesh = std::make_shared<mesh>(device,pool);
-		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","");
+		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","",native);
+
+		auto miku_scale = get_mesh_transform(glm::vec3(10.0f),glm::vec3(50.0f,0,0),glm::vec3(0,glm::pi<float>() * -0.5f,0));
+		miku_mesh = std::make_shared<mesh>(device,pool);
+		miku_mesh->load_pmx_mesh("data/model/HCMiku v3 ver1.00/HCMiku v3.pmx",miku_scale);
 	}
 
 	// 释放加载到cpu中的网格数据
 	void meshes_manager::release_cpu_mesh_data()
 	{
 		sponza_mesh->raw_data.release_cpu_data();
+		miku_mesh->raw_data.release_cpu_data();
 	}
 
 	void quad_mesh::initialize(vk_device* in_device,VkCommandPool in_pool)
@@ -441,7 +596,44 @@ namespace flower{ namespace graphics{
 		
 		index_buffer.reset();
 		index_buffer = vk_index_buffer::create(in_device,in_pool,indices);
+	}
 
+	glm::mat4 meshes_manager::get_mesh_transform(const glm::vec3& scale,const glm::vec3& pos, const glm::vec3& rotate)
+	{
+		glm::mat4 res = glm::mat4(1.0f);
+
+		
+
+
+		res = glm::scale(
+			res,
+			scale
+		);
+
+		res = glm::translate(
+			res,
+			pos
+		);
+
+		res = glm::rotate(
+			res,
+			rotate.x,
+			glm::vec3(1.0f,0,0)
+		);
+
+		res = glm::rotate(
+			res,
+			rotate.y,
+			glm::vec3(0,1.0f,0)
+		);
+
+		res = glm::rotate(
+			res,
+			rotate.z,
+			glm::vec3(0,0,1.0f)
+		);
+
+		return res * global_ident_mat4_model;
 	}
 
 }}

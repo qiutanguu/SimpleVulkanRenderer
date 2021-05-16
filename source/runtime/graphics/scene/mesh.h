@@ -74,7 +74,6 @@ namespace flower{ namespace graphics{
 		// 纹理ids
 		std::vector<uint32_t> texture_ids = {};
 
-
 		// 每种renderpass都应该注册对应的material
 		std::array<std::shared_ptr<material>,renderpass_type::max_index> mat_map = { }; 
 		std::array<bool,renderpass_type::max_index> has_registered = { };
@@ -111,7 +110,7 @@ namespace flower{ namespace graphics{
 		vertex_raw_data raw_data = {};
 
 		// 注册render pass 对应的 mesh
-		void register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,bool reload_vertex_buf = true);
+		void register_renderpass(std::shared_ptr<vk_renderpass> pass,std::shared_ptr<vk_shader_mix> shader,uint32_t pass_type,bool reload_vertex_buf = true);
 
 
 	protected:
@@ -120,7 +119,13 @@ namespace flower{ namespace graphics{
 		
 		void load_obj_mesh(
 			std::string mesh_path,
-			std::string mat_path
+			std::string mat_path,
+			const glm::mat4& model = glm::mat4(1.0f)
+		);
+
+		void load_pmx_mesh(
+			std::string mesh_path
+			,const glm::mat4& model = glm::mat4(1.0f)
 		);
 
 		friend class meshes_manager;
@@ -141,10 +146,16 @@ namespace flower{ namespace graphics{
 		void release()
 		{
 			sponza_mesh.reset();
+			miku_mesh.reset();
 		}
 
 	public:
 		std::shared_ptr<mesh> sponza_mesh;
+		std::shared_ptr<mesh> miku_mesh;
+
+		// NOTE: 添加了Global Identical Mat4
+		glm::mat4 get_mesh_transform(const glm::vec3& scale,const glm::vec3& pos, const glm::vec3& rotate);
+		
 
 	private:
 		vk_device* device;

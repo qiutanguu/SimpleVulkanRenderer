@@ -47,6 +47,8 @@ void main()
 	vec3 world_space_normal = get_normal_from_map();
 	
 	out_position = vec4(vary_worldpos, roughness);
-	out_normal = vec4(normalize(vary_normal), metalic);
-	out_basecolor = texture(basecolor_tex, vary_uv0);
+	out_normal = vec4(world_space_normal, metalic);
+
+    float g_buffer_id = -1.0f; // 默认shading model
+	out_basecolor = vec4(texture(basecolor_tex, vary_uv0).xyz,g_buffer_id);
 }

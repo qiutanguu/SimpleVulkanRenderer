@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flower", "source\flower\flo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "runtime", "source\runtime\runtime.vcxproj", "{F89F6060-5BEE-421F-B28D-22F94782CE13}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asset_baker", "source\asset_baker\asset_baker.vcxproj", "{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -27,6 +29,14 @@ Global
 		{F89F6060-5BEE-421F-B28D-22F94782CE13}.Release|x64.ActiveCfg = Release|x64
 		{F89F6060-5BEE-421F-B28D-22F94782CE13}.Release|x64.Build.0 = Release|x64
 		{F89F6060-5BEE-421F-B28D-22F94782CE13}.Release|x86.ActiveCfg = Release|x64
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Debug|x64.ActiveCfg = Debug|x64
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Debug|x64.Build.0 = Debug|x64
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Debug|x86.ActiveCfg = Debug|Win32
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Debug|x86.Build.0 = Debug|Win32
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Release|x64.ActiveCfg = Release|x64
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Release|x64.Build.0 = Release|x64
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Release|x86.ActiveCfg = Release|Win32
+		{2DF377F2-F314-4C8A-933A-09EA60BDD2E7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

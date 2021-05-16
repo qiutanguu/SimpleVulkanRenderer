@@ -68,6 +68,8 @@ namespace flower { namespace asset{
 		out_file.bin_blob.resize(bloblen);
 		infile.read(out_file.bin_blob.data(),bloblen);
 
+		infile.close();
+
 		return true;
 	}
 

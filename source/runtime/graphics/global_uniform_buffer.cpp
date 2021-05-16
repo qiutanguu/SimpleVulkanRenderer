@@ -4,6 +4,7 @@
 namespace flower{ namespace graphics{
 
 	global_uniform_buffers g_uniform_buffers = {};
+	glm::mat4 global_ident_mat4_model =  glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
 
 	void global_uniform_buffers::update(uint32_t back_buffer_index)
 	{
@@ -57,7 +58,9 @@ namespace flower{ namespace graphics{
 
 		float min_z = std::numeric_limits<float>::max();
 		float max_z = -std::numeric_limits<float>::max();
-		auto model = glm::rotate(glm::mat4(1.0f),glm::radians(0.0f),glm::vec3(-1.0f,0.0f,0.0f));
+
+		// global ident model
+		auto model = global_ident_mat4_model;
 
 		for (auto& point : bound_points)
 		{

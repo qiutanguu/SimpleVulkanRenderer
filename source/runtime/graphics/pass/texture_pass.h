@@ -21,7 +21,7 @@ namespace flower { namespace graphics{
 			vk_renderpass_mix_data in_mixdata
 		): mix_data(in_mixdata)
 		{
-			type = renderpass_type::texture_pass;
+
 		}
 
 		~texture_pass();

@@ -25,7 +25,7 @@ namespace flower { namespace graphics{
 			vk_renderpass_mix_data in_mixdata
 		): mix_data(in_mixdata)
 		{
-			type = renderpass_type::shadowdepth_pass;
+		
 		}
 
 		virtual void swapchain_change(vk_renderpass_mix_data in_mixdata) override

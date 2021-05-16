@@ -61,4 +61,5 @@ namespace flower{ namespace graphics{
 	};
 
 	extern global_uniform_buffers g_uniform_buffers;
+	extern glm::mat4 global_ident_mat4_model;
 }}

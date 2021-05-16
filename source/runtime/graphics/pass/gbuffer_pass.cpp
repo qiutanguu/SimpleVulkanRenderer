@@ -218,4 +218,61 @@ namespace flower{namespace graphics{
 
 		return ret;
 	}
+
+	std::shared_ptr<material_gbuffer_character> graphics::material_gbuffer_character::create(
+		vk_device* indevice,
+		VkRenderPass in_renderpass,
+		VkCommandPool in_pool,
+		const std::vector<uint32_t>& in_texlib,
+		glm::mat4 model_mat)
+	{
+		auto ret = std::make_shared<material_gbuffer_character>();
+
+		auto& shader = g_shader_manager.gbuffer_character_shader;
+
+		vk_pipeline_info pipe_info;	
+
+		pipe_info.vert_shader_module = shader->vert_shader_module->handle;
+		pipe_info.frag_shader_module = shader->frag_shader_module->handle;
+		pipe_info.color_attachment_count = 3;
+
+		ret->pipeline = vk_pipeline::create_by_shader(
+			indevice,
+			VK_NULL_HANDLE,
+			pipe_info,
+			shader,
+			in_renderpass
+		);
+
+		VkDeviceSize bufferSize = sizeof(glm::mat4);
+		auto buffer = vk_buffer::create(
+			*indevice,
+			in_pool,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			bufferSize,
+			nullptr
+		);
+
+
+		buffer->map();
+		buffer->copy_to((void*)&model_mat,sizeof(model_mat));
+		buffer->unmap();
+
+		// ÉèÖÃmodel¾ØÕó
+		ret->model_ubo = buffer;
+
+		ret->descriptor_set = shader->allocate_descriptor_set();
+		ret->shader = shader;
+
+		ret->descriptor_set->set_buffer("ub_vp",g_uniform_buffers.ubo_vps);
+		ret->descriptor_set->set_buffer("ub_m",ret->model_ubo);
+
+		ret->descriptor_set->set_image(
+			"basecolor_tex",
+			g_texture_manager.get_texture_vk(in_texlib[texture_id_type::diffuse])
+		);
+
+		return ret;
+	}
 }}

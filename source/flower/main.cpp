@@ -1,5 +1,6 @@
 #include "core/application.h"
 #include "pbr_deferred.h"
+#include "asset_system/asset_pmx.h"
 
 int main()
 {
