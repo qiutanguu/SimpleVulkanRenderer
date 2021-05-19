@@ -51,6 +51,7 @@
     <ClInclude Include="graphics\compute\deferred_cluster.h" />
     <ClInclude Include="asset_system\asset_pmx.h" />
     <ClInclude Include="core\unicode.hpp" />
+    <ClInclude Include="asset_system\asset_vmd.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\core.cpp" />
@@ -93,5 +94,6 @@
     <ClCompile Include="asset_system\asset_texture.cpp" />
     <ClCompile Include="graphics\compute\deferred_cluster.cpp" />
     <ClCompile Include="asset_system\asset_pmx.cpp" />
+    <ClCompile Include="asset_system\asset_vmd.cpp" />
   </ItemGroup>
 </Project>

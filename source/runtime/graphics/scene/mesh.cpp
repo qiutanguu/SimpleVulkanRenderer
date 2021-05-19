@@ -602,9 +602,6 @@ namespace flower{ namespace graphics{
 	{
 		glm::mat4 res = glm::mat4(1.0f);
 
-		
-
-
 		res = glm::scale(
 			res,
 			scale
