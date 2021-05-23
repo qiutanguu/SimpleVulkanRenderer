@@ -9,6 +9,8 @@
 #include "material.h"
 #include "tinyobjloader/tiny_obj_loader.h"
 #include "../vk/vk_renderpass.h"
+#include "asset_system/asset_pmx.h"
+#include "asset_system/asset_vmd.h"
 
 namespace flower{ namespace graphics{
 
@@ -55,7 +57,7 @@ namespace flower{ namespace graphics{
 	public:
 		sub_mesh()
 		{
-			for (auto& val:has_registered)
+			for (auto& val : has_registered)
 			{
 				val = false;
 			}
@@ -97,7 +99,7 @@ namespace flower{ namespace graphics{
 			
 		}
 
-		~mesh(){ }
+		virtual ~mesh(){ }
 
 		std::array<std::shared_ptr<vk_vertex_buffer>,renderpass_type::max_index> vertex_bufs = { };
 		std::array<bool,renderpass_type::max_index> has_registered = { };
@@ -123,14 +125,74 @@ namespace flower{ namespace graphics{
 			const glm::mat4& model = glm::mat4(1.0f)
 		);
 
-		void load_pmx_mesh(
-			std::string mesh_path
-			,const glm::mat4& model = glm::mat4(1.0f)
-		);
-
 		friend class meshes_manager;
 	};
 
+	struct bone_node_mmd
+	{
+	public:
+		bone_node_mmd(asset::PMXBone& in_bone) : bone(in_bone){ }
+
+		asset::PMXBone& bone;
+		int32_t index;
+
+		bone_node_mmd* parent;
+		std::vector<bone_node_mmd*> childs;
+
+		// 从更节点到该节点的最终变换矩阵。
+		glm::mat4 conv_matrix;
+		
+	};
+
+	// 骨骼层级树
+	struct bone_processor_mmd
+	{
+	public:
+		bone_processor_mmd(asset::PMXFile* file);
+		~bone_processor_mmd();
+		bone_node_mmd* operator[](std::u16string name);
+
+		// 线性
+		std::vector<bone_node_mmd*> list;
+
+		// pmx 文件可以有多个根节点。
+		std::vector<bone_node_mmd*> roots;
+	};
+
+	class mesh_mmd : public mesh
+	{
+	public:
+		mesh_mmd(vk_device* indevice,
+			VkCommandPool pool): mesh(indevice,pool)
+		{
+
+		}
+
+		~mesh_mmd()
+		{
+			if(bone_manager!=nullptr)
+			{
+				delete bone_manager;
+			}
+		}
+
+		void initialize(std::string mesh_path,std::string vmd_path);
+
+		// 骨骼层级树
+		bone_processor_mmd* bone_manager = nullptr;
+
+		asset::VMDFile dance_data;
+		asset::PMXFile miku_skeleton_mesh;
+
+	private:	
+		void load_pmx_mesh(
+			std::string mesh_path
+		);
+
+		void load_vmd_data(
+			std::string vmd_path
+		);
+	};
 
 	class meshes_manager
 	{
@@ -151,11 +213,10 @@ namespace flower{ namespace graphics{
 
 	public:
 		std::shared_ptr<mesh> sponza_mesh;
-		std::shared_ptr<mesh> miku_mesh;
+		std::shared_ptr<mesh_mmd> miku_mesh;
 
 		// NOTE: 添加了Global Identical Mat4
-		glm::mat4 get_mesh_transform(const glm::vec3& scale,const glm::vec3& pos, const glm::vec3& rotate);
-		
+		static glm::mat4 get_mesh_transform(const glm::vec3& scale,const glm::vec3& pos, const glm::vec3& rotate);
 
 	private:
 		vk_device* device;

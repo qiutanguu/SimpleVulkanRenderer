@@ -136,142 +136,6 @@ namespace flower{ namespace graphics{
 		}
 	}
 
-	void mesh::load_pmx_mesh(std::string path,const glm::mat4& model)
-	{
-		flower::asset::PMXFile file{};
-		flower::asset::ReadPMXFile(&file,path.c_str());
-
-		// 同样一个材质分配一个submesh
-		sub_meshes.resize(file.m_materials.size());
-		for(auto& it : sub_meshes)
-		{
-			it.model = model;
-		}
-
-		auto end_pos = path.find_last_of("/\\");
-
-		std::string pmx_folder_path;
-		if(end_pos!=std::string::npos)
-		{
-			pmx_folder_path = path.substr(0,end_pos);
-		}
-
-		pmx_folder_path += "/";
-
-		// 填充raw data
-		auto& pos_data = raw_data.get_stream(vertex_attribute::pos).data;
-		auto& normal_data = raw_data.get_stream(vertex_attribute::normal).data;
-		auto& uv0_data = raw_data.get_stream(vertex_attribute::uv0).data;
-
-		pos_data.resize(file.m_vertices.size() * 3);
-		normal_data.resize(file.m_vertices.size() * 3);
-		uv0_data.resize(file.m_vertices.size() * 2);
-
-		// 填充raw data顶点
-		for(auto i_v = 0; i_v < file.m_vertices.size(); i_v ++)
-		{
-			auto pos_index = 3 * i_v;
-			auto normal_index = 3 * i_v;
-			auto uv0_index = 2 * i_v;
-
-			pos_data[pos_index] = file.m_vertices[i_v].m_position.x;
-			pos_data[pos_index + 1] = file.m_vertices[i_v].m_position.y;
-			pos_data[pos_index + 2] = file.m_vertices[i_v].m_position.z;
-
-			normal_data[normal_index] = file.m_vertices[i_v].m_normal.x;
-			normal_data[normal_index + 1] = file.m_vertices[i_v].m_normal.y;
-			normal_data[normal_index + 2] = file.m_vertices[i_v].m_normal.z;
-
-			uv0_data[uv0_index] = file.m_vertices[i_v].m_uv.x;
-			uv0_data[uv0_index + 1] = file.m_vertices[i_v].m_uv.y;
-		}
-
-		// 加载所有的纹理
-		// pmx 所有纹理都是 srgb 233
-		for(auto mat_i = 0; mat_i<file.m_materials.size(); mat_i++)
-		{
-			auto& set_mat = sub_meshes[mat_i].texture_ids;
-			auto& process_mat = file.m_materials[mat_i];
-
-			// 使用绝对路径作为标记
-			if(process_mat.m_textureIndex>=0)
-			{
-				auto base_color_path = pmx_folder_path + file.m_textures[process_mat.m_textureIndex].m_textureName;
-				set_mat.push_back(g_texture_manager.load_texture_mipmap(
-					VK_FORMAT_R8G8B8A8_SRGB,
-					sampler_layout::linear_repeat(),
-					base_color_path
-				));
-			}
-			else
-			{
-				set_mat.push_back(g_texture_manager.checkboard);
-			}
-			
-			if(process_mat.m_toonTextureIndex>=0)
-			{
-				auto toon_tex_path = pmx_folder_path + file.m_textures[process_mat.m_toonTextureIndex].m_textureName;
-				set_mat.push_back(g_texture_manager.load_texture_mipmap(
-					VK_FORMAT_R8G8B8A8_SRGB,
-					sampler_layout::linear_repeat(),
-					toon_tex_path
-				));
-			}
-			else
-			{
-				set_mat.push_back(g_texture_manager.checkboard);
-			}
-
-			if(process_mat.m_sphereTextureIndex >= 0)
-			{
-				auto sphere_tex_path = pmx_folder_path + file.m_textures[process_mat.m_sphereTextureIndex].m_textureName;
-				set_mat.push_back(g_texture_manager.load_texture_mipmap(
-					VK_FORMAT_R8G8B8A8_SRGB,
-					sampler_layout::linear_repeat(),
-					sphere_tex_path
-				));
-			}
-			else
-			{
-				set_mat.push_back(g_texture_manager.checkboard);
-			}
-		}
-
-		
-
-		// 分别处理每一个材质
-		int32_t start_face_point = 0;
-		int32_t idex = 0;
-
-		for(auto& mat : file.m_materials)
-		{
-			auto& processing_submesh = sub_meshes[idex];
-			idex ++;
-			auto face_num = mat.m_numFaceVertices / 3;
-			processing_submesh.indices.resize(mat.m_numFaceVertices);
-
-			int32_t vertex_stamp = 0;
-			int32_t end_face_point = start_face_point + face_num;
-			for(auto face_id = start_face_point;face_id < end_face_point; face_id++)
-			{
-				auto& face = file.m_faces[face_id];
-				for(auto vertex : face.m_vertices)
-				{
-					processing_submesh.indices[vertex_stamp] = vertex;
-					vertex_stamp ++;
-				}
-			}
-			start_face_point = end_face_point;
-		}
-
-		// 上传次序缓冲
-		for(auto& submesh : sub_meshes)
-		{
-			auto& indices = submesh.indices;
-			submesh.index_buf = vk_index_buffer::create(device,pool,indices);
-		}
-	}
-
 	void mesh::load_obj_mesh(
 		std::string path,
 		std::string mat_path,const glm::mat4& model)
@@ -577,9 +441,8 @@ namespace flower{ namespace graphics{
 		sponza_mesh = std::make_shared<mesh>(device,pool);
 		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","",native);
 
-		auto miku_scale = get_mesh_transform(glm::vec3(10.0f),glm::vec3(50.0f,0,0),glm::vec3(0,glm::pi<float>() * -0.5f,0));
-		miku_mesh = std::make_shared<mesh>(device,pool);
-		miku_mesh->load_pmx_mesh("data/model/HCMiku v3 ver1.00/HCMiku v3.pmx",miku_scale);
+		miku_mesh = std::make_shared<mesh_mmd>(device,pool);
+		miku_mesh->initialize("data/model/HCMiku v3 ver1.00/HCMiku v3.pmx","data/model/HCMiku v3 ver1.00/dance.vmd");
 	}
 
 	// 释放加载到cpu中的网格数据
@@ -631,6 +494,212 @@ namespace flower{ namespace graphics{
 		);
 
 		return res * global_ident_mat4_model;
+	}
+
+	bone_processor_mmd::bone_processor_mmd(asset::PMXFile* file)
+	{
+		list.resize(file->m_bones.size());
+		for(auto i = 0; i<list.size(); i++)
+		{
+			list[i] = new bone_node_mmd(file->m_bones[i]);
+			list[i]->index = i;
+		}
+
+		// 建树。
+		for(auto* node : list)
+		{
+			if(node->bone.m_parentBoneIndex!=-1)
+			{
+				// 设定好父子关系。
+				node->parent = list[node->bone.m_parentBoneIndex];
+				list[node->bone.m_parentBoneIndex]->childs.push_back(node);
+			}
+			else
+			{
+				node->parent = nullptr;
+				roots.push_back(node);
+			}
+		}
+	}
+
+	bone_processor_mmd::~bone_processor_mmd()
+	{
+		for(auto* node : list)
+		{
+			delete node;
+		}
+	}
+
+	bone_node_mmd* bone_processor_mmd::operator[](std::u16string name)
+	{
+		for(auto* node : list)
+		{
+			if(node->bone.m_u16name == name)
+			{
+				return node;
+			}
+		}
+		return nullptr;
+	}
+
+	void mesh_mmd::initialize(std::string mesh_path,std::string vmd_path)
+	{
+		load_pmx_mesh(mesh_path);
+		load_vmd_data(vmd_path);
+
+		if(bone_manager!=nullptr)
+		{
+			delete bone_manager;
+			bone_manager = nullptr;
+		}
+			
+		// 1. 创建骨骼层级树。
+		bone_manager = new bone_processor_mmd(&miku_skeleton_mesh);
+
+		// 2. 根据vmd采样结果构建bone matrices。
+
+	}
+
+	void mesh_mmd::load_pmx_mesh(std::string mesh_path)
+	{
+		this->miku_skeleton_mesh = {};
+		auto& file = this->miku_skeleton_mesh;
+		flower::asset::ReadPMXFile(&this->miku_skeleton_mesh,mesh_path.c_str());
+
+		// 同样一个材质分配一个submesh
+		sub_meshes.resize(this->miku_skeleton_mesh.m_materials.size());
+		auto miku_scale = meshes_manager::get_mesh_transform(glm::vec3(10.0f),glm::vec3(50.0f,0,0),glm::vec3(0,glm::pi<float>() * -0.5f,0));
+		for(auto& it : sub_meshes)
+		{
+			it.model = miku_scale;
+		}
+
+		auto end_pos = mesh_path.find_last_of("/\\");
+
+		std::string pmx_folder_path;
+		if(end_pos!=std::string::npos)
+		{
+			pmx_folder_path = mesh_path.substr(0,end_pos);
+		}
+
+		pmx_folder_path += "/";
+
+		// 填充raw data
+		auto& pos_data = raw_data.get_stream(vertex_attribute::pos).data;
+		auto& normal_data = raw_data.get_stream(vertex_attribute::normal).data;
+		auto& uv0_data = raw_data.get_stream(vertex_attribute::uv0).data;
+
+		pos_data.resize(file.m_vertices.size() * 3);
+		normal_data.resize(file.m_vertices.size() * 3);
+		uv0_data.resize(file.m_vertices.size() * 2);
+
+		// 填充raw data顶点
+		for(auto i_v = 0; i_v < file.m_vertices.size(); i_v ++)
+		{
+			auto pos_index = 3 * i_v;
+			auto normal_index = 3 * i_v;
+			auto uv0_index = 2 * i_v;
+
+			pos_data[pos_index] = file.m_vertices[i_v].m_position.x;
+			pos_data[pos_index + 1] = file.m_vertices[i_v].m_position.y;
+			pos_data[pos_index + 2] = file.m_vertices[i_v].m_position.z;
+
+			normal_data[normal_index] = file.m_vertices[i_v].m_normal.x;
+			normal_data[normal_index + 1] = file.m_vertices[i_v].m_normal.y;
+			normal_data[normal_index + 2] = file.m_vertices[i_v].m_normal.z;
+
+			uv0_data[uv0_index] = file.m_vertices[i_v].m_uv.x;
+			uv0_data[uv0_index + 1] = file.m_vertices[i_v].m_uv.y;
+		}
+
+		// 加载所有的纹理
+		// pmx 所有纹理都是 srgb 233
+		for(auto mat_i = 0; mat_i<file.m_materials.size(); mat_i++)
+		{
+			auto& set_mat = sub_meshes[mat_i].texture_ids;
+			auto& process_mat = file.m_materials[mat_i];
+
+			// 使用绝对路径作为标记
+			if(process_mat.m_textureIndex>=0)
+			{
+				auto base_color_path = pmx_folder_path + file.m_textures[process_mat.m_textureIndex].m_textureName;
+				set_mat.push_back(g_texture_manager.load_texture_mipmap(
+					VK_FORMAT_R8G8B8A8_SRGB,
+					sampler_layout::linear_repeat(),
+					base_color_path
+				));
+			}
+			else
+			{
+				set_mat.push_back(g_texture_manager.checkboard);
+			}
+
+			if(process_mat.m_toonTextureIndex>=0)
+			{
+				auto toon_tex_path = pmx_folder_path + file.m_textures[process_mat.m_toonTextureIndex].m_textureName;
+				set_mat.push_back(g_texture_manager.load_texture_mipmap(
+					VK_FORMAT_R8G8B8A8_SRGB,
+					sampler_layout::linear_repeat(),
+					toon_tex_path
+				));
+			}
+			else
+			{
+				set_mat.push_back(g_texture_manager.checkboard);
+			}
+
+			if(process_mat.m_sphereTextureIndex >= 0)
+			{
+				auto sphere_tex_path = pmx_folder_path + file.m_textures[process_mat.m_sphereTextureIndex].m_textureName;
+				set_mat.push_back(g_texture_manager.load_texture_mipmap(
+					VK_FORMAT_R8G8B8A8_SRGB,
+					sampler_layout::linear_repeat(),
+					sphere_tex_path
+				));
+			}
+			else
+			{
+				set_mat.push_back(g_texture_manager.checkboard);
+			}
+		}
+
+		// 分别处理每一个材质
+		int32_t start_face_point = 0;
+		int32_t idex = 0;
+
+		for(auto& mat : file.m_materials)
+		{
+			auto& processing_submesh = sub_meshes[idex];
+			idex ++;
+			auto face_num = mat.m_numFaceVertices / 3;
+			processing_submesh.indices.resize(mat.m_numFaceVertices);
+
+			int32_t vertex_stamp = 0;
+			int32_t end_face_point = start_face_point + face_num;
+			for(auto face_id = start_face_point;face_id < end_face_point; face_id++)
+			{
+				auto& face = file.m_faces[face_id];
+				for(auto vertex : face.m_vertices)
+				{
+					processing_submesh.indices[vertex_stamp] = vertex;
+					vertex_stamp ++;
+				}
+			}
+			start_face_point = end_face_point;
+		}
+
+		// 上传次序缓冲
+		for(auto& submesh : sub_meshes)
+		{
+			auto& indices = submesh.indices;
+			submesh.index_buf = vk_index_buffer::create(device,pool,indices);
+		}
+	}
+
+	void mesh_mmd::load_vmd_data(std::string vmd_path)
+	{
+		this->dance_data = {};
+		flower::asset::ReadVMDFile(&this->dance_data,vmd_path.c_str());
 	}
 
 }}

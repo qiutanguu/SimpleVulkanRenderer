@@ -21,6 +21,7 @@ int main(int argc,char** argvs)
 			LOG_IO_TRACE("∑¢œ÷Œ∆¿Ì{0}°£",p.path().c_str());
 
 			auto newpath = p.path();
+			/*
 			newpath.replace_extension(".flower");
 
 			std::string new_path_str = newpath.c_str();
@@ -28,8 +29,9 @@ int main(int argc,char** argvs)
 			if(newpath)
 
 			bake_image(p.path(), newpath,);
+			*/
 		}
 	}
-}
 
+	return 0;
 }

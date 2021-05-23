@@ -11,7 +11,7 @@ namespace flower
 		const float speed_default = 500.0f;
 		const float sensitivity_default = 0.1f;
 
-        // 过大的fov容易导致3d眩晕
+        // 过大的fov容易导致我3d眩晕
 		const float zoom_default = 45.0f;
 
 		enum class move_type

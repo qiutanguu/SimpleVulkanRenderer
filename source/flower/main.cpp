@@ -9,9 +9,6 @@ int main()
 
 	app.initialize();
 
-	flower::asset::VMDFile file_test{};
-	flower::asset::ReadVMDFile(&file_test,"data/model/HCMiku v3 ver1.00/dance.vmd");
-	
 	std::shared_ptr<flower::iruntime_module> vk_module = std::make_shared<flower::graphics::pbr_deferred>(app.get_window());
 
 	app.modules.push_back(vk_module);

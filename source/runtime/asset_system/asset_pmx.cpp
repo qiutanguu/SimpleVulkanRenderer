@@ -6,7 +6,7 @@ namespace flower { namespace asset{
 
 	constexpr bool print_debug = true;
 
-	void read_string(PMXFile* pmx,std::string* val,std::ifstream& file)
+	void read_string(PMXFile* pmx,std::string* val,std::ifstream& file,std::u16string* string_16 = nullptr)
 	{
 		uint32_t buf_size;
 		// 1. 获取buffer大小
@@ -19,6 +19,12 @@ namespace flower { namespace asset{
 				// utf-16
 				std::u16string utf16_str(buf_size / 2,u'\0');
 				file.read((char*)&utf16_str[0], sizeof(utf16_str[0]) * utf16_str.size() );
+
+				if(string_16!=nullptr)
+				{
+					*string_16 = utf16_str;
+				}
+
 				unicode::ConvU16ToU8(utf16_str,*val);
 			}
 			else if(pmx->m_header.m_encode==1)
@@ -295,7 +301,9 @@ namespace flower { namespace asset{
 
 		for (auto& bone : pmx->m_bones)
 		{
-			read_string(pmx, &bone.m_name, file);
+			read_string(pmx, &bone.m_name, file,&bone.m_u16name);
+
+			// bone.m_u16name = unicode::ConvertSjisToU16String(bone.m_name.c_str());
 			read_string(pmx, &bone.m_englishName, file);
 
 			file.read((char*)&bone.m_position[0], sizeof(float) * 3);

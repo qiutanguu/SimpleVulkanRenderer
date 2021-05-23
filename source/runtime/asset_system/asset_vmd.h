@@ -12,11 +12,13 @@ namespace flower { namespace asset{
 	{
 		char	m_header[30];
 		char	m_modelName[20];
+		std::u16string modelName;
 	};
 
 	struct VMDMotion
 	{
 		char	m_boneName[15];
+		std::u16string boneName;
 		uint32_t		m_frame;
 		glm::vec3		m_translate;
 		glm::quat		m_quaternion;
@@ -26,6 +28,7 @@ namespace flower { namespace asset{
 	struct VMDMorph
 	{
 		char	m_blendShapeName[15];
+		std::u16string blendShapeName;
 		uint32_t		m_frame;
 		float			m_weight;
 	};
@@ -58,6 +61,7 @@ namespace flower { namespace asset{
 	struct VMDIkInfo
 	{
 		char	m_name[20];
+		std::u16string name;
 		uint8_t			m_enable;
 	};
 

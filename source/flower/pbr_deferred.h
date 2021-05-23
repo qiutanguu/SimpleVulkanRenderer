@@ -54,6 +54,8 @@ namespace flower{ namespace graphics{
 		void tonemapper_ui_record_command();
 		void ui_overlay_update();
 		void ui_layout();
+
+		bool start_play = false;
 	};
 
 } }

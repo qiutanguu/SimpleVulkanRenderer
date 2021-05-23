@@ -239,6 +239,7 @@ namespace flower { namespace asset{
 	struct PMXBone
 	{
 		std::string	m_name;
+		std::u16string m_u16name;
 		std::string	m_englishName;
 
 		glm::vec3	m_position;

@@ -110,6 +110,7 @@
     <ClInclude Include="core\ring_buffer.h" />
     <ClInclude Include="core\timer.h" />
     <ClInclude Include="core\unicode.hpp" />
+    <ClInclude Include="graphics\animation.h" />
     <ClInclude Include="graphics\compute\deferred_cluster.h" />
     <ClInclude Include="graphics\compute\edge_detect.h" />
     <ClInclude Include="graphics\global_uniform_buffers.h" />
@@ -159,6 +160,8 @@
     <ClCompile Include="core\job_system.cpp" />
     <ClCompile Include="core\log.cpp" />
     <ClCompile Include="core\timer.cpp" />
+    <ClCompile Include="core\unicode.cpp" />
+    <ClCompile Include="graphics\animation.cpp" />
     <ClCompile Include="graphics\compute\deferred_cluster.cpp" />
     <ClCompile Include="graphics\compute\edge_detect.cpp" />
     <ClCompile Include="graphics\global_uniform_buffer.cpp" />

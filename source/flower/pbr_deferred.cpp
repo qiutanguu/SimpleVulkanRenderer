@@ -375,7 +375,7 @@ namespace flower{ namespace graphics{
 				ImGui::SliderFloat("pcss dilation", &g_uniform_buffers.direct_light.shadow_mix.x, 0.0f, 100.0f); 
 				ImGui::SliderFloat("pcf  dilation", &g_uniform_buffers.direct_light.shadow_mix.y, 0.0f, 100.0f); 
 				ImGui::SliderFloat("switch       ", &g_uniform_buffers.direct_light.shadow_mix.z, -100.0f, 100.0f); 
-				ImGui::Checkbox("show base color",&show_base_color);
+				ImGui::Checkbox("show base color", &show_base_color);
 
 				if(!first_open)
 				{
@@ -394,7 +394,13 @@ namespace flower{ namespace graphics{
 						);
 					}
 				}
-				
+
+				ImGui::Checkbox("Play Animation", &start_play);
+				if(start_play)
+				{
+					// ²¥·Å¶¯»­
+
+				}
 			}
 			ImGui::PopItemWidth();
 		}

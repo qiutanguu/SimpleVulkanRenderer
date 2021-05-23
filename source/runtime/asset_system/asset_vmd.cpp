@@ -1,4 +1,5 @@
 #include "asset_vmd.h"
+#include "core/unicode.hpp"
 
 namespace flower { namespace asset{
 	
@@ -16,9 +17,11 @@ namespace flower { namespace asset{
 		infile.seekg(0);
 		LOG_IO_INFO("Reading Vmd file {0}.",filename);
 
+		
 		// 0. 读取header
 		infile.read((char*)&vmd->m_header.m_header[0],sizeof(char) * 30);
 		infile.read((char*)&vmd->m_header.m_modelName[0],sizeof(char) * 20);
+		vmd->m_header.modelName = unicode::ConvertSjisToU16String(vmd->m_header.m_modelName);
 
 		if(std::string(vmd->m_header.m_header) != "Vocaloid Motion Data 0002" &&
 			std::string(vmd->m_header.m_modelName) != "Vocaloid Motion Data"
@@ -29,7 +32,7 @@ namespace flower { namespace asset{
 		}
 
 		LOG_IO_INFO("VMD header : {0}.",std::string(vmd->m_header.m_header));
-		LOG_IO_INFO("VMD model name : {0}.",std::string(vmd->m_header.m_modelName));
+		LOG_IO_INFO("VMD model name : {0}.",vmd->m_header.m_modelName);
 
 		// 1. 读取动作
 		uint32_t motionCount = 0;
@@ -38,6 +41,10 @@ namespace flower { namespace asset{
 		for( auto& motion:vmd->m_motions )
 		{
 			infile.read((char*)&motion.m_boneName[0],sizeof(char) * 15);
+
+			
+			motion.boneName = unicode::ConvertSjisToU16String(motion.m_boneName);
+
 			infile.read((char*)&motion.m_frame,sizeof(uint32_t));
 			infile.read((char*)&motion.m_translate[0], sizeof(float) * 3);
 			infile.read((char*)&motion.m_quaternion[0],sizeof(float) * 4);
@@ -50,9 +57,13 @@ namespace flower { namespace asset{
 			uint32_t blendShapeCount = 0;
 			infile.read((char*)&blendShapeCount,sizeof(uint32_t));
 			vmd->m_morphs.resize(blendShapeCount);
+
 			for(auto& morph:vmd->m_morphs)
 			{
 				infile.read((char*)&morph.m_blendShapeName[0],sizeof(char)*15);
+
+				morph.blendShapeName = unicode::ConvertSjisToU16String(morph.m_blendShapeName);
+
 				infile.read((char*)&morph.m_frame,sizeof(uint32_t));
 				infile.read((char*)&morph.m_weight,sizeof(float));
 			}
@@ -122,6 +133,8 @@ namespace flower { namespace asset{
 				for(auto& ikInfo:ik.m_ikInfos)
 				{
 					infile.read((char*)&ikInfo.m_name,sizeof(char) * 20);
+
+					ikInfo.name = unicode::ConvertSjisToU16String(ikInfo.m_name);
 					infile.read((char*)&ikInfo.m_enable,sizeof(uint8_t));
 				}
 			}
@@ -129,7 +142,7 @@ namespace flower { namespace asset{
 
 		if(!infile.eof())
 		{
-			LOG_IO_FATAL("ERROR");
+			// LOG_IO_FATAL("ERROR");
 		}
 
 		infile.close();
