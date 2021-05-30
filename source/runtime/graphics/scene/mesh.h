@@ -11,6 +11,7 @@
 #include "../vk/vk_renderpass.h"
 #include "asset_system/asset_pmx.h"
 #include "asset_system/asset_vmd.h"
+#include "../animation.h"
 
 namespace flower{ namespace graphics{
 
@@ -159,9 +160,16 @@ namespace flower{ namespace graphics{
 		std::vector<bone_node_mmd*> roots;
 	};
 
+	class pose_mmd
+	{
+
+	};
+
 	class mesh_mmd : public mesh
 	{
 	public:
+		static const int32_t vmd_frame_rate = 30;
+
 		mesh_mmd(vk_device* indevice,
 			VkCommandPool pool): mesh(indevice,pool)
 		{
@@ -184,7 +192,10 @@ namespace flower{ namespace graphics{
 		asset::VMDFile dance_data;
 		asset::PMXFile miku_skeleton_mesh;
 
+
 	private:	
+		std::unordered_map<int32_t,std::vector<animation_key>> bone_animation_keys;
+
 		void load_pmx_mesh(
 			std::string mesh_path
 		);
@@ -192,6 +203,12 @@ namespace flower{ namespace graphics{
 		void load_vmd_data(
 			std::string vmd_path
 		);
+
+		// 根据时间采样frame并构造bone matrices.
+		// time 为开始播放后经过的时间 /s
+		void build_bone_matrices(float time,const std::u16string& name);
+
+		std::pair<int32_t,int32_t> find_key(float time,const std::vector<animation_key>& keys);
 	};
 
 	class meshes_manager

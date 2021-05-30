@@ -4,7 +4,7 @@
 
 namespace flower { namespace graphics{
 
-	glm::mat3 inv_z(const glm::mat3& m)
+	inline glm::mat3 inv_z(const glm::mat3& m)
 	{
 		const glm::mat3 invZ = glm::scale(glm::mat4(1),glm::vec3(1,1,-1));
 		return invZ * m * invZ;
@@ -93,6 +93,9 @@ namespace flower { namespace graphics{
 
 	struct animation_key
 	{
+		animation_key(){ }
+		animation_key(const asset::VMDMotion& motion) { set(motion); }
+
 		void set(const asset::VMDMotion& motion)
 		{
 			// NOTE: 旋转以匹配Vulkan
@@ -131,11 +134,4 @@ namespace flower { namespace graphics{
 		int32_t	time;
 		bool	enable;
 	};
-
-	// vmd时间采样
-	inline void vmd_animation_evaluate(float time)
-	{
-		
-	}
-
 } }

@@ -6,6 +6,7 @@
 #include "core/timer.h"
 #include "../pass/shadowdepth_pass.h"
 #include "asset_system/asset_pmx.h"
+#include "core/unicode.hpp"
 
 // 标准顶点
 struct vertex_standard
@@ -438,11 +439,11 @@ namespace flower{ namespace graphics{
 		// sponza 网格加载到内存中
 		auto native = get_mesh_transform(glm::vec3(1.0f),glm::vec3(0.0f),glm::vec3(0.0f));
 
-		sponza_mesh = std::make_shared<mesh>(device,pool);
-		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","",native);
-
 		miku_mesh = std::make_shared<mesh_mmd>(device,pool);
 		miku_mesh->initialize("data/model/HCMiku v3 ver1.00/HCMiku v3.pmx","data/model/HCMiku v3 ver1.00/dance.vmd");
+
+		sponza_mesh = std::make_shared<mesh>(device,pool);
+		sponza_mesh->load_obj_mesh("data/model/sponza/sponza.obj","",native);
 	}
 
 	// 释放加载到cpu中的网格数据
@@ -553,11 +554,8 @@ namespace flower{ namespace graphics{
 			bone_manager = nullptr;
 		}
 			
-		// 1. 创建骨骼层级树。
+		// 创建骨骼层级树。
 		bone_manager = new bone_processor_mmd(&miku_skeleton_mesh);
-
-		// 2. 根据vmd采样结果构建bone matrices。
-
 	}
 
 	void mesh_mmd::load_pmx_mesh(std::string mesh_path)
@@ -696,10 +694,114 @@ namespace flower{ namespace graphics{
 		}
 	}
 
+	bool animation_key_sort_greater(animation_key k0,animation_key k1)
+	{
+		return k0.time > k1.time;
+	}
+
+	bool animation_key_sort_less(animation_key k0,animation_key k1)
+	{
+		return k0.time < k1.time;
+	}
+
 	void mesh_mmd::load_vmd_data(std::string vmd_path)
 	{
 		this->dance_data = {};
 		flower::asset::ReadVMDFile(&this->dance_data,vmd_path.c_str());
+
+		// 注册所有的vmd骨骼
+		for (auto i = 0; i < miku_skeleton_mesh.m_bones.size(); i++)
+		{
+			auto key_string = miku_skeleton_mesh.m_bones[i].m_u16name;
+			int32_t key_int = flower::unicode::u16stringToHash(key_string);
+
+			ASSERT(bone_animation_keys.find(key_int) == bone_animation_keys.end(),
+				"重复的Bone {0}！",miku_skeleton_mesh.m_bones[i].m_name.c_str());
+
+			bone_animation_keys.insert( std::make_pair(key_int,std::vector<animation_key>()));
+		}
+
+		// 为每个vmd骨骼都填入它们对应的所有关键帧
+		for ( auto& motion : dance_data.m_motions)
+		{
+			int32_t key_int = flower::unicode::u16stringToHash(motion.boneName);
+			std::vector<animation_key>& bone_vector = bone_animation_keys[key_int];
+
+			animation_key akey(motion);
+			bone_vector.push_back(akey);
+		}
+
+		// 对vmd关键帧排序
+		for ( auto& keys : bone_animation_keys)
+		{
+			auto& bone_vector =  keys.second;
+			std::sort(bone_vector.begin(),bone_vector.end(),animation_key_sort_less); // 降序排序
+		}
+	}
+
+	// 
+	void mesh_mmd::build_bone_matrices(float time,const std::u16string& name)
+	{
+		int32_t key_int = unicode::u16stringToHash(name);
+		auto& bone_vector = bone_animation_keys[key_int];
+		
+		// 找到最近临近两帧
+		auto near_frame = find_key(time,bone_vector);
+
+
+		int32_t last_key = near_frame.first;
+		int32_t next_key = near_frame.second;
+
+
+	}
+
+	std::pair<int32_t,int32_t> mesh_mmd::find_key(float time,const std::vector<animation_key>& keys)
+	{
+		// 处理三种退化情况
+		if(keys.size()==0)
+		{
+			return std::make_pair(-1,-1);
+		}
+
+		if(keys.size()==1)
+		{
+			return std::make_pair(0,0);
+		}
+
+		if(keys.size()==2)
+		{
+			return std::make_pair(0,1);
+		}
+
+		float time_key = time * (float)vmd_frame_rate;
+
+		int32_t end = (int32_t)keys.size() - 1;
+		int32_t start = 0;
+
+		while(true)
+		{
+			int32_t mid = (end + start) / 2;
+			float mid_time = float(keys[mid].time) / float(vmd_frame_rate);
+
+			if(time_key == mid_time)
+			{
+				return std::make_pair(mid,mid);
+			}
+			else if(end - start <= 1)
+			{
+				return std::make_pair(start,end);
+			}
+			else if(time_key < mid_time) // 在左边
+			{
+				end = mid;
+			}
+			else // 在右边
+			{
+				start = mid;
+			}
+		}
+
+		return std::make_pair(-2,-2);
 	}
 
 }}

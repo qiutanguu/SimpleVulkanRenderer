@@ -35,4 +35,9 @@ namespace flower { namespace unicode{
 	char16_t ConvertSjisToU16Char(int ch);
 	std::u16string ConvertSjisToU16String(const char* sjisCode);
 	std::u32string ConvertSjisToU32String(const char* sjisCode);
+
+	inline int32_t u16stringToHash(const std::u16string& in)
+	{
+		return (int32_t)std::hash<std::u16string>{ }(in);
+	}
 } }
