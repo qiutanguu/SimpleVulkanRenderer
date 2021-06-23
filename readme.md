@@ -2,6 +2,6 @@
 
 flower is deferred physical basic shading renderer using vulkan.
 
-![](gallery/miku.png)
+![image](gallery/miku.png)
 
-![](gallery/soft_shadow0.png)
+![image](gallery/soft_shadow0.png)
