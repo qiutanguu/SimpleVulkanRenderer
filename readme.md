@@ -1,6 +1,6 @@
 # flower
 
-flower is deferred physical basic shading renderer using vulkan.
+flower is deferred shading renderer using vulkan.
 
 ![image](gallery/miku.png)
 
